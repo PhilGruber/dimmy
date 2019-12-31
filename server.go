@@ -17,15 +17,15 @@ import (
 
 func main() {
 
-    config, err := loadConfig()
     devices := make(map[string]*Device)
 
-    for key := range config {
-        devices[key] = NewDevice(config[key])
-    }
-
+    deviceConfig, err := loadConfig("devices.conf")
     if err != nil {
         log.Fatal(err)
+    }
+
+    for key := range deviceConfig {
+        devices[key] = NewDevice(deviceConfig[key])
     }
 
     channel := make(chan SwitchRequest, 10)
@@ -107,10 +107,10 @@ func ShowStatus(devices *map[string]*Device) http.HandlerFunc {
     }
 }
 
-func loadConfig() (map[string]map[string]string, error) {
+func loadConfig(filename string) (map[string]map[string]string, error) {
     config := map[string]map[string]string{}
 
-    file, err := os.Open("devices.conf")
+    file, err := os.Open(filename)
     defer file.Close()
 
     if err != nil {
