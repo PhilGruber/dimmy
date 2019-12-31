@@ -1,0 +1,8 @@
+[Lamp1]
+    topic = cmnd/livingroom/lamp/dimmer
+
+[Lamp2]
+    topic = cmnd/livingroom/ceiling-light/dimmer
+
+[Lamp3]
+    topic = cmnd/bathroom/lamp/dimmer
