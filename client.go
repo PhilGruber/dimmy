@@ -28,13 +28,10 @@ func main() {
     jsonRequest, _ := json.Marshal(request)
     url := fmt.Sprintf("http://%s:%d/switch", *host, *port)
 
-    log.Println(string(jsonRequest))
-    log.Println(url)
-    result, err := http.Post(url, "application/json", bytes.NewBuffer(jsonRequest))
+    _, err := http.Post(url, "application/json", bytes.NewBuffer(jsonRequest))
     if err != nil {
         log.Fatal(err)
     }
-    fmt.Println(result)
 }
 
 type SwitchRequest struct {
