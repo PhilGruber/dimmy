@@ -11,6 +11,7 @@ import (
     "os"
     "strings"
     "strconv"
+    "html/template"
 
     mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -34,7 +35,7 @@ func main() {
 
     http.Handle("/api/switch", http.HandlerFunc(ReceiveRequest(channel)))
     http.Handle("/api/status", http.HandlerFunc(ShowStatus(&devices)))
-    http.Handle("/dashboard",  http.HandlerFunc(ShowDashboard(&devices)))
+    http.Handle("/",  http.HandlerFunc(ShowDashboard(&devices)))
     log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
@@ -110,7 +111,8 @@ func ShowStatus(devices *map[string]*Device) http.HandlerFunc {
 
 func ShowDashboard(devices *map[string]*Device) http.HandlerFunc {
     return func(output http.ResponseWriter, request *http.Request) {
-        fmt.Fprintf(output, "Dashboard")
+        templ, _ := template.ParseFiles("html/dashboard.html")
+        templ.Execute(output, devices)
     }
 }
 

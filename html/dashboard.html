@@ -1,0 +1,21 @@
+<html>
+    <head>
+    </head>
+    <body>
+        {{range $name, $device := .}}
+            <form method='POST'>
+            <input type='hidden' name='device' value='{{ $name }}' />
+            <div class='device'>
+                <div class='title'>
+                    {{ $name }}
+                </div>
+                <input type='submit' name='zero' value='off' />
+                <input type='submit' name='less' value='-' />
+                {{ $device.Target }}
+                <input type='submit' name='more' value='+' />
+                <input type='submit' name='full' value='on' />
+            </div>
+            </form>
+        {{end}}
+    </body>
+</html>
