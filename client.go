@@ -26,7 +26,7 @@ func main() {
         Delay: *delay,
     }
     jsonRequest, _ := json.Marshal(request)
-    url := fmt.Sprintf("http://%s:%d/switch", *host, *port)
+    url := fmt.Sprintf("http://%s:%d/api/switch", *host, *port)
 
     _, err := http.Post(url, "application/json", bytes.NewBuffer(jsonRequest))
     if err != nil {
