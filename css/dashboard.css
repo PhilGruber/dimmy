@@ -1,0 +1,30 @@
+
+body {
+    font-family: Verdana, Sans-Serif;
+}
+
+.device {
+    border: 2px solid green;
+    padding: 2px;
+}
+
+.title {
+    background-color: green;
+    color: white;
+    font-weight: bold;
+    padding: 6px;
+}
+
+.buttons {
+    padding: 2px;
+}
+
+.buttons input {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+}
+
+.buttons .value {
+    width: 100px;
+}

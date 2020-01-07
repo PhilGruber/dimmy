@@ -1,5 +1,9 @@
 <html>
     <head>
+        <title>
+            Dimmy Dashboard
+        </title>
+        <link rel='stylesheet' type='text/css' href='/css/dashboard.css' />
     </head>
     <body>
         {{range $name, $device := .}}
@@ -9,11 +13,15 @@
                 <div class='title'>
                     {{ $name }}
                 </div>
-                <input type='submit' name='target' value='off' />
-                <input type='submit' name='target' value='-' />
-                {{ $device.Target }}
-                <input type='submit' name='target' value='+' />
-                <input type='submit' name='target' value='on' />
+                <div class='buttons'>
+                    <input type='submit' name='target' value='off' />
+                    <input type='submit' name='target' value='-' />
+                    <span class='value'>
+                    {{ $device.Target }}%
+                    </span>
+                    <input type='submit' name='target' value='+' />
+                    <input type='submit' name='target' value='on' />
+                </div>
             </div>
             </form>
         {{end}}

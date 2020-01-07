@@ -36,6 +36,9 @@ func main() {
     http.Handle("/api/switch", http.HandlerFunc(ReceiveRequest(channel)))
     http.Handle("/api/status", http.HandlerFunc(ShowStatus(&devices)))
     http.Handle("/",  http.HandlerFunc(ShowDashboard(devices, channel)))
+    css := http.FileServer(http.Dir("css"))
+    http.Handle("/css/", http.StripPrefix("/css/", css))
+
     log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
@@ -67,9 +70,9 @@ func eventLoop(devices map[string]*Device, channel chan SwitchRequest, mqttServe
 }
 
 func ReceiveRequest(channel chan SwitchRequest) http.HandlerFunc {
-        return func(output http.ResponseWriter, httpRequest *http.Request) {
+    return func(output http.ResponseWriter, httpRequest *http.Request) {
 
-        jsonResponse:= func(result bool, request interface{}, message string) string {
+        jsonResponse := func(result bool, request interface{}, message string) string {
             data := make(map[string]interface{})
             data["data"] = "Success"
             data["input"] = request
@@ -77,6 +80,8 @@ func ReceiveRequest(channel chan SwitchRequest) http.HandlerFunc {
             jsonData, _ := json.Marshal(data)
             return string(jsonData)
         }
+
+        log.Println("new request")
 
         body, err := ioutil.ReadAll(httpRequest.Body)
         if err != nil {
