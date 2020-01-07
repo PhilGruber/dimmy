@@ -81,8 +81,6 @@ func ReceiveRequest(channel chan SwitchRequest) http.HandlerFunc {
             return string(jsonData)
         }
 
-        log.Println("new request")
-
         body, err := ioutil.ReadAll(httpRequest.Body)
         if err != nil {
             log.Println("Error: ", err)
@@ -91,7 +89,6 @@ func ReceiveRequest(channel chan SwitchRequest) http.HandlerFunc {
         }
 
         s := string(body[:])
-        log.Println("Received " + s)
 
         var request SwitchRequest
 
