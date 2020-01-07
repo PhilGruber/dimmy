@@ -1,6 +1,7 @@
 
 body {
     font-family: Verdana, Sans-Serif;
+    font-size: 30pt;
 }
 
 .device {
@@ -20,9 +21,10 @@ body {
 }
 
 .buttons input {
-    width: 32px;
-    height: 32px;
+    width: 60px;
+    height: 60px;
     border-radius: 6px;
+    font-size: 22pt;
 }
 
 .buttons .value {
