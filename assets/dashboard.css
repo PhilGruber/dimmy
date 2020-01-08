@@ -5,15 +5,17 @@ body {
 }
 
 .device {
-    border: 2px solid green;
+    border: 3px solid #67D0DD;
     padding: 2px;
+    max-width: 360px;
+    margin-bottom: 5px;
 }
 
 .title {
-    background-color: green;
-    color: white;
-    font-weight: bold;
+    background-color: #67D0DD;
+    color: #F6E785;
     padding: 6px;
+    text-align: center;
 }
 
 .buttons {
@@ -21,15 +23,19 @@ body {
 }
 
 .buttons a {
-    width: 60px;
-    height: 60px;
-    border-radius: 6px;
-    border: 1px solid green;
-    background-color: #BBB;
+    width: 40px;
+    height: 36px;
+    border-radius: 20px;
+    background-color: #FAAFa5;
     font-size: 22pt;
     padding: 2px 5px;
+    display: inline-block;
+    text-align: center;
+    color: #FFDAC1;
 }
 
 .buttons .value {
     width: 100px;
+    display: inline-block;
+    text-align: center;
 }

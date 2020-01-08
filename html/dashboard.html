@@ -28,8 +28,6 @@
     </head>
     <body>
         {{range $name, $device := .}}
-            <form method='POST'>
-            <input type='hidden' name='device' value='{{ $name }}' />
             <div class='device'>
                 <div class='title'>
                     {{ $name }}
@@ -44,7 +42,6 @@
                     <a onClick="switchDevice('{{ $name }}', 100);">on</a>
                 </div>
             </div>
-            </form>
         {{end}}
     </body>
 </html>

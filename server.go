@@ -33,11 +33,11 @@ func main() {
 
     go eventLoop(devices, channel, "192.168.178.48")
 
+    assets := http.FileServer(http.Dir("assets"))
+    http.Handle("/assets/", http.StripPrefix("/assets/", assets))
     http.Handle("/api/switch", http.HandlerFunc(ReceiveRequest(channel)))
     http.Handle("/api/status", http.HandlerFunc(ShowStatus(&devices)))
     http.Handle("/",  http.HandlerFunc(ShowDashboard(devices, channel)))
-    assets := http.FileServer(http.Dir("assets"))
-    http.Handle("/assets/", http.StripPrefix("/assets/", assets))
 
     log.Fatal(http.ListenAndServe(":8080", nil))
 }
