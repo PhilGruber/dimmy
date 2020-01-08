@@ -3,7 +3,7 @@
         <title>
             Dimmy Dashboard
         </title>
-        <link rel='stylesheet' type='text/css' href='/css/dashboard.css' />
+        <link rel='stylesheet' type='text/css' href='/assets/dashboard.css' />
     </head>
     <body>
         {{range $name, $device := .}}
@@ -16,7 +16,7 @@
                 <div class='buttons'>
                     <input type='submit' name='target' value='off' />
                     <input type='submit' name='target' value='-' />
-                    <span class='value'>
+                    <span class='value' id='value[{{ $name }}]'>
                     {{ $device.Target }}%
                     </span>
                     <input type='submit' name='target' value='+' />

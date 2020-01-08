@@ -36,8 +36,8 @@ func main() {
     http.Handle("/api/switch", http.HandlerFunc(ReceiveRequest(channel)))
     http.Handle("/api/status", http.HandlerFunc(ShowStatus(&devices)))
     http.Handle("/",  http.HandlerFunc(ShowDashboard(devices, channel)))
-    css := http.FileServer(http.Dir("css"))
-    http.Handle("/css/", http.StripPrefix("/css/", css))
+    assets := http.FileServer(http.Dir("assets"))
+    http.Handle("/assets/", http.StripPrefix("/assets/", assets))
 
     log.Fatal(http.ListenAndServe(":8080", nil))
 }
@@ -87,8 +87,6 @@ func ReceiveRequest(channel chan SwitchRequest) http.HandlerFunc {
             fmt.Fprintf(output, "Invalid JSON data")
             return
         }
-
-        s := string(body[:])
 
         var request SwitchRequest
 
