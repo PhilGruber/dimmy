@@ -4,6 +4,27 @@
             Dimmy Dashboard
         </title>
         <link rel='stylesheet' type='text/css' href='/assets/dashboard.css' />
+        <script src='/assets/jquery.js'></script>
+        <script>
+        $(document).ready(function() {
+            setInterval(function () {
+                $.get('/api/status', null, function(data, status, jqXHR) {
+                     for (name in data) {
+                        $("#value_" + name).text(data[name].value + "%");
+                    }
+                }, "json");
+            }, 1000);
+        });
+
+        function switchDevice(device, value) {
+            var data = {
+                device: device,
+                value: value,
+                delay: 0
+            };
+            $.post('/api/switch', JSON.stringify(data), null, 'json');
+        }
+        </script>
     </head>
     <body>
         {{range $name, $device := .}}
@@ -14,13 +35,13 @@
                     {{ $name }}
                 </div>
                 <div class='buttons'>
-                    <input type='submit' name='target' value='off' />
-                    <input type='submit' name='target' value='-' />
-                    <span class='value' id='value[{{ $name }}]'>
-                    {{ $device.Target }}%
+                    <a onClick="switchDevice('{{ $name }}', 0);">off</a>
+                    <a onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) - 10);">-</a>
+                    <span class='value' id='value_{{ $name }}'>
+                        {{ $device.Current }}%
                     </span>
-                    <input type='submit' name='target' value='+' />
-                    <input type='submit' name='target' value='on' />
+                    <a onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) + 10);">+</a>
+                    <a onClick="switchDevice('{{ $name }}', 100);">on</a>
                 </div>
             </div>
             </form>

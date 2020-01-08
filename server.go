@@ -94,6 +94,7 @@ func ReceiveRequest(channel chan SwitchRequest) http.HandlerFunc {
 
         if err != nil {
             log.Println("Error: ", err)
+            log.Println(string(body[:]))
             fmt.Fprintf(output, "Invalid JSON data")
             return
         }
@@ -124,9 +125,9 @@ func ShowDashboard(devices map[string]*Device, channel chan SwitchRequest) http.
                     case "off":
                         sr.Value = 0
                     case "+":
-                        sr.Value = devices[sr.Device].Target + 10
+                        sr.Value = devices[sr.Device].Current + 10
                     case "-":
-                        sr.Value = devices[sr.Device].Target - 10
+                        sr.Value = devices[sr.Device].Current - 10
                 }
                 devices[sr.Device].Target = sr.Value
                 channel <-sr
