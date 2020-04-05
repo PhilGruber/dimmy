@@ -11,11 +11,11 @@ import (
 
 func main() {
     host := flag.String("host", "127.0.0.1", "hostname to connect to")
-    port := flag.Int("post", 8080, "port to connect to")
+    port := flag.Int("port", 8080, "port to connect to")
 
-    value  := flag.Int("value", 100, "Value to set the device to [0-100]")
-    device := flag.String("device", "", "Device to send command to")
-    delay  := flag.Int("delay", 0, "Delay between steps")
+    value    := flag.Int("value", 100, "Value to set the device to [0-100]")
+    device   := flag.String("device", "", "Device to send command to")
+    duration := flag.Int("duration", 0, "Duration of the dimming curve (seconds)")
 
     flag.Parse()
 
@@ -23,7 +23,7 @@ func main() {
         Device: *device,
         Command: "dim",
         Value: *value,
-        Delay: *delay,
+        Duration: *duration,
     }
     jsonRequest, _ := json.Marshal(request)
     url := fmt.Sprintf("http://%s:%d/api/switch", *host, *port)
@@ -32,11 +32,4 @@ func main() {
     if err != nil {
         log.Fatal(err)
     }
-}
-
-type SwitchRequest struct {
-    Device string `json:"device"`
-    Command string `json:"command"`
-    Value int `json:"value"`
-    Delay int `json:"delay"`
 }

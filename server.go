@@ -12,9 +12,12 @@ import (
     "strings"
     "strconv"
     "html/template"
+    "math"
 
     mqtt "github.com/eclipse/paho.mqtt.golang"
 )
+
+const cycleLength = 100
 
 func main() {
 
@@ -45,7 +48,7 @@ func main() {
 func eventLoop(devices map[string]*Device, channel chan SwitchRequest, mqttServer string) {
     mqtt := initMqtt(mqttServer, "goserver")
     for {
-        time.Sleep(100 * time.Millisecond)
+        time.Sleep(cycleLength * time.Millisecond)
 
         for ; len(channel) > 0 ; {
             request := <-channel
@@ -53,17 +56,30 @@ func eventLoop(devices map[string]*Device, channel chan SwitchRequest, mqttServe
             if _, ok := devices[request.Device]; ok {
                 log.Println("Dimming " + request.Device + " to " + strconv.Itoa(request.Value))
                 devices[request.Device].Target = request.Value
-                devices[request.Device].Delay = time.Duration(request.Delay) * time.Second
+                diff := int(math.Abs(devices[request.Device].Current - float64(request.Value)))
+                var step float64
+                cycles := request.Duration * 1000/cycleLength
+                if request.Duration == 0 {
+                    step = float64(diff)
+                } else {
+                    step = float64(diff) / float64(cycles)
+                }
+
+                /* correct */
+                log.Printf("steps per cycle = %f (%d steps / %d cycles)", step, diff, cycles)
+
+                log.Printf("Dimming %d steps in %d seconds = %f steps per cycle", diff, request.Duration, step)
+                devices[request.Device].Step  = step
             }
         }
 
         for name, _ := range devices {
             if value, ok := devices[name].UpdateValue(); ok {
-                log.Println("Setting " + name + " to " + strconv.Itoa(value))
+                log.Printf("Setting %s to %f", name, value)
                 devices[name].Current = value
                 tt := time.Now()
                 devices[name].LastChanged = &tt
-                mqtt.Publish(devices[name].MqttTopic, 0, false, strconv.Itoa(value))
+                mqtt.Publish(devices[name].MqttTopic, 0, false, strconv.Itoa(int(math.Round(value))))
             }
         }
     }
@@ -116,7 +132,7 @@ func ShowDashboard(devices map[string]*Device, channel chan SwitchRequest) http.
             err := request.ParseForm()
             if err == nil {
                 var sr SwitchRequest
-                sr.Delay = 0
+                sr.Duration = 0
                 sr.Device = request.FormValue("device")
                 target := request.FormValue("target")
                 switch target {
@@ -125,9 +141,9 @@ func ShowDashboard(devices map[string]*Device, channel chan SwitchRequest) http.
                     case "off":
                         sr.Value = 0
                     case "+":
-                        sr.Value = devices[sr.Device].Current + 10
+                        sr.Value = int(devices[sr.Device].Current) + 10
                     case "-":
-                        sr.Value = devices[sr.Device].Current - 10
+                        sr.Value = int(devices[sr.Device].Current) - 10
                 }
                 devices[sr.Device].Target = sr.Value
                 channel <-sr
@@ -197,11 +213,4 @@ func initMqtt(hostname string, clientId string) mqtt.Client {
 	}
     log.Println("Connected to MQTT at " + hostname)
 	return client
-}
-
-type SwitchRequest struct {
-    Device string
-    Command string
-    Value int
-    Delay int
 }

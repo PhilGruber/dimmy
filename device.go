@@ -2,13 +2,16 @@ package main
 
 import (
     "time"
+    "strconv"
 )
 
 type Device struct {
     MqttTopic string `json:"-"`
-    Current int `json:"value"`
+    Current float64 `json:"value"`
     Target int `json:"target"`
-    Delay time.Duration `json:"-"`
+    Step float64 `json:"-"`
+    Min int `json:"-"`
+    Max int `json:"-"`
     LastChanged *time.Time `json:"-"`
 }
 
@@ -17,34 +20,41 @@ func makeDevice(config map[string]string) Device {
     d.MqttTopic = config["topic"]
     d.Current = 0
     d.Target = 0
-    d.Delay = 0
+    min, ok := config["min"]
+    if !ok {
+        min = "0"
+    }
+    max, ok := config["max"]
+    if !ok {
+        max = "0"
+    }
+    d.Min, _ = strconv.Atoi(min)
+    d.Max, _ = strconv.Atoi(max)
     tt := time.Now()
     d.LastChanged = &tt
     return d
 }
 
 func NewDevice(config map[string]string) *Device {
-    d := Device{};
-    d.MqttTopic = config["topic"]
-    d.Current = 0
-    d.Target = 0
-    d.Delay = 0
-    tt := time.Now()
-    d.LastChanged = &tt
+    d := makeDevice(config)
     return &d
 }
 
-func (d Device) UpdateValue() (int, bool) {
-    if d.Current != d.Target {
-        now := time.Now()
-        if d.LastChanged.Add(d.Delay).Before(now) {
-            if (d.Current > d.Target) {
-                d.Current--
-            } else {
-                d.Current++
+func (d Device) UpdateValue() (float64, bool) {
+    if d.Current != float64(d.Target) {
+        if (d.Current > float64(d.Target)) {
+            d.Current -= d.Step
+            if (d.Current < float64(d.Target)) {
+                d.Current = float64(d.Target)
             }
-            return d.Current, true
+        } else {
+            d.Current += d.Step
+            if (d.Current > float64(d.Target)) {
+                d.Current = float64(d.Target)
+            }
         }
+        return d.Current, true
+
     }
     return 0, false
 }
