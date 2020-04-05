@@ -17,7 +17,7 @@ import (
     mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-const cycleLength = 100
+const cycleLength = 200
 
 func main() {
 
@@ -78,8 +78,12 @@ func eventLoop(devices map[string]*Device, channel chan SwitchRequest, mqttServe
                 log.Printf("Setting %s to %f", name, value)
                 devices[name].Current = value
                 tt := time.Now()
-                devices[name].LastChanged = &tt
-                mqtt.Publish(devices[name].MqttTopic, 0, false, strconv.Itoa(int(math.Round(value))))
+                if int(math.Round(value)) != devices[name].LastSent {
+                    devices[name].LastChanged = &tt
+                    devices[name].LastSent = &tt
+                    log.Printf("\tSending %d", int(math.Round(value)))
+                    mqtt.Publish(devices[name].MqttTopic, 0, false, strconv.Itoa(int(math.Round(value))))
+                }
             }
         }
     }
@@ -137,9 +141,9 @@ func ShowDashboard(devices map[string]*Device, channel chan SwitchRequest) http.
                 target := request.FormValue("target")
                 switch target {
                     case "on":
-                        sr.Value = 100
+                        sr.Value = devices[sr.Device].Max
                     case "off":
-                        sr.Value = 0
+                        sr.Value = devices[sr.Device].Min
                     case "+":
                         sr.Value = int(devices[sr.Device].Current) + 10
                     case "-":
