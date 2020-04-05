@@ -75,13 +75,12 @@ func eventLoop(devices map[string]*Device, channel chan SwitchRequest, mqttServe
 
         for name, _ := range devices {
             if value, ok := devices[name].UpdateValue(); ok {
-                log.Printf("Setting %s to %f", name, value)
                 devices[name].Current = value
                 tt := time.Now()
                 if int(math.Round(value)) != devices[name].LastSent {
                     devices[name].LastChanged = &tt
                     devices[name].LastSent = int(math.Round(value))
-                    log.Printf("\tSending %d", int(math.Round(value)))
+                    log.Printf("Setting %s to %f", int(math.Round(value)))
                     mqtt.Publish(devices[name].MqttTopic, 0, false, strconv.Itoa(int(math.Round(value))))
                 }
             }
