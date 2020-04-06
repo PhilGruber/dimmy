@@ -10,7 +10,7 @@
             setInterval(function () {
                 $.get('/api/status', null, function(data, status, jqXHR) {
                      for (name in data) {
-                        $("#value_" + name).text(data[name].value + "%");
+                        $("#value_" + name).text(Math.round(data[name].value) + "%");
                     }
                 }, "json");
             }, 1000);
@@ -20,7 +20,7 @@
             var data = {
                 device: device,
                 value: value,
-                delay: 0
+                duration: 1,
             };
             $.post('/api/switch', JSON.stringify(data), null, 'json');
         }
