@@ -51,10 +51,11 @@ func main() {
 }
 
 func eventLoop(devices map[string]*Device, sensors map[string]*TuyaSensor, channel chan SwitchRequest, mqttServer string) {
-    mqtt := initMqtt(mqttServer, "goserver")
+    hostname, _ := os.Hostname()
+    mqtt := initMqtt(mqttServer, "goserver-" + hostname)
 
     for name, _ := range sensors {
-        mqtt.Subscribe(sensors[name].MqttTopic, 0, TuyaSensorMessageHandler)
+        mqtt.Subscribe(sensors[name].MqttTopic, 0, TuyaSensorMessageHandler(channel, sensors[name]))
     }
 
     for {
@@ -62,7 +63,7 @@ func eventLoop(devices map[string]*Device, sensors map[string]*TuyaSensor, chann
 
         for ; len(channel) > 0 ; {
             request := <-channel
-            log.Println(request)
+//            log.Println(request)
             if _, ok := devices[request.Device]; ok {
                 log.Println("Dimming " + request.Device + " to " + strconv.Itoa(request.Value))
                 devices[request.Device].Target = request.Value
@@ -75,11 +76,12 @@ func eventLoop(devices map[string]*Device, sensors map[string]*TuyaSensor, chann
                     step = float64(diff) / float64(cycles)
                 }
 
-                /* correct */
-                log.Printf("steps per cycle = %f (%d steps / %d cycles)", step, diff, cycles)
+//                log.Printf("steps per cycle = %f (%d steps / %d cycles)", step, diff, cycles)
 
                 log.Printf("Dimming %d steps in %d seconds = %f steps per cycle", diff, request.Duration, step)
                 devices[request.Device].Step  = step
+            } else {
+                log.Println("Unknown device [" + request.Device + "]")
             }
         }
 
@@ -90,11 +92,28 @@ func eventLoop(devices map[string]*Device, sensors map[string]*TuyaSensor, chann
                 if int(math.Round(value)) != devices[name].LastSent {
                     devices[name].LastChanged = &tt
                     devices[name].LastSent = int(math.Round(value))
-                    log.Printf("Setting %s to %f", int(math.Round(value)))
+//                    log.Printf("Setting %s to %f", int(math.Round(value)))
                     mqtt.Publish(devices[name].MqttTopic, 0, false, strconv.Itoa(int(math.Round(value))))
                 }
             }
         }
+
+        for name, _ := range sensors {
+            if sensors[name].Active {
+                if (sensors[name].LastChanged.Local().Add(time.Second * time.Duration(sensors[name].Timeout))).Before(time.Now()) {
+                    log.Println("Timeout")
+                    sensors[name].Active = false
+
+                    var request SwitchRequest
+                    request.Device   = sensors[name].Target
+                    request.Value    = sensors[name].TargetOff
+                    request.Duration = sensors[name].TargetOffDuration
+                    channel <- request
+
+                }
+            }
+        }
+
     }
 }
 
