@@ -55,6 +55,7 @@ func MakeTuyaSensor(config map[string]string) TuyaSensor {
     s.Timeout, _ = strconv.Atoi(val)
 
     s.Active = false
+    s.Value = 1
     return s
 }
 
@@ -75,12 +76,14 @@ type TuyaSensorMessageWrapper struct {
 
 func TuyaSensorMessageHandler(channel chan SwitchRequest, sensor *TuyaSensor) mqtt.MessageHandler {
     return func (client mqtt.Client, mqttMessage mqtt.Message) {
-        if sensor.Value == 0 {
-            return
-        }
+
         payload := mqttMessage.Payload()
 
         log.Println("[" + sensor.MqttTopic + "] Payload: " + string(payload[:]))
+
+        if sensor.Value == 0 {
+            return
+        }
 
         var data TuyaSensorMessageWrapper
         err := json.Unmarshal(payload, &data)
@@ -91,7 +94,7 @@ func TuyaSensorMessageHandler(channel chan SwitchRequest, sensor *TuyaSensor) mq
 
         message := data.TuyaReceived
 
-        if message.Cmnd == 5 {
+        if message.Cmnd == 5 || message.Cmnd == 2 {
             log.Println("Received Command " + message.CmndData)
             tt := time.Now()
             sensor.LastChanged = &tt
