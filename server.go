@@ -80,6 +80,8 @@ func eventLoop(devices map[string]*Device, sensors map[string]*TuyaSensor, chann
 
                 log.Printf("Dimming %d steps in %d seconds = %f steps per cycle", diff, request.Duration, step)
                 devices[request.Device].Step  = step
+            } else if _, ok := sensors[request.Device]; ok {
+                sensors[request.Device].Value = request.Value
             } else {
                 log.Println("Unknown device [" + request.Device + "]")
             }

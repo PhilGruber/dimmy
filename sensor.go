@@ -4,6 +4,7 @@ import (
     "log"
     "encoding/json"
     "time"
+    "strconv"
     mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
@@ -17,17 +18,42 @@ type TuyaSensor struct {
     Timeout int
     LastChanged *time.Time
     Active bool
+    Value int
 }
 
 func MakeTuyaSensor(config map[string]string) TuyaSensor {
     s := TuyaSensor{};
     s.MqttTopic = config["topic"]
     s.Target = config["target"]
-    s.TargetOn = 100
-    s.TargetOff = 0
-    s.TargetOnDuration = 3
-    s.TargetOffDuration = 120
-    s.Timeout = 10
+
+    var val string
+    var ok bool
+
+    if val, ok = config["TargetOn"]; !ok {
+        val = "100"
+    }
+    s.TargetOn, _ = strconv.Atoi(val)
+
+    if val, ok = config["TargetOff"]; !ok {
+        val = "0"
+    }
+    s.TargetOff, _ = strconv.Atoi(val)
+
+    if val, ok = config["TargetOnDuration"]; !ok {
+        val = "3"
+    }
+    s.TargetOnDuration, _ = strconv.Atoi(val)
+
+    if val, ok = config["TargetOffDuration"]; !ok {
+        val = "120"
+    }
+    s.TargetOffDuration, _ = strconv.Atoi(val)
+
+    if val, ok = config["Timeout"]; !ok {
+        val = "10"
+    }
+    s.Timeout, _ = strconv.Atoi(val)
+
     s.Active = false
     return s
 }
@@ -49,6 +75,9 @@ type TuyaSensorMessageWrapper struct {
 
 func TuyaSensorMessageHandler(channel chan SwitchRequest, sensor *TuyaSensor) mqtt.MessageHandler {
     return func (client mqtt.Client, mqttMessage mqtt.Message) {
+        if sensor.Value == 0 {
+            return
+        }
         payload := mqttMessage.Payload()
 
         log.Println("[" + sensor.MqttTopic + "] Payload: " + string(payload[:]))
