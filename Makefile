@@ -5,7 +5,7 @@ client: client.go api.go
 	go build -o dimmy client.go api.go
 
 server: jquery server.go device.go api.go html/*
-	go build -o dimmyd server.go device.go api.go
+	go build -o dimmyd server.go device.go api.go sensor.go
 
 jquery:
 	wget https://code.jquery.com/jquery-3.4.1.min.js -O assets/jquery.js

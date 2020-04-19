@@ -22,6 +22,7 @@ const cycleLength = 200
 func main() {
 
     devices := make(map[string]*Device)
+    sensors := make(map[string]*TuyaSensor)
 
     deviceConfig, err := loadConfig("devices.conf")
     if err != nil {
@@ -29,12 +30,16 @@ func main() {
     }
 
     for key := range deviceConfig {
-        devices[key] = NewDevice(deviceConfig[key])
+        if deviceConfig[key]["type"] == "sensor" {
+            sensors[key] = NewTuyaSensor(deviceConfig[key])
+        } else {
+            devices[key] = NewDevice(deviceConfig[key])
+        }
     }
 
     channel := make(chan SwitchRequest, 10)
 
-    go eventLoop(devices, channel, "192.168.178.48")
+    go eventLoop(devices, sensors, channel, "192.168.178.48")
 
     assets := http.FileServer(http.Dir("assets"))
     http.Handle("/assets/", http.StripPrefix("/assets/", assets))
@@ -45,8 +50,13 @@ func main() {
     log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func eventLoop(devices map[string]*Device, channel chan SwitchRequest, mqttServer string) {
+func eventLoop(devices map[string]*Device, sensors map[string]*TuyaSensor, channel chan SwitchRequest, mqttServer string) {
     mqtt := initMqtt(mqttServer, "goserver")
+
+    for name, _ := range sensors {
+        mqtt.Subscribe(sensors[name].MqttTopic, 0, TuyaSensorMessageHandler)
+    }
+
     for {
         time.Sleep(cycleLength * time.Millisecond)
 
