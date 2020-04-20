@@ -14,6 +14,7 @@ type Device struct {
     Max int `json:"-"`
     LastChanged *time.Time `json:"-"`
     LastSent int `json:"-"`
+    Type string
 }
 
 func makeDevice(config map[string]string) Device {

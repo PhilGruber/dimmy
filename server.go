@@ -110,8 +110,8 @@ func eventLoop(devices map[string]*Device, sensors map[string]*TuyaSensor, chann
                     sensors[name].Active = false
 
                     var request SwitchRequest
-                    request.Device   = sensors[name].Target
-                    request.Value    = sensors[name].TargetOff
+                    request.Device   = sensors[name].TargetDevice
+                    request.Value    = 0
                     request.Duration = sensors[name].TargetOffDuration
                     channel <- request
 

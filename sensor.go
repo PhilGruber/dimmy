@@ -10,9 +10,7 @@ import (
 
 type TuyaSensor struct {
     MqttTopic string `json:"-"`
-    Target string
-    TargetOn int
-    TargetOff int
+    TargetDevice string
     TargetOnDuration int
     TargetOffDuration int
     Timeout int
@@ -24,20 +22,10 @@ type TuyaSensor struct {
 func MakeTuyaSensor(config map[string]string) TuyaSensor {
     s := TuyaSensor{};
     s.MqttTopic = config["topic"]
-    s.Target = config["target"]
+    s.TargetDevice = config["target"]
 
     var val string
     var ok bool
-
-    if val, ok = config["TargetOn"]; !ok {
-        val = "100"
-    }
-    s.TargetOn, _ = strconv.Atoi(val)
-
-    if val, ok = config["TargetOff"]; !ok {
-        val = "0"
-    }
-    s.TargetOff, _ = strconv.Atoi(val)
 
     if val, ok = config["TargetOnDuration"]; !ok {
         val = "3"
@@ -100,8 +88,8 @@ func TuyaSensorMessageHandler(channel chan SwitchRequest, sensor *TuyaSensor) mq
             sensor.LastChanged = &tt
             sensor.Active = true
             var request SwitchRequest
-            request.Device   = sensor.Target
-            request.Value    = sensor.TargetOn
+            request.Device   = sensor.TargetDevice
+            request.Value    = sensor.Value
             request.Duration = sensor.TargetOnDuration
             channel <- request
         }
