@@ -65,7 +65,10 @@ func eventLoop(devices map[string]*Device, sensors map[string]*TuyaSensor, chann
             request := <-channel
 //            log.Println(request)
             if _, ok := devices[request.Device]; ok {
+                request.Value = int(math.Min(float64(request.Value), float64(devices[request.Device].Max)));
+                request.Value = int(math.Max(float64(request.Value), float64(devices[request.Device].Min)));
                 log.Println("Dimming " + request.Device + " to " + strconv.Itoa(request.Value))
+
                 devices[request.Device].Target = request.Value
                 diff := int(math.Abs(devices[request.Device].Current - float64(request.Value)))
                 var step float64

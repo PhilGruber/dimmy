@@ -27,7 +27,7 @@ func makeDevice(config map[string]string) Device {
     }
     max, ok := config["max"]
     if !ok {
-        max = "0"
+        max = "100"
     }
     d.Min, _ = strconv.Atoi(min)
     d.Max, _ = strconv.Atoi(max)
@@ -45,18 +45,18 @@ func (d Device) UpdateValue() (float64, bool) {
     if d.Current != float64(d.Target) {
         if (d.Current > float64(d.Target)) {
             d.Current -= d.Step
-            if (d.Current < float64(d.Target)) {
+            if (d.Current <= float64(d.Target)) {
                 d.Current = float64(d.Target)
             }
         } else {
             d.Current += d.Step
-            if (d.Current > float64(d.Target)) {
+            if (d.Current >= float64(d.Target)) {
                 d.Current = float64(d.Target)
             }
         }
         return d.Current, true
 
     }
-    return 0, false
+    return d.Current, false
 }
 
