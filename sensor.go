@@ -28,6 +28,9 @@ func MakeSensor(config map[string]string) Sensor {
     s.MqttTopic = config["topic"]
     s.TargetDevice = config["target"]
 
+    s.Max = 100
+    s.Min = 0
+
     var val string
     var ok bool
 
