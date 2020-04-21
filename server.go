@@ -80,7 +80,7 @@ func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, m
                     step = float64(diff) / float64(cycles)
                 }
 
-                log.Printf("Dimming %d steps in %d seconds (%f steps per cycle)", diff, request.Duration, step)
+                log.Printf("Dimming %s from %.f to %d: %d steps in %d seconds (%.1f steps per cycle)", request.Device, devices[request.Device].getCurrent(), request.Value, diff, request.Duration, step)
                 devices[request.Device].setStep(step)
 
             } else {
