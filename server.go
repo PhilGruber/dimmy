@@ -10,7 +10,6 @@ import (
     "bufio"
     "os"
     "strings"
-    "strconv"
     "html/template"
     "math"
 
@@ -21,8 +20,7 @@ const cycleLength = 200
 
 func main() {
 
-    devices := make(map[string]*Device)
-    sensors := make(map[string]*TuyaSensor)
+    devices := make(map[string]DeviceInterface)
 
     deviceConfig, err := loadConfig("devices.conf")
     if err != nil {
@@ -30,16 +28,19 @@ func main() {
     }
 
     for key := range deviceConfig {
-        if deviceConfig[key]["type"] == "sensor" {
-            sensors[key] = NewTuyaSensor(deviceConfig[key])
-        } else {
-            devices[key] = NewDevice(deviceConfig[key])
+        switch deviceConfig[key]["type"] {
+            case "sensor":
+                devices[key] = NewSensor(deviceConfig[key])
+            case "light":
+                devices[key] = NewLight(deviceConfig[key])
+            default:
+                log.Println("Skipping device of unknown type '" + deviceConfig[key]["type"] + "'")
         }
     }
 
     channel := make(chan SwitchRequest, 10)
 
-    go eventLoop(devices, sensors, channel, "192.168.178.48")
+    go eventLoop(devices, channel, "192.168.178.48")
 
     assets := http.FileServer(http.Dir("assets"))
     http.Handle("/assets/", http.StripPrefix("/assets/", assets))
@@ -50,12 +51,14 @@ func main() {
     log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-func eventLoop(devices map[string]*Device, sensors map[string]*TuyaSensor, channel chan SwitchRequest, mqttServer string) {
+func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, mqttServer string) {
     hostname, _ := os.Hostname()
     mqtt := initMqtt(mqttServer, "goserver-" + hostname)
 
-    for name, _ := range sensors {
-        mqtt.Subscribe(sensors[name].MqttTopic, 0, TuyaSensorMessageHandler(channel, sensors[name]))
+    for name, _ := range devices {
+        if devices[name].getType() == "sensor" {
+            mqtt.Subscribe(devices[name].getMqttTopic(), 0, SensorMessageHandler(channel, devices[name]))
+        }
     }
 
     for {
@@ -63,14 +66,12 @@ func eventLoop(devices map[string]*Device, sensors map[string]*TuyaSensor, chann
 
         for ; len(channel) > 0 ; {
             request := <-channel
-//            log.Println(request)
             if _, ok := devices[request.Device]; ok {
-                request.Value = int(math.Min(float64(request.Value), float64(devices[request.Device].Max)));
-                request.Value = int(math.Max(float64(request.Value), float64(devices[request.Device].Min)));
-                log.Println("Dimming " + request.Device + " to " + strconv.Itoa(request.Value))
+                request.Value = int(math.Min(float64(request.Value), float64(devices[request.Device].getMax())));
+                request.Value = int(math.Max(float64(request.Value), float64(devices[request.Device].getMin())));
 
-                devices[request.Device].Target = request.Value
-                diff := int(math.Abs(devices[request.Device].Current - float64(request.Value)))
+                devices[request.Device].setTarget(request.Value)
+                diff := int(math.Abs(devices[request.Device].getCurrent() - float64(request.Value)))
                 var step float64
                 cycles := request.Duration * 1000/cycleLength
                 if request.Duration == 0 {
@@ -79,43 +80,27 @@ func eventLoop(devices map[string]*Device, sensors map[string]*TuyaSensor, chann
                     step = float64(diff) / float64(cycles)
                 }
 
-//                log.Printf("steps per cycle = %f (%d steps / %d cycles)", step, diff, cycles)
+                log.Printf("Dimming %d steps in %d seconds (%f steps per cycle)", diff, request.Duration, step)
+                devices[request.Device].setStep(step)
 
-                log.Printf("Dimming %d steps in %d seconds = %f steps per cycle", diff, request.Duration, step)
-                devices[request.Device].Step  = step
-            } else if _, ok := sensors[request.Device]; ok {
-                sensors[request.Device].Value = request.Value
             } else {
                 log.Println("Unknown device [" + request.Device + "]")
             }
         }
 
         for name, _ := range devices {
-            if value, ok := devices[name].UpdateValue(); ok {
-                devices[name].Current = value
-                tt := time.Now()
-                if int(math.Round(value)) != devices[name].LastSent {
-                    devices[name].LastChanged = &tt
-                    devices[name].LastSent = int(math.Round(value))
-//                    log.Printf("Setting %s to %f", int(math.Round(value)))
-                    mqtt.Publish(devices[name].MqttTopic, 0, false, strconv.Itoa(int(math.Round(value))))
-                }
+            if ok := devices[name].UpdateValue(); ok {
+                devices[name].PublishValue(mqtt)
             }
         }
 
-        for name, _ := range sensors {
-            if sensors[name].Active {
-                if (sensors[name].LastChanged.Local().Add(time.Second * time.Duration(sensors[name].Timeout))).Before(time.Now()) {
-                    log.Println("Timeout")
-                    sensors[name].Active = false
-
-                    var request SwitchRequest
-                    request.Device   = sensors[name].TargetDevice
-                    request.Value    = 0
-                    request.Duration = sensors[name].TargetOffDuration
+        for name, _ := range devices {
+            if devices[name].getType() == "sensor" {
+                request, ok := devices[name].getTimeoutRequest()
+                if ok {
                     channel <- request
-
                 }
+
             }
         }
 
@@ -156,14 +141,14 @@ func ReceiveRequest(channel chan SwitchRequest) http.HandlerFunc {
     }
 }
 
-func ShowStatus(devices *map[string]*Device) http.HandlerFunc {
+func ShowStatus(devices *map[string]DeviceInterface) http.HandlerFunc {
     return func(output http.ResponseWriter, request *http.Request) {
         jsonDevices, _ := json.Marshal(devices)
         fmt.Fprintf(output, string(jsonDevices))
     }
 }
 
-func ShowDashboard(devices map[string]*Device, channel chan SwitchRequest) http.HandlerFunc {
+func ShowDashboard(devices map[string]DeviceInterface, channel chan SwitchRequest) http.HandlerFunc {
     return func(output http.ResponseWriter, request *http.Request) {
         if request.Method == "POST" {
             err := request.ParseForm()
@@ -174,15 +159,15 @@ func ShowDashboard(devices map[string]*Device, channel chan SwitchRequest) http.
                 target := request.FormValue("target")
                 switch target {
                     case "on":
-                        sr.Value = devices[sr.Device].Max
+                        sr.Value = devices[sr.Device].getMax()
                     case "off":
-                        sr.Value = devices[sr.Device].Min
+                        sr.Value = devices[sr.Device].getMin()
                     case "+":
-                        sr.Value = int(devices[sr.Device].Current) + 10
+                        sr.Value = int(devices[sr.Device].getCurrent()) + 10
                     case "-":
-                        sr.Value = int(devices[sr.Device].Current) - 10
+                        sr.Value = int(devices[sr.Device].getCurrent()) - 10
                 }
-                devices[sr.Device].Target = sr.Value
+                devices[sr.Device].setTarget(sr.Value)
                 channel <-sr
             }
         }
