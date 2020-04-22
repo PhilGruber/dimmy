@@ -136,11 +136,12 @@ func NewLight(config map[string]string) *Light {
     return &d
 }
 
-func (l Light) PublishValue(mqtt mqtt.Client) {
+func (l *Light) PublishValue(mqtt mqtt.Client) {
     tt := time.Now()
-    if int(math.Round(l.Current)) != l.LastSent {
+    newVal := int(math.Round(l.Current))
+    if newVal != l.LastSent {
         l.LastChanged = &tt
-        l.LastSent = int(math.Round(l.Current))
+        l.LastSent = newVal
         mqtt.Publish(l.MqttTopic, 0, false, strconv.Itoa(int(math.Round(l.Current))))
     }
 }
