@@ -67,7 +67,7 @@ type SensorMessageWrapper struct {
     TuyaReceived SensorMessage
 }
 
-func (s Sensor) getTimeoutRequest() (SwitchRequest, bool) {
+func (s *Sensor) getTimeoutRequest() (SwitchRequest, bool) {
     var request SwitchRequest
 
     if !s.Active {
