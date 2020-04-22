@@ -93,9 +93,8 @@ func (s Sensor) getTimeoutRequest() (SwitchRequest, bool) {
 
 }
 
-func (s Sensor) getMotionRequest(cmd string) SwitchRequest {
+func (s Sensor) generateMotionRequest(cmd string) SwitchRequest {
     var request SwitchRequest
-    log.Println("Received Command " + cmd)
     tt := time.Now()
     s.LastChanged = &tt
     s.Active = true
@@ -109,8 +108,6 @@ func SensorMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mq
     return func (client mqtt.Client, mqttMessage mqtt.Message) {
 
         payload := mqttMessage.Payload()
-
-        log.Println("[" + sensor.getMqttTopic() + "] Payload: " + string(payload[:]))
 
         if sensor.getCurrent() == 0 {
             return
@@ -126,7 +123,8 @@ func SensorMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mq
         message := data.TuyaReceived
 
         if message.Cmnd == 5 || message.Cmnd == 2 {
-            request := sensor.getMotionRequest(message.CmndData)
+            log.Printf("Motion detected (%d)", message.Cmnd)
+            request := sensor.generateMotionRequest(message.CmndData)
             channel <- request
         }
 

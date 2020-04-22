@@ -12,7 +12,7 @@ type DeviceInterface interface {
     UpdateValue() bool
     PublishValue(mqtt.Client)
     getTimeoutRequest() (SwitchRequest, bool)
-    getMotionRequest(string) SwitchRequest
+    generateMotionRequest(string) SwitchRequest
 
     getMqttTopic() string
     getType() string
@@ -77,7 +77,7 @@ func (d Device) getTimeoutRequest() (SwitchRequest, bool) {
     return r, false
 }
 
-func (d Device) getMotionRequest(cmd string) SwitchRequest {
+func (d Device) generateMotionRequest(cmd string) SwitchRequest {
     var r SwitchRequest
     return r
 }
