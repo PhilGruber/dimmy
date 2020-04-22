@@ -11,11 +11,7 @@ import (
 
 type Sensor struct {
     Device
-    /*
-    LastChanged *time.Time
-    Value int
-    MqttTopic string `json:"-"`
-    */
+
     TargetDevice string
     TargetOnDuration int
     TargetOffDuration int
@@ -93,7 +89,7 @@ func (s Sensor) getTimeoutRequest() (SwitchRequest, bool) {
 
 }
 
-func (s Sensor) generateMotionRequest(cmd string) SwitchRequest {
+func (s *Sensor) generateMotionRequest(cmd string) SwitchRequest {
     var request SwitchRequest
     tt := time.Now()
     s.LastChanged = &tt
