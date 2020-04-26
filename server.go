@@ -28,13 +28,15 @@ func main() {
     }
 
     for key := range deviceConfig {
-        switch deviceConfig[key]["type"] {
-            case "sensor":
-                devices[key] = NewSensor(deviceConfig[key])
-            case "light":
-                devices[key] = NewLight(deviceConfig[key])
-            default:
-                log.Println("Skipping device of unknown type '" + deviceConfig[key]["type"] + "'")
+        if key != "__global" {
+            switch deviceConfig[key]["type"] {
+                case "sensor":
+                    devices[key] = NewSensor(deviceConfig[key])
+                case "light":
+                    devices[key] = NewLight(deviceConfig[key])
+                default:
+                    log.Println("Skipping device of unknown type '" + deviceConfig[key]["type"] + "'")
+            }
         }
     }
 
@@ -190,7 +192,8 @@ func loadConfig(filename string) (map[string]map[string]string, error) {
     reader := bufio.NewReader(file)
 
     var line string
-    var deviceName string
+    deviceName := "__global"
+    config[deviceName] = map[string]string{}
     for {
         line, err = reader.ReadString('\n')
         line = strings.TrimSpace(line)
