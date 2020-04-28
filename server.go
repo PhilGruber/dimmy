@@ -59,6 +59,7 @@ func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, m
 
     for name, _ := range devices {
         if devices[name].getType() == "sensor" {
+            log.Println("Subscribing to " + devices[name].getMqttTopic())
             mqtt.Subscribe(devices[name].getMqttTopic(), 0, SensorMessageHandler(channel, devices[name]))
         }
     }

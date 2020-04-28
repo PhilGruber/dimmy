@@ -105,6 +105,8 @@ func SensorMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mq
 
         payload := mqttMessage.Payload()
 
+        log.Println("Sensor Message received")
+
         if sensor.getCurrent() == 0 {
             return
         }
