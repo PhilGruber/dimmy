@@ -22,7 +22,7 @@ func main() {
 
     devices := make(map[string]DeviceInterface)
 
-    deviceConfig, err := loadConfig("devices.conf")
+    deviceConfig, err := loadConfig("dimmyd.conf")
     if err != nil {
         log.Fatal(err)
     }
