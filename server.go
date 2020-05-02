@@ -12,6 +12,7 @@ import (
     "strings"
     "html/template"
     "math"
+    "errors"
 
     mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -22,7 +23,7 @@ func main() {
 
     devices := make(map[string]DeviceInterface)
 
-    deviceConfig, err := loadConfig("dimmyd.conf")
+    deviceConfig, err := loadConfig()
     if err != nil {
         log.Fatal(err)
     }
@@ -180,8 +181,19 @@ func ShowDashboard(devices map[string]DeviceInterface, channel chan SwitchReques
     }
 }
 
-func loadConfig(filename string) (map[string]map[string]string, error) {
+func loadConfig() (map[string]map[string]string, error) {
     config := map[string]map[string]string{}
+
+    var filename string
+
+    if _, err := os.Stat("/etc/dimmyd.conf"); err == nil {
+        filename = "/etc/dimmyd.conf"
+    } else if _, err := os.Stat("dimmyd.conf"); err == nil {
+        filename = "dimmyd.conf"
+    } else {
+        return nil, errors.New("Could not find config file /etc/dimmyd.conf")
+    }
+
 
     file, err := os.Open(filename)
     defer file.Close()

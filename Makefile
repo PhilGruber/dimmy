@@ -13,3 +13,4 @@ jquery:
 install:
 	cp dimmy /usr/bin
 	cp dimmyd /usr/bin
+	test -f /etc/dimmyd.conf || cp dimmyd.conf.example /etc/dimmyd.conf
