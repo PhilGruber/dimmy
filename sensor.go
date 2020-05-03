@@ -11,6 +11,7 @@ import (
 
 type Sensor struct {
     Device
+    Dimmable
 
     TargetDevice string
     TargetOnDuration int
