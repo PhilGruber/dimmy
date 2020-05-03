@@ -23,7 +23,7 @@ func main() {
 
     devices := make(map[string]DeviceInterface)
 
-    deviceConfig, err := loadConfig()
+    config, deviceConfig, err := loadConfig()
     if err != nil {
         log.Fatal(err)
     }
@@ -41,9 +41,11 @@ func main() {
         }
     }
 
+
+
     channel := make(chan SwitchRequest, 10)
 
-    go eventLoop(devices, channel, "192.168.178.48")
+    go eventLoop(devices, channel, config["mqtt_server"])
 
     assets := http.FileServer(http.Dir("assets"))
     http.Handle("/assets/", http.StripPrefix("/assets/", assets))
@@ -51,7 +53,7 @@ func main() {
     http.Handle("/api/status", http.HandlerFunc(ShowStatus(&devices)))
     http.Handle("/",  http.HandlerFunc(ShowDashboard(devices, channel)))
 
-    log.Fatal(http.ListenAndServe(":8080", nil))
+    log.Fatal(http.ListenAndServe(":" + config["port"], nil))
 }
 
 func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, mqttServer string) {
@@ -181,7 +183,7 @@ func ShowDashboard(devices map[string]DeviceInterface, channel chan SwitchReques
     }
 }
 
-func loadConfig() (map[string]map[string]string, error) {
+func loadConfig() (map[string]string, map[string]map[string]string, error) {
     config := map[string]map[string]string{}
 
     var filename string
@@ -191,7 +193,7 @@ func loadConfig() (map[string]map[string]string, error) {
     } else if _, err := os.Stat("dimmyd.conf"); err == nil {
         filename = "dimmyd.conf"
     } else {
-        return nil, errors.New("Could not find config file /etc/dimmyd.conf")
+        return nil, nil, errors.New("Could not find config file /etc/dimmyd.conf")
     }
 
 
@@ -199,7 +201,7 @@ func loadConfig() (map[string]map[string]string, error) {
     defer file.Close()
 
     if err != nil {
-        return nil,err
+        return nil, nil, err
     }
 
     reader := bufio.NewReader(file)
@@ -235,7 +237,15 @@ func loadConfig() (map[string]map[string]string, error) {
         }
     }
 
-    return config, nil
+    if _, ok := config["__global"]["port"]; !ok {
+        config["__global"]["port"] = "80"
+    }
+
+    if _, ok := config["__global"]["mqtt_server"]; !ok {
+        config["__global"]["mqtt_server"] = "127.0.0.1"
+    }
+
+    return config["__global"], config, nil
 }
 
 func initMqtt(hostname string, clientId string) mqtt.Client {
