@@ -1,6 +1,7 @@
 package main
 
 import (
+    "time"
 )
 
 
@@ -10,6 +11,7 @@ type Dimmable struct {
     Step float64 `json:"-"`
     Min int `json:"-"`
     Max int `json:"-"`
+    LastSent int `json:"-"`
 }
 
 func (d Dimmable) getMin() int {
@@ -28,6 +30,22 @@ func (d *Dimmable) setStep(step float64) {
     d.Step = step
 }
 
+func (d Dimmable) getLastSent() int {
+    return d.LastSent
+}
+
+func (d *Dimmable) setLastSent(lastSent int) {
+    d.LastSent = lastSent
+}
+
+func (d Dimmable) getLastChanged() *time.Time {
+    return d.LastChanged
+}
+
+func (d *Dimmable) setLastChanged(lastSent *time.Time) {
+    d.LastChanged = lastSent
+}
+
 func (d Dimmable) getTarget() int {
     return d.Target
 }
@@ -36,20 +54,22 @@ func (d *Dimmable) setTarget(target int) {
     d.Target = target
 }
 
-func (d *Dimmable) UpdateValue() bool {
-    if d.Current != float64(d.Target) {
-        if (d.Current > float64(d.Target)) {
-            d.Current -= d.Step
-            if (d.Current <= float64(d.Target)) {
-                d.Current = float64(d.Target)
+func (d *Dimmable) UpdateValue() (float64, bool) {
+    current := d.getCurrent()
+    if current != float64(d.Target) {
+        if (current > float64(d.Target)) {
+            current -= d.Step
+            if (current <= float64(d.Target)) {
+                current = float64(d.Target)
             }
         } else {
-            d.Current += d.Step
-            if (d.Current >= float64(d.Target)) {
-                d.Current = float64(d.Target)
+            current += d.Step
+            if (current >= float64(d.Target)) {
+                current = float64(d.Target)
             }
         }
-        return true
+        d.setCurrent(current)
+        return current, true
     }
-    return false
+    return 0, false
 }

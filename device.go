@@ -7,8 +7,7 @@ import (
 )
 
 type DeviceInterface interface {
-    UpdateValue() bool
-    PublishValue(mqtt.Client)
+    UpdateValue() (float64, bool)
     getTimeoutRequest() (SwitchRequest, bool)
     generateMotionRequest(string) SwitchRequest
 
@@ -17,10 +16,15 @@ type DeviceInterface interface {
     getMax() int
     getMin() int
     getCurrent() float64
+    setCurrent(float64)
     getStep() float64
     setStep(float64)
     getTarget() int
     setTarget(int)
+    getLastSent() int
+    setLastSent(int)
+    getLastChanged() *time.Time
+    setLastChanged(*time.Time)
 }
 
 type Device struct {
@@ -32,6 +36,10 @@ type Device struct {
 
 func (d Device) getCurrent() float64 {
     return d.Current
+}
+
+func (d *Device) setCurrent(current float64) {
+    d.Current = current
 }
 
 func (d Device) getType() string {

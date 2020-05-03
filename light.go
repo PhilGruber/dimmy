@@ -11,7 +11,6 @@ import (
 type Light struct {
     Device
     Dimmable
-    LastSent int `json:"-"`
 }
 
 func makeLight(config map[string]string) Light {
