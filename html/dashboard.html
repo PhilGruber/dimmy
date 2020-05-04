@@ -27,7 +27,8 @@
         </script>
     </head>
     <body>
-        {{range $name, $device := .}}
+        {{ range $name, $device := . }}
+            {{ if not $device.Hidden }}
             <div class='device'>
                 <div class='title'>
                     {{ $name }}
@@ -35,13 +36,12 @@
                 <div class='buttons'>
                     <a onClick="switchDevice('{{ $name }}', 0);">off</a>
                     <a onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) - 10);">-</a>
-                    <span class='value' id='value_{{ $name }}'>
-                        {{ $device.Current }}%
-                    </span>
+                    <span class='value' id='value_{{ $name }}'></span>
                     <a onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) + 10);">+</a>
                     <a onClick="switchDevice('{{ $name }}', 100);">on</a>
                 </div>
             </div>
-        {{end}}
+            {{ end }}
+        {{ end }}
     </body>
 </html>

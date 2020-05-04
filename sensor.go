@@ -46,6 +46,11 @@ func MakeSensor(config map[string]string) Sensor {
     }
     s.Timeout, _ = strconv.Atoi(val)
 
+    s.Hidden = false
+    if val, ok := config["hidden"]; ok {
+        s.Hidden = (val == "true")
+    }
+
     s.Active = false
     s.Current = 0
     s.Target = 0

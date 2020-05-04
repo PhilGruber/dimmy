@@ -26,8 +26,15 @@ func makeLight(config map[string]string) Light {
     if !ok {
         max = "100"
     }
+
     d.Min, _ = strconv.Atoi(min)
     d.Max, _ = strconv.Atoi(max)
+
+    d.Hidden = false
+    if val, ok := config["hidden"]; ok {
+        d.Hidden = (val == "true")
+    }
+
     tt := time.Now()
     d.LastChanged = &tt
     d.Type = "light"
