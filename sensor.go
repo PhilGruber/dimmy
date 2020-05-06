@@ -111,8 +111,6 @@ func SensorMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mq
 
         payload := mqttMessage.Payload()
 
-        log.Println("Sensor Message received")
-
         if sensor.getCurrent() == 0 {
             return
         }
@@ -120,7 +118,6 @@ func SensorMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mq
         var data SensorMessageWrapper
         err := json.Unmarshal(payload, &data)
         if err != nil {
-            log.Println("Error: ", err)
             return
         }
 
