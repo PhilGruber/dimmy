@@ -48,11 +48,11 @@ func main() {
 
     go eventLoop(devices, channel, config["mqtt_server"])
 
-    assets := http.FileServer(http.Dir("assets"))
+    assets := http.FileServer(http.Dir(config["webroot"] + "/assets"))
     http.Handle("/assets/", http.StripPrefix("/assets/", assets))
     http.Handle("/api/switch", http.HandlerFunc(ReceiveRequest(channel)))
     http.Handle("/api/status", http.HandlerFunc(ShowStatus(&devices)))
-    http.Handle("/",  http.HandlerFunc(ShowDashboard(devices, channel)))
+    http.Handle("/",  http.HandlerFunc(ShowDashboard(devices, channel, config["webroot"])))
 
     log.Fatal(http.ListenAndServe(":" + config["port"], nil))
 }
@@ -162,7 +162,7 @@ func ShowStatus(devices *map[string]DeviceInterface) http.HandlerFunc {
     }
 }
 
-func ShowDashboard(devices map[string]DeviceInterface, channel chan SwitchRequest) http.HandlerFunc {
+func ShowDashboard(devices map[string]DeviceInterface, channel chan SwitchRequest, webroot string) http.HandlerFunc {
     return func(output http.ResponseWriter, request *http.Request) {
         if request.Method == "POST" {
             err := request.ParseForm()
@@ -186,7 +186,8 @@ func ShowDashboard(devices map[string]DeviceInterface, channel chan SwitchReques
             }
         }
 
-        templ, _ := template.ParseFiles("html/dashboard.html")
+        log.Println(webroot + "/dashboard.html")
+        templ, _ := template.ParseFiles(webroot + "/dashboard.html")
         templ.Execute(output, devices)
     }
 }
@@ -203,7 +204,6 @@ func loadConfig() (map[string]string, map[string]map[string]string, error) {
     } else {
         return nil, nil, errors.New("Could not find config file /etc/dimmyd.conf")
     }
-
 
     file, err := os.Open(filename)
     defer file.Close()
@@ -251,6 +251,10 @@ func loadConfig() (map[string]string, map[string]map[string]string, error) {
 
     if _, ok := config["__global"]["mqtt_server"]; !ok {
         config["__global"]["mqtt_server"] = "127.0.0.1"
+    }
+
+    if _, ok := config["__global"]["webroot"]; !ok {
+        config["__global"]["webroot"] = "/usr/share/dimmy"
     }
 
     return config["__global"], config, nil
