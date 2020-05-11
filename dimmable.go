@@ -2,6 +2,8 @@ package main
 
 import (
     "time"
+    "math"
+    "log"
 )
 
 
@@ -52,6 +54,25 @@ func (d Dimmable) getTarget() int {
 
 func (d *Dimmable) setTarget(target int) {
     d.Target = target
+}
+
+func (d *Dimmable) processRequest(request SwitchRequest) {
+    request.Value = int(math.Min(float64(request.Value), float64(d.getMax())));
+    request.Value = int(math.Max(float64(request.Value), float64(d.getMin())));
+
+    d.setTarget(request.Value)
+    diff := int(math.Abs(d.getCurrent() - float64(request.Value)))
+    var step float64
+    cycles := request.Duration * 1000/cycleLength
+    if request.Duration == 0 {
+        step = float64(diff)
+    } else {
+        step = float64(diff) / float64(cycles)
+    }
+
+    log.Printf("Dimming %s from %.f to %d: %d steps in %d seconds (%.1f steps per cycle)", request.Device, d.getCurrent(), request.Value, diff, request.Duration, step)
+    d.setStep(step)
+
 }
 
 func (d *Dimmable) UpdateValue() (float64, bool) {

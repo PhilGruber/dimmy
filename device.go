@@ -25,6 +25,7 @@ type DeviceInterface interface {
     setLastSent(int)
     getLastChanged() *time.Time
     setLastChanged(*time.Time)
+    processRequest(SwitchRequest)
 }
 
 type Device struct {

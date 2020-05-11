@@ -74,21 +74,8 @@ func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, m
         for ; len(channel) > 0 ; {
             request := <-channel
             if _, ok := devices[request.Device]; ok {
-                request.Value = int(math.Min(float64(request.Value), float64(devices[request.Device].getMax())));
-                request.Value = int(math.Max(float64(request.Value), float64(devices[request.Device].getMin())));
 
-                devices[request.Device].setTarget(request.Value)
-                diff := int(math.Abs(devices[request.Device].getCurrent() - float64(request.Value)))
-                var step float64
-                cycles := request.Duration * 1000/cycleLength
-                if request.Duration == 0 {
-                    step = float64(diff)
-                } else {
-                    step = float64(diff) / float64(cycles)
-                }
-
-                log.Printf("Dimming %s from %.f to %d: %d steps in %d seconds (%.1f steps per cycle)", request.Device, devices[request.Device].getCurrent(), request.Value, diff, request.Duration, step)
-                devices[request.Device].setStep(step)
+                devices[request.Device].processRequest(request);
 
             } else {
                 log.Println("Unknown device [" + request.Device + "]")
