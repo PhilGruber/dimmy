@@ -106,6 +106,9 @@ func (s *Sensor) generateMotionRequest(cmd string) SwitchRequest {
     return request
 }
 
+func (s *Sensor) PublishValue(mqtt mqtt.Client) {
+}
+
 func SensorMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
     return func (client mqtt.Client, mqttMessage mqtt.Message) {
 

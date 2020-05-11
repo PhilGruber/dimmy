@@ -11,9 +11,7 @@ import (
     "os"
     "strings"
     "html/template"
-    "math"
     "errors"
-    "strconv"
 
     mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -83,15 +81,8 @@ func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, m
         }
 
         for name, _ := range devices {
-            if currentValue , ok := devices[name].UpdateValue(); ok {
-                newVal := int(math.Round(currentValue))
-                devices[name].setCurrent(float64(newVal))
-                tt := time.Now()
-                if newVal != devices[name].getLastSent() {
-                    devices[name].setLastChanged(&tt)
-                    devices[name].setLastSent(newVal)
-                    mqtt.Publish(devices[name].getMqttTopic(), 0, false, strconv.Itoa(newVal))
-                }
+            if _, ok := devices[name].UpdateValue(); ok {
+                devices[name].PublishValue(mqtt)
             }
         }
 
@@ -168,12 +159,10 @@ func ShowDashboard(devices map[string]DeviceInterface, channel chan SwitchReques
                     case "-":
                         sr.Value = int(devices[sr.Device].getCurrent()) - 10
                 }
-                devices[sr.Device].setTarget(sr.Value)
                 channel <-sr
             }
         }
 
-        log.Println(webroot + "/dashboard.html")
         templ, _ := template.ParseFiles(webroot + "/dashboard.html")
         templ.Execute(output, devices)
     }

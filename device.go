@@ -17,15 +17,9 @@ type DeviceInterface interface {
     getMin() int
     getCurrent() float64
     setCurrent(float64)
-    getStep() float64
-    setStep(float64)
-    getTarget() int
-    setTarget(int)
-    getLastSent() int
-    setLastSent(int)
-    getLastChanged() *time.Time
-    setLastChanged(*time.Time)
     processRequest(SwitchRequest)
+
+    PublishValue(mqtt.Client)
 }
 
 type Device struct {
@@ -62,6 +56,6 @@ func (d Device) generateMotionRequest(cmd string) SwitchRequest {
     return r
 }
 
-func (d Device) PublishValue(mqtt mqtt.Client) {
+func (d *Device) PublishValue(mqtt mqtt.Client) {
 }
 
