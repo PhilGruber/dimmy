@@ -10,7 +10,11 @@
             setInterval(function () {
                 $.get('/api/status', null, function(data, status, jqXHR) {
                      for (name in data) {
-                        $("#value_" + name).text(Math.round(data[name].value) + "%");
+                        if (data[name].Type == 'plug') {
+                            $("#value_" + name).text(data[name].value ? "on" : "off");
+                        } else {
+                            $("#value_" + name).text(Math.round(data[name].value) + "%");
+                        }
                     }
                 }, "json");
             }, 1000);
@@ -34,11 +38,18 @@
                     {{ $name }}
                 </div>
                 <div class='buttons'>
-                    <a onClick="switchDevice('{{ $name }}', 0);">off</a>
-                    <a onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) - 10);">-</a>
+
+                    <a class='left' onClick="switchDevice('{{ $name }}', {{ $device.Min }});">off</a>
+                    {{ if ne $device.Type "plug" }}
+                        <a class='left' onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) - 10);">-</a>
+                    {{ end }}
+
                     <span class='value' id='value_{{ $name }}'></span>
-                    <a onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) + 10);">+</a>
-                    <a onClick="switchDevice('{{ $name }}', 100);">on</a>
+
+                    <a class='right' onClick="switchDevice('{{ $name }}', {{ $device.Max }});">on</a>
+                    {{ if ne $device.Type "plug" }}
+                        <a class='right' onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) + 10);">+</a>
+                    {{ end }}
                 </div>
             </div>
             {{ end }}

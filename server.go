@@ -34,13 +34,13 @@ func main() {
                     devices[key] = NewSensor(deviceConfig[key])
                 case "light":
                     devices[key] = NewLight(deviceConfig[key])
+                case "plug":
+                    devices[key] = NewPlug(deviceConfig[key])
                 default:
                     log.Println("Skipping device of unknown type '" + deviceConfig[key]["type"] + "'")
             }
         }
     }
-
-
 
     channel := make(chan SwitchRequest, 10)
 
