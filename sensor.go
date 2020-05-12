@@ -10,7 +10,6 @@ import (
 )
 
 type Sensor struct {
-    Device
     Dimmable
 
     TargetDevice string
@@ -21,7 +20,7 @@ type Sensor struct {
 }
 
 func MakeSensor(config map[string]string) Sensor {
-    s := Sensor{};
+    s := Sensor{}
     s.MqttTopic = config["topic"]
     s.TargetDevice = config["target"]
 
