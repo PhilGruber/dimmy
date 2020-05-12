@@ -41,6 +41,7 @@ func NewPlug(config map[string]string) *Plug {
 
 func (p *Plug) PublishValue(mqtt mqtt.Client) {
     mqtt.Publish(p.MqttTopic, 0, false, strconv.Itoa(int(math.Round(p.Current))))
+    p.needsSending = false
 }
 
 func (p *Plug) UpdateValue() (float64, bool) {
