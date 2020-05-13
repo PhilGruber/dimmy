@@ -36,9 +36,10 @@ body {
 }
 
 .buttons .value {
-    width: 100px;
+    width: 140px;
     display: inline-block;
     text-align: center;
+    word-wrap: no-wrap;
     color: #666;
     height: 38px;
 }
@@ -49,4 +50,8 @@ body {
 
 .left {
     float: left;
+}
+
+.hidden {
+    visibility: none;
 }

@@ -12,6 +12,16 @@
                      for (name in data) {
                         if (data[name].Type == 'plug') {
                             $("#value_" + name).text(data[name].value ? "on" : "off");
+                        } else if (data[name].Type == 'thermostat') {
+                            $("#value_" + name).text(Math.round(data[name].value*10)/10 + "");
+                            if (data[name].TargetTemperature == 0) {
+                                $("#target_" + name).addClass('hidden');
+                                $("#separator" + name).addClass('hidden');
+                            } else {
+                                $("#target_" + name).removeClass('hidden');
+                                $("#separator" + name).removeClass('hidden');
+                            }
+                            $("#target_" + name).text(Math.round(data[name].TargetTemperature));
                         } else {
                             $("#value_" + name).text(Math.round(data[name].value) + "%");
                         }
@@ -28,6 +38,13 @@
             };
             $.post('/api/switch', JSON.stringify(data), null, 'json');
         }
+
+        function thermostatOffset(current, target) {
+            if (target == 0) {
+                return Math.round(current);
+            }
+            return target;
+        }
         </script>
     </head>
     <body>
@@ -39,17 +56,28 @@
                 </div>
                 <div class='buttons'>
 
-                    <a class='left' onClick="switchDevice('{{ $name }}', {{ $device.Min }});">off</a>
-                    {{ if ne $device.Type "plug" }}
-                        <a class='left' onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) - 10);">-</a>
+                    {{ if eq $device.Type "plug" }}
+                        <a class='left' onClick="switchDevice('{{ $name }}', {{ $device.Min }});">off</a>
+                        <span class='value' id='value_{{ $name }}'></span>
+                        <a class='right' onClick="switchDevice('{{ $name }}', {{ $device.Max }});">on</a>
                     {{ end }}
 
-                    <span class='value' id='value_{{ $name }}'></span>
-
-                    <a class='right' onClick="switchDevice('{{ $name }}', {{ $device.Max }});">on</a>
-                    {{ if ne $device.Type "plug" }}
+                    {{ if (or (eq $device.Type "light") (eq $device.Type "sensor")) }}
+                        <a class='left' onClick="switchDevice('{{ $name }}', {{ $device.Min }});">off</a>
+                        <a class='left' onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) - 10);">-</a>
+                        <span class='value' id='value_{{ $name }}'></span>
+                        <a class='right' onClick="switchDevice('{{ $name }}', {{ $device.Max }});">on</a>
                         <a class='right' onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) + 10);">+</a>
                     {{ end }}
+
+                    {{ if eq $device.Type "thermostat" }}
+                        <a class='left' onClick="switchDevice('{{ $name }}', parseInt($('#target_{{$name}}').text()) - 1);">-</a>
+                        <span class='value'>
+                            <span id='value_{{ $name }}'></span><span id="separator_{{ $name }}">/</span><span id='target_{{ $name }}'></span>
+                        </span>
+                        <a class='right' onClick="switchDevice('{{ $name }}', parseInt($('#target_{{$name}}').text()) + 1);">+</a>
+                    {{ end }}
+
                 </div>
             </div>
             {{ end }}

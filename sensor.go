@@ -94,7 +94,7 @@ func (s *Sensor) getTimeoutRequest() (SwitchRequest, bool) {
 
 }
 
-func (s *Sensor) generateMotionRequest(cmd string) SwitchRequest {
+func (s *Sensor) generateRequest(cmd string) (SwitchRequest, bool) {
     var request SwitchRequest
     tt := time.Now()
     s.LastChanged = &tt
@@ -102,7 +102,7 @@ func (s *Sensor) generateMotionRequest(cmd string) SwitchRequest {
     request.Device   = s.TargetDevice
     request.Value    = int(math.Round(s.Current))
     request.Duration = s.TargetOnDuration
-    return request
+    return request, true
 }
 
 func (s *Sensor) PublishValue(mqtt mqtt.Client) {
@@ -120,6 +120,7 @@ func SensorMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mq
         var data SensorMessageWrapper
         err := json.Unmarshal(payload, &data)
         if err != nil {
+            log.Println("Error: " + err.Error())
             return
         }
 
@@ -127,8 +128,10 @@ func SensorMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mq
 
         if message.Cmnd == 5 || message.Cmnd == 2 {
             log.Printf("Motion detected (%d)", message.Cmnd)
-            request := sensor.generateMotionRequest(message.CmndData)
-            channel <- request
+            request, ok := sensor.generateRequest(message.CmndData)
+            if (ok) {
+                channel <- request
+            }
         }
 
     }

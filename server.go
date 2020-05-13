@@ -36,6 +36,8 @@ func main() {
                     devices[key] = NewLight(deviceConfig[key])
                 case "plug":
                     devices[key] = NewPlug(deviceConfig[key])
+                case "thermostat":
+                    devices[key] = NewThermostat(deviceConfig[key])
                 default:
                     log.Println("Skipping device of unknown type '" + deviceConfig[key]["type"] + "'")
             }
@@ -63,6 +65,10 @@ func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, m
         if devices[name].getType() == "sensor" {
             log.Println("Subscribing to " + devices[name].getMqttTopic())
             mqtt.Subscribe(devices[name].getMqttTopic(), 0, SensorMessageHandler(channel, devices[name]))
+        }
+        if devices[name].getType() == "thermostat" {
+            log.Println("Subscribing to " + devices[name].getMqttTopic())
+            mqtt.Subscribe(devices[name].getMqttTopic(), 0, ThermostatMessageHandler(channel, devices[name]))
         }
     }
 
