@@ -5,7 +5,7 @@ client: client.go api.go
 	go build -o dimmy client.go api.go
 
 server: jquery server.go device.go api.go html/*
-	go build -o dimmyd server.go device.go api.go sensor.go dimmable.go light.go plug.go thermostat.go
+	go build -o dimmyd server.go device.go api.go sensor.go dimmable.go light.go plug.go thermostat.go switch.go
 
 clean:
 	rm dimmy dimmyd html/assets/jquery.js

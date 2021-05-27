@@ -32,6 +32,8 @@ func main() {
             switch deviceConfig[key]["type"] {
                 case "sensor":
                     devices[key] = NewSensor(deviceConfig[key])
+                case "switch":
+                    devices[key] = NewSwitch(deviceConfig[key])
                 case "light":
                     devices[key] = NewLight(deviceConfig[key])
                 case "plug":
@@ -65,6 +67,10 @@ func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, m
         if devices[name].getType() == "sensor" {
             log.Println("Subscribing to " + devices[name].getMqttTopic())
             mqtt.Subscribe(devices[name].getMqttTopic(), 0, SensorMessageHandler(channel, devices[name]))
+        }
+        if devices[name].getType() == "switch" {
+            log.Println("Subscribing to " + devices[name].getMqttTopic())
+            mqtt.Subscribe(devices[name].getMqttTopic(), 0, SwitchMessageHandler(channel, devices[name]))
         }
         if devices[name].getType() == "thermostat" {
             log.Println("Subscribing to " + devices[name].getMqttTopic())

@@ -1,8 +1,17 @@
-[Lamp1]
+[Livingroom]
+    type = light
     topic = cmnd/livingroom/lamp/dimmer
 
-[Lamp2]
-    topic = cmnd/livingroom/ceiling-light/dimmer
-
-[Lamp3]
+[Bathroom]
+    type = light
     topic = cmnd/bathroom/lamp/dimmer
+
+[MotionSensor-Livingroom]
+    type = sensor
+    hidden = true
+    topic = tele/motion/sensor-livingroom/RESULT
+    target = Livingroom
+    TargetOnDuration = 3
+    TargetOffDuration = 420
+    Timeout = 420
+
