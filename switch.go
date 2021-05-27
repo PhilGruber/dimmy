@@ -20,6 +20,11 @@ func makeSwitch(config map[string]string) Switch {
     s.MqttTopic = config["topic"]
     s.TargetDevice = config["target"]
     s.Type = "switch"
+
+    s.Hidden = false
+    if val, ok := config["hidden"]; ok {
+        s.Hidden = (val == "true")
+    }
     return s
 }
 
