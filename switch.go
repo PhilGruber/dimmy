@@ -21,10 +21,7 @@ func makeSwitch(config map[string]string) Switch {
     s.TargetDevice = config["target"]
     s.Type = "switch"
 
-    s.Hidden = false
-    if val, ok := config["hidden"]; ok {
-        s.Hidden = (val == "true")
-    }
+    s.Hidden = true
     return s
 }
 
