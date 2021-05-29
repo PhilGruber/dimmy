@@ -18,6 +18,7 @@ type DeviceInterface interface {
     getCurrent() float64
     setCurrent(float64)
     processRequest(SwitchRequest)
+    getMessageHandler(chan SwitchRequest, DeviceInterface) mqtt.MessageHandler
 
     PublishValue(mqtt.Client)
 }
@@ -59,3 +60,7 @@ func (d Device) generateRequest(cmd string) (SwitchRequest, bool) {
 func (d *Device) PublishValue(mqtt mqtt.Client) {
 }
 
+func (d *Device) getMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
+    return func (client mqtt.Client, mqttMessage mqtt.Message) {
+	}
+}

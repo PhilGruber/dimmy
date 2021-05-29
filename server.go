@@ -1,17 +1,17 @@
 package main
 
 import (
+    "bufio"
+    "encoding/json"
+    "errors"
+    "fmt"
+    "html/template"
+    "io/ioutil"
     "log"
     "net/http"
-    "fmt"
-    "encoding/json"
-    "io/ioutil"
-    "time"
-    "bufio"
     "os"
     "strings"
-    "html/template"
-    "errors"
+    "time"
 
     mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -32,6 +32,8 @@ func main() {
             switch deviceConfig[key]["type"] {
                 case "sensor":
                     devices[key] = NewSensor(deviceConfig[key])
+                case "zsensor":
+                    devices[key] = NewZSensor(deviceConfig[key])
                 case "switch":
                     devices[key] = NewSwitch(deviceConfig[key])
                 case "light":
@@ -61,21 +63,10 @@ func main() {
 
 func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, mqttServer string) {
     hostname, _ := os.Hostname()
-    mqtt := initMqtt(mqttServer, "goserver-" + hostname)
+    client := initMqtt(mqttServer, "goserver-" + hostname)
 
     for name, _ := range devices {
-        if devices[name].getType() == "sensor" {
-            log.Println("Subscribing to " + devices[name].getMqttTopic())
-            mqtt.Subscribe(devices[name].getMqttTopic(), 0, SensorMessageHandler(channel, devices[name]))
-        }
-        if devices[name].getType() == "switch" {
-            log.Println("Subscribing to " + devices[name].getMqttTopic())
-            mqtt.Subscribe(devices[name].getMqttTopic(), 0, SwitchMessageHandler(channel, devices[name]))
-        }
-        if devices[name].getType() == "thermostat" {
-            log.Println("Subscribing to " + devices[name].getMqttTopic())
-            mqtt.Subscribe(devices[name].getMqttTopic(), 0, ThermostatMessageHandler(channel, devices[name]))
-        }
+        client.Subscribe(devices[name].getMqttTopic(), 0, devices[name].getMessageHandler(channel, devices[name]))
     }
 
     for {
@@ -94,7 +85,7 @@ func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, m
 
         for name, _ := range devices {
             if _, ok := devices[name].UpdateValue(); ok {
-                devices[name].PublishValue(mqtt)
+                devices[name].PublishValue(client)
             }
         }
 
@@ -176,7 +167,11 @@ func ShowDashboard(devices map[string]DeviceInterface, channel chan SwitchReques
         }
 
         templ, _ := template.ParseFiles(webroot + "/dashboard.html")
-        templ.Execute(output, devices)
+        err := templ.Execute(output, devices)
+        if err != nil {
+            log.Println(err)
+            return
+        }
     }
 }
 
@@ -194,11 +189,11 @@ func loadConfig() (map[string]string, map[string]map[string]string, error) {
     }
 
     file, err := os.Open(filename)
-    defer file.Close()
 
     if err != nil {
         return nil, nil, err
     }
+    defer file.Close()
 
     reader := bufio.NewReader(file)
 

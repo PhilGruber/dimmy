@@ -1,8 +1,8 @@
 package main
 
 import (
-    "strconv"
     "log"
+    "strconv"
 
     mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -83,7 +83,8 @@ func (t Thermostat) UpdateValue() (float64, bool) {
     return 0, false
 }
 
-func ThermostatMessageHandler(channel chan SwitchRequest, thermostat DeviceInterface) mqtt.MessageHandler {
+func (s *Thermostat) getMessageHandler(channel chan SwitchRequest, thermostat DeviceInterface) mqtt.MessageHandler {
+    log.Println("Subscribing to " + thermostat.getMqttTopic())
     return func (client mqtt.Client, mqttMessage mqtt.Message) {
         payload := string(mqttMessage.Payload())
         log.Println("Received new temperature: " + string(payload))

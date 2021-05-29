@@ -1,9 +1,9 @@
 package main
 
 import (
-    "strconv"
     "encoding/json"
     "log"
+    "strconv"
 
     mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -38,24 +38,19 @@ func (s *Switch) generateRequest(cmd string) (SwitchRequest, bool) {
     return request, true
 }
 
-type SwitchMessageUpdate struct {
-    state string
-}
-
 type SwitchMessage struct {
+    Zigbee2MqttMessage
+
     Action string `json:"action"`
-    Battery int `json:"battery"`
-    Linkquality int `json:"linkquality"`
-    UpdateAvailable bool `json:"`
-    Update SwitchMessageUpdate `json:"update"`
 }
 
-func SwitchMessageHandler(channel chan SwitchRequest, s DeviceInterface) mqtt.MessageHandler {
+func (s *Switch) getMessageHandler(channel chan SwitchRequest, sw DeviceInterface) mqtt.MessageHandler {
+    log.Println("Subscribing to " + s.getMqttTopic())
     return func (client mqtt.Client, mqttMessage mqtt.Message) {
 
         payload := mqttMessage.Payload()
 
-        if s.getCurrent() == 0 {
+        if sw.getCurrent() == 0 {
             return
         }
 
@@ -75,7 +70,7 @@ func SwitchMessageHandler(channel chan SwitchRequest, s DeviceInterface) mqtt.Me
 
         log.Printf("Setting device to %d", val)
 
-        request, ok := s.generateRequest(strconv.Itoa(val))
+        request, ok := sw.generateRequest(strconv.Itoa(val))
         if (ok) {
             channel <- request
         }

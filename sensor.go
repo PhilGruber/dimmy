@@ -1,12 +1,12 @@
 package main
 
 import (
-    "log"
     "encoding/json"
-    "time"
-    "strconv"
-    "math"
     mqtt "github.com/eclipse/paho.mqtt.golang"
+    "log"
+    "math"
+    "strconv"
+    "time"
 )
 
 type Sensor struct {
@@ -108,7 +108,8 @@ func (s *Sensor) generateRequest(cmd string) (SwitchRequest, bool) {
 func (s *Sensor) PublishValue(mqtt mqtt.Client) {
 }
 
-func SensorMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
+func (s *Sensor) getMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
+    log.Println("Subscribing to " + sensor.getMqttTopic())
     return func (client mqtt.Client, mqttMessage mqtt.Message) {
 
         payload := mqttMessage.Payload()
@@ -129,7 +130,7 @@ func SensorMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mq
         if message.Cmnd == 5 || message.Cmnd == 2 {
             log.Printf("Motion detected (%d)", message.Cmnd)
             request, ok := sensor.generateRequest(message.CmndData)
-            if (ok) {
+            if ok {
                 channel <- request
             }
         }

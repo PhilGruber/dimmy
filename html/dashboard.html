@@ -10,11 +10,11 @@
             setInterval(function () {
                 $.get('/api/status', null, function(data, status, jqXHR) {
                      for (name in data) {
-                        if (data[name].Type == 'plug') {
+                        if (data[name].Type === 'plug') {
                             $("#value_" + name).text(data[name].value ? "on" : "off");
-                        } else if (data[name].Type == 'thermostat') {
+                        } else if (data[name].Type === 'thermostat') {
                             $("#value_" + name).text(Math.round(data[name].value*10)/10 + "");
-                            if (data[name].TargetTemperature == 0) {
+                            if (data[name].TargetTemperature === 0) {
                                 $("#target_" + name).addClass('hidden');
                                 $("#separator" + name).addClass('hidden');
                             } else {
