@@ -73,13 +73,15 @@ func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, m
         time.Sleep(cycleLength * time.Millisecond)
 
         for ; len(channel) > 0 ; {
-            request := <-channel
-            if _, ok := devices[request.Device]; ok {
+            request := <- channel
+            for _, device := range strings.Split(request.Device, ",") {
+                if _, ok := devices[device]; ok {
 
-                devices[request.Device].processRequest(request);
+                    devices[device].processRequest(request);
 
-            } else {
-                log.Println("Unknown device [" + request.Device + "]")
+                } else {
+                    log.Println("Unknown device [" + device + "]")
+                }
             }
         }
 
