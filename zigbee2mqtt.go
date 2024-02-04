@@ -10,3 +10,8 @@ type Zigbee2MqttMessage struct {
 	UpdateAvailable bool `json:""`
 	Update Zigbee2MqttMessageUpdate `json:"update"`
 }
+
+type Zigbee2MqttSetMessage struct {
+    State string `json:"state"`
+    Brightness int `json:"brightness"`
+}

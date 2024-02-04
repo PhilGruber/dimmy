@@ -38,6 +38,8 @@ func main() {
                     devices[key] = NewSwitch(deviceConfig[key])
                 case "light":
                     devices[key] = NewLight(deviceConfig[key])
+                case "zlight":
+                    devices[key] = NewZLight(deviceConfig[key])
                 case "plug":
                     devices[key] = NewPlug(deviceConfig[key])
                 case "thermostat":

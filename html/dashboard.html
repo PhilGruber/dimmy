@@ -62,7 +62,7 @@
                         <a class='right' onClick="switchDevice('{{ $name }}', {{ $device.Max }});">on</a>
                     {{ end }}
 
-                    {{ if (or (eq $device.Type "light") (eq $device.Type "sensor")) }}
+                    {{ if (or (eq $device.Type "light") (eq $device.Type "sensor") (eq $device.Type "zlight")) }}
                         <a class='left' onClick="switchDevice('{{ $name }}', {{ $device.Min }});">off</a>
                         <a class='left' onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) - 10);">-</a>
                         <span class='value' id='value_{{ $name }}'></span>
