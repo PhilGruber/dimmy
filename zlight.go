@@ -49,12 +49,21 @@ func makeZLight(config map[string]string) ZLight {
 func (l *ZLight) PublishValue(mqtt mqtt.Client) {
     tt := time.Now()
     newVal := int(math.Round(l.Current))
+    var state string
     if newVal != l.LastSent {
         l.LastChanged = &tt
         l.LastSent = newVal
+
+        brightness := int(math.Round(l.Current * 2.5))
+        if brightness > 0 {
+            state = "ON"
+        } else {
+            state = "OFF"
+        }
+
         msg := Zigbee2MqttSetMessage{
-            State: "ON",
-            Brightness: int(math.Round(l.Current * 2.5)),
+            State: state,
+            Brightness: brightness,
         }
         s, _ := json.Marshal(msg)
         mqtt.Publish(l.MqttTopic + "/set", 0, false, s)
