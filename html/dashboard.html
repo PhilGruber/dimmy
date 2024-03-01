@@ -57,16 +57,16 @@
                 <div class='buttons'>
 
                     {{ if eq $device.Type "plug" }}
-                        <a class='left' onClick="switchDevice('{{ $name }}', {{ $device.Min }});">off</a>
+                        <a class='left' onClick="switchDevice('{{ $name }}', 0);">off</a>
                         <span class='value' id='value_{{ $name }}'></span>
-                        <a class='right' onClick="switchDevice('{{ $name }}', {{ $device.Max }});">on</a>
+                        <a class='right' onClick="switchDevice('{{ $name }}', 100);">on</a>
                     {{ end }}
 
-                    {{ if (or (eq $device.Type "light") (eq $device.Type "sensor") (eq $device.Type "zlight")) }}
-                        <a class='left' onClick="switchDevice('{{ $name }}', {{ $device.Min }});">off</a>
+                    {{ if (or (eq $device.Type "light") (eq $device.Type "sensor") (eq $device.Type "zlight") (eq $device.Type "group")) }}
+                        <a class='left' onClick="switchDevice('{{ $name }}', 0);">off</a>
                         <a class='left' onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) - 10);">-</a>
                         <span class='value' id='value_{{ $name }}'></span>
-                        <a class='right' onClick="switchDevice('{{ $name }}', {{ $device.Max }});">on</a>
+                        <a class='right' onClick="switchDevice('{{ $name }}', 100);">on</a>
                         <a class='right' onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) + 10);">+</a>
                     {{ end }}
 

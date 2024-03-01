@@ -31,7 +31,7 @@ type Device struct {
 	Hidden      bool
 }
 
-func (d Device) getCurrent() float64 {
+func (d *Device) getCurrent() float64 {
 	return d.Current
 }
 
@@ -39,20 +39,20 @@ func (d *Device) setCurrent(current float64) {
 	d.Current = current
 }
 
-func (d Device) getType() string {
+func (d *Device) getType() string {
 	return d.Type
 }
 
-func (d Device) getMqttTopic() string {
+func (d *Device) getMqttTopic() string {
 	return d.MqttTopic
 }
 
-func (d Device) getTimeoutRequest() (SwitchRequest, bool) {
+func (d *Device) getTimeoutRequest() (SwitchRequest, bool) {
 	var r SwitchRequest
 	return r, false
 }
 
-func (d Device) generateRequest(cmd string) (SwitchRequest, bool) {
+func (d *Device) generateRequest(cmd string) (SwitchRequest, bool) {
 	var r SwitchRequest
 	return r, false
 }

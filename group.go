@@ -9,7 +9,7 @@ import (
 )
 
 type Group struct {
-	Device
+	Dimmable
 	devices []DeviceInterface
 }
 
@@ -57,45 +57,48 @@ func makeGroup(config map[string]string, allDevices map[string]DeviceInterface) 
 	return g
 }
 
-func (g Group) getCurrent() float64 {
+func (g *Group) getCurrent() float64 {
 	var current float64
 	current = 0
 	for _, d := range g.devices {
-		current = math.Max(float64(d.getCurrent()), float64(current))
+		current = math.Max(d.getCurrent(), current)
 	}
 	return current
 }
 
-func (g Group) getMax() int {
-	max := 0
+func (g *Group) getMax() int {
+	groupMax := 0
 	for _, d := range g.devices {
-		max = int(math.Max(float64(d.getMax()), float64(max)))
+		groupMax = int(math.Max(float64(d.getMax()), float64(groupMax)))
 	}
-	return max
+	return groupMax
 }
 
-func (g Group) getMin() int {
-	min := 0
+func (g *Group) getMin() int {
+	groupMin := 0
 	for _, d := range g.devices {
-		min = int(math.Min(float64(d.getMin()), float64(min)))
+		groupMin = int(math.Min(float64(d.getMin()), float64(groupMin)))
 	}
-	return min
+	return groupMin
 }
 
-func (g Group) setCurrent(current float64) {
-	for _, d := range g.devices {
-		d.setCurrent(current)
-	}
-}
-
-func (g Group) UpdateValue() (float64, bool) {
+func (g *Group) UpdateValue() (float64, bool) {
+	//	log.Printf("g.getCurrent() = %f\n", g.getCurrent())
 	update := false
 	current := 0.0
 	for _, d := range g.devices {
 		c, b := d.UpdateValue()
-		update = b && update
+		update = b || update
 		current = math.Max(c, current)
 	}
+	if update {
+		//		log.Printf("Updating group to %f\n", current)
+		for _, d := range g.devices {
+			d.setCurrent(current)
+		}
+		g.setCurrent(current)
+	}
+	//	log.Printf("g.getCurrent() = %f\n", g.getCurrent())
 	return current, update
 }
 
