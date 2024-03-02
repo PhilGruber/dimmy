@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"math"
-	"reflect"
 	"strings"
 	"time"
 )
@@ -29,27 +28,19 @@ func makeGroup(config map[string]string, allDevices map[string]DeviceInterface) 
 	tt := time.Now()
 	g.LastChanged = &tt
 
-	fmt.Println("Devices: " + config["devices"])
 	devices := strings.Split(config["devices"], ",")
-	fmt.Printf("Found %d devices\n", len(devices))
 	g.devices = make([]DeviceInterface, len(devices))
 	i := 0
-	for k := range allDevices {
-		fmt.Println("Existing device: " + k)
-	}
 	for _, key := range devices {
-		fmt.Println("Finding " + key)
 		_, ok := allDevices[key]
 		if ok {
-			fmt.Println("Type: " + reflect.TypeOf(allDevices[key]).Name())
 			dev, ok := allDevices[key]
 			if ok {
-				fmt.Println("\tAdding : " + key)
 				g.devices[i] = dev
 				i = i + 1
-			} else {
-				fmt.Println("\tinvalid type")
 			}
+		} else {
+			fmt.Println("Could not find device " + key + ", as part of a group")
 		}
 	}
 
@@ -80,26 +71,6 @@ func (g *Group) getMin() int {
 		groupMin = int(math.Min(float64(d.getMin()), float64(groupMin)))
 	}
 	return groupMin
-}
-
-func (g *Group) UpdateValue() (float64, bool) {
-	//	log.Printf("g.getCurrent() = %f\n", g.getCurrent())
-	update := false
-	current := 0.0
-	for _, d := range g.devices {
-		c, b := d.UpdateValue()
-		update = b || update
-		current = math.Max(c, current)
-	}
-	if update {
-		//		log.Printf("Updating group to %f\n", current)
-		for _, d := range g.devices {
-			d.setCurrent(current)
-		}
-		g.setCurrent(current)
-	}
-	//	log.Printf("g.getCurrent() = %f\n", g.getCurrent())
-	return current, update
 }
 
 func (g *Group) processRequest(request SwitchRequest) {

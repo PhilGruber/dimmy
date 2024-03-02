@@ -44,6 +44,7 @@ func main() {
 				devices[key] = NewPlug(deviceConfig[key])
 			case "thermostat":
 				devices[key] = NewThermostat(deviceConfig[key])
+			case "group":
 			default:
 				log.Println("Skipping device of unknown type '" + deviceConfig[key]["type"] + "'")
 			}
@@ -69,6 +70,7 @@ func main() {
 	http.Handle("/api/status", http.HandlerFunc(ShowStatus(&devices)))
 	http.Handle("/", http.HandlerFunc(ShowDashboard(devices, channel, config["webroot"])))
 
+	log.Println("Listening on port " + config["port"])
 	log.Fatal(http.ListenAndServe(":"+config["port"], nil))
 }
 
