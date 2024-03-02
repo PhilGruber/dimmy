@@ -12,6 +12,7 @@ type DeviceInterface interface {
 	generateRequest(string) (SwitchRequest, bool)
 
 	getMqttTopic() string
+	getMqttState() string
 	getType() string
 	getMax() int
 	getMin() int
@@ -19,12 +20,14 @@ type DeviceInterface interface {
 	setCurrent(float64)
 	processRequest(SwitchRequest)
 	getMessageHandler(chan SwitchRequest, DeviceInterface) mqtt.MessageHandler
+	getStateMessageHandler(chan SwitchRequest, DeviceInterface) mqtt.MessageHandler
 
 	PublishValue(mqtt.Client)
 }
 
 type Device struct {
 	MqttTopic   string     `json:"-"`
+	MqttState   string     `json:"-"`
 	Current     float64    `json:"value"`
 	LastChanged *time.Time `json:"-"`
 	Type        string
@@ -47,6 +50,10 @@ func (d *Device) getMqttTopic() string {
 	return d.MqttTopic
 }
 
+func (d *Device) getMqttState() string {
+	return d.MqttState
+}
+
 func (d *Device) getTimeoutRequest() (SwitchRequest, bool) {
 	var r SwitchRequest
 	return r, false
@@ -61,6 +68,11 @@ func (d *Device) PublishValue(mqtt mqtt.Client) {
 }
 
 func (d *Device) getMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
+	return func(client mqtt.Client, mqttMessage mqtt.Message) {
+	}
+}
+
+func (d *Device) getStateMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 	}
 }

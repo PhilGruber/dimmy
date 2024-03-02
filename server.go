@@ -66,9 +66,9 @@ func main() {
 
 	assets := http.FileServer(http.Dir(config["webroot"] + "/assets"))
 	http.Handle("/assets/", http.StripPrefix("/assets/", assets))
-	http.Handle("/api/switch", http.HandlerFunc(ReceiveRequest(channel)))
-	http.Handle("/api/status", http.HandlerFunc(ShowStatus(&devices)))
-	http.Handle("/", http.HandlerFunc(ShowDashboard(devices, channel, config["webroot"])))
+	http.Handle("/api/switch", ReceiveRequest(channel))
+	http.Handle("/api/status", ShowStatus(&devices))
+	http.Handle("/", ShowDashboard(devices, channel, config["webroot"]))
 
 	log.Println("Listening on port " + config["port"])
 	log.Fatal(http.ListenAndServe(":"+config["port"], nil))
@@ -80,6 +80,9 @@ func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, m
 
 	for name, _ := range devices {
 		client.Subscribe(devices[name].getMqttTopic(), 0, devices[name].getMessageHandler(channel, devices[name]))
+		if len(devices[name].getMqttState()) > 0 {
+			client.Subscribe(devices[name].getMqttState(), 0, devices[name].getStateMessageHandler(channel, devices[name]))
+		}
 	}
 
 	for {
