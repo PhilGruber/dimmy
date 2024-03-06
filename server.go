@@ -16,6 +16,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
+// ms
 const cycleLength = 200
 
 func main() {

@@ -87,6 +87,10 @@ func (d *Dimmable) UpdateValue() (float64, bool) {
 			if current >= float64(d.Target) {
 				current = float64(d.Target)
 			}
+			if current < float64(d.getMin())+1 {
+				// Force 0 when value is between 0 and 1
+				current = float64(d.getMin())
+			}
 		}
 		log.Printf("%s.setCurrent(%f / %d) - %s\n", d.Type, current, d.Target, d.MqttTopic)
 		d.setCurrent(current)
