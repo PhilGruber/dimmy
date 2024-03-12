@@ -171,13 +171,13 @@ func ShowDashboard(devices map[string]DeviceInterface, channel chan SwitchReques
 				target := request.FormValue("target")
 				switch target {
 				case "on":
-					sr.Value = devices[sr.Device].getMax()
+					sr.Value = float64(devices[sr.Device].getMax())
 				case "off":
-					sr.Value = devices[sr.Device].getMin()
+					sr.Value = float64(devices[sr.Device].getMin())
 				case "+":
-					sr.Value = int(devices[sr.Device].getCurrent()) + 10
+					sr.Value = devices[sr.Device].getCurrent() + 10
 				case "-":
-					sr.Value = int(devices[sr.Device].getCurrent()) - 10
+					sr.Value = devices[sr.Device].getCurrent() - 10
 				}
 				channel <- sr
 			}

@@ -15,7 +15,7 @@ type Light struct {
 }
 
 type lightStateMessage struct {
-	Value int `json:"Dimmer"`
+	Value float64 `json:"Dimmer"`
 }
 
 func makeLight(config map[string]string) Light {
@@ -76,7 +76,7 @@ func (l *Light) getStateMessageHandler(channel chan SwitchRequest, sensor Device
 			return
 		}
 		log.Printf("Received state value %d from device\n", data.Value)
-		if l.getTarget() == int(math.Round(l.getCurrent())) {
+		if l.getTarget() == math.Round(l.getCurrent()) {
 			l.setTarget(data.Value)
 		}
 		l.setCurrent(float64(data.Value))

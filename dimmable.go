@@ -8,7 +8,7 @@ import (
 
 type Dimmable struct {
 	Device
-	Target   int     `json:"target"`
+	Target   float64 `json:"target"`
 	Step     float64 `json:"-"`
 	Min      int     `json:"-"`
 	Max      int     `json:"-"`
@@ -47,17 +47,17 @@ func (d *Dimmable) setLastChanged(lastSent *time.Time) {
 	d.LastChanged = lastSent
 }
 
-func (d Dimmable) getTarget() int {
+func (d Dimmable) getTarget() float64 {
 	return d.Target
 }
 
-func (d *Dimmable) setTarget(target int) {
+func (d *Dimmable) setTarget(target float64) {
 	d.Target = target
 }
 
 func (d *Dimmable) processRequest(request SwitchRequest) {
-	request.Value = int(math.Min(float64(request.Value), float64(d.getMax())))
-	request.Value = int(math.Max(float64(request.Value), float64(d.getMin())))
+	request.Value = math.Min(float64(request.Value), float64(d.getMax()))
+	request.Value = math.Max(float64(request.Value), float64(d.getMin()))
 
 	d.setTarget(request.Value)
 	diff := int(math.Abs(d.getCurrent() - float64(request.Value)))
@@ -69,26 +69,26 @@ func (d *Dimmable) processRequest(request SwitchRequest) {
 		step = float64(diff) / float64(cycles)
 	}
 
-	log.Printf("Dimming %s from %.f to %d: %d steps in %d seconds (%.1f steps per cycle)", request.Device, d.getCurrent(), request.Value, diff, request.Duration, step)
+	log.Printf("Dimming %s from %.f to %.1f: %d steps in %d seconds (%.1f steps per cycle)", request.Device, d.getCurrent(), request.Value, diff, request.Duration, step)
 	d.setStep(step)
 
 }
 
 func (d *Dimmable) UpdateValue() (float64, bool) {
 	current := d.getCurrent()
-	if current != float64(d.Target) {
-		if current > float64(d.Target) {
+	if current != d.Target {
+		if current > d.Target {
 			current -= d.Step
-			if current <= float64(d.Target) {
-				current = float64(d.Target)
+			if current <= d.Target {
+				current = d.Target
 			}
 		} else {
 			current += d.Step
-			if current >= float64(d.Target) {
-				current = float64(d.Target)
+			if current >= d.Target {
+				current = d.Target
 			}
 		}
-		log.Printf("%s.setCurrent(%f / %d) - %s\n", d.Type, current, d.Target, d.MqttTopic)
+		log.Printf("%s.setCurrent(%.1f / %.1f) - %s\n", d.Type, current, d.Target, d.MqttTopic)
 		d.setCurrent(current)
 		return current, true
 	}
