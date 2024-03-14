@@ -88,7 +88,7 @@ func (d *Dimmable) UpdateValue() (float64, bool) {
 				current = d.Target
 			}
 		}
-		log.Printf("%s.setCurrent(%.1f / %.1f) - %s\n", d.Type, current, d.Target, d.MqttTopic)
+		log.Printf("%s.setCurrent(%.1f -> %.1f) - %s\n", d.Type, current, d.Target, d.MqttTopic)
 		d.setCurrent(current)
 		return current, true
 	}

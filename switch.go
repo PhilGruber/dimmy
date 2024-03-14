@@ -18,6 +18,7 @@ type Switch struct {
 func makeSwitch(config map[string]string) Switch {
 	s := Switch{}
 	s.MqttTopic = config["topic"]
+	s.MqttState = config["topic"]
 	s.TargetDevice = config["target"]
 	s.Type = "switch"
 
@@ -45,7 +46,6 @@ type SwitchMessage struct {
 }
 
 func (s *Switch) getMessageHandler(channel chan SwitchRequest, sw DeviceInterface) mqtt.MessageHandler {
-	log.Println("Subscribing to " + s.getMqttTopic())
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 
 		payload := mqttMessage.Payload()

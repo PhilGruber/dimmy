@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -12,7 +13,7 @@ type DeviceInterface interface {
 	generateRequest(string) (SwitchRequest, bool)
 
 	getMqttTopic() string
-	getMqttState() string
+	getMqttStateTopic() string
 	getType() string
 	getMax() int
 	getMin() int
@@ -23,6 +24,7 @@ type DeviceInterface interface {
 	getStateMessageHandler(chan SwitchRequest, DeviceInterface) mqtt.MessageHandler
 
 	PublishValue(mqtt.Client)
+	PollValue(mqtt.Client)
 }
 
 type Device struct {
@@ -50,7 +52,7 @@ func (d *Device) getMqttTopic() string {
 	return d.MqttTopic
 }
 
-func (d *Device) getMqttState() string {
+func (d *Device) getMqttStateTopic() string {
 	return d.MqttState
 }
 
@@ -64,7 +66,10 @@ func (d *Device) generateRequest(cmd string) (SwitchRequest, bool) {
 	return r, false
 }
 
-func (d *Device) PublishValue(mqtt mqtt.Client) {
+func (d *Device) PublishValue(mqtt.Client) {
+}
+
+func (d *Device) PollValue(mqtt.Client) {
 }
 
 func (d *Device) getMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
@@ -74,5 +79,6 @@ func (d *Device) getMessageHandler(channel chan SwitchRequest, sensor DeviceInte
 
 func (d *Device) getStateMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
+		log.Println("Received state message from " + d.MqttState)
 	}
 }

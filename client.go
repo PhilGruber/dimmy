@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -40,7 +40,12 @@ func loadClientConfig() (*string, *int) {
 	if err != nil {
 		return &host, &port
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			log.Println("Error: " + err.Error())
+		}
+	}(file)
 
 	reader := bufio.NewReader(file)
 	var line string
@@ -90,11 +95,17 @@ func main() {
 	if *list {
 		fmt.Println("Getting device list from " + url)
 		response, err := http.Get(url + "status")
-		defer response.Body.Close()
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				log.Println("Error: " + err.Error())
+			}
+		}(response.Body)
+
 		if err != nil {
 			log.Println("Error: " + err.Error())
 		}
-		body, err := ioutil.ReadAll(response.Body)
+		body, err := io.ReadAll(response.Body)
 
 		var devices map[string]listRequest
 		err = json.Unmarshal(body, &devices)

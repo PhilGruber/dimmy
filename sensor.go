@@ -107,13 +107,16 @@ func (s *Sensor) generateRequest(cmd string) (SwitchRequest, bool) {
 func (s *Sensor) PublishValue(mqtt mqtt.Client) {
 }
 
-func (s *Sensor) getMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
-	log.Println("Subscribing to " + sensor.getMqttTopic())
+func (s *Sensor) getStateMqttTopic() string {
+	return s.MqttState
+}
+
+func (s *Sensor) geteMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 
 		payload := mqttMessage.Payload()
 
-		if sensor.getCurrent() == 0 {
+		if s.getCurrent() == 0 {
 			return
 		}
 
@@ -128,7 +131,7 @@ func (s *Sensor) getMessageHandler(channel chan SwitchRequest, sensor DeviceInte
 
 		if message.Cmnd == 5 || message.Cmnd == 2 {
 			log.Printf("Motion detected (%d)", message.Cmnd)
-			request, ok := sensor.generateRequest(message.CmndData)
+			request, ok := s.generateRequest(message.CmndData)
 			if ok {
 				channel <- request
 			}

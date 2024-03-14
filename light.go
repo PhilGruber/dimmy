@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"math"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -21,7 +22,9 @@ type lightStateMessage struct {
 func makeLight(config map[string]string) Light {
 	d := Light{}
 	d.MqttTopic = config["topic"]
-	d.MqttState = ""
+	var re = regexp.MustCompile("^cmnd/(.+)/dimmer$")
+	d.MqttState = re.ReplaceAllString(d.MqttTopic, "tele/$1/STATE")
+
 	if state, ok := config["state"]; ok {
 		d.MqttState = state
 	}
@@ -65,8 +68,7 @@ func (l *Light) PublishValue(mqtt mqtt.Client) {
 	}
 }
 
-func (l *Light) getStateMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
-	log.Println("Subscribing to " + sensor.getMqttState())
+func (l *Light) getMessageHandler(channel chan SwitchRequest, light DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
 		var data lightStateMessage
@@ -75,11 +77,11 @@ func (l *Light) getStateMessageHandler(channel chan SwitchRequest, sensor Device
 			log.Println("Error: " + err.Error())
 			return
 		}
-		log.Printf("Received state value %d from device\n", data.Value)
+		log.Printf("Received state value %.2f from %s\n", data.Value, light.getMqttStateTopic())
 		if l.getTarget() == math.Round(l.getCurrent()) {
 			l.setTarget(data.Value)
 		}
-		l.setCurrent(float64(data.Value))
+		l.setCurrent(data.Value)
 
 	}
 }
