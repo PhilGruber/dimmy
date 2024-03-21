@@ -50,7 +50,7 @@ func makeZLight(config map[string]string) ZLight {
 
 func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 	tt := time.Now()
-	newVal := int(math.Round(l.Current))
+	newVal := int(math.Round(l.Current * 2.5))
 	var state string
 	if newVal != l.LastSent {
 		l.LastChanged = &tt
