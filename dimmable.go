@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"math"
 	"time"
 )
@@ -68,15 +67,19 @@ func (d *Dimmable) processRequest(request SwitchRequest) {
 	} else {
 		step = float64(diff) / float64(cycles)
 	}
-
-	log.Printf("Dimming %s from %.f to %.1f: %d steps in %d seconds (%.1f steps per cycle)", request.Device, d.getCurrent(), request.Value, diff, request.Duration, step)
 	d.setStep(step)
+}
 
+func (d *Dimmable) processRequestChild(request SwitchRequest) {
+	d.processRequest(request)
 }
 
 func (d *Dimmable) UpdateValue() (float64, bool) {
 	current := d.getCurrent()
 	if current != d.Target {
+		if d.Step == 0 {
+			d.setStep(100)
+		}
 		if current > d.Target {
 			current -= d.Step
 			if current <= d.Target {
@@ -88,9 +91,12 @@ func (d *Dimmable) UpdateValue() (float64, bool) {
 				current = d.Target
 			}
 		}
-		log.Printf("%s.setCurrent(%.1f -> %.1f) - %s\n", d.Type, current, d.Target, d.MqttTopic)
 		d.setCurrent(current)
 		return current, true
 	}
 	return 0, false
+}
+
+func (d *Dimmable) UpdateValueChild() (float64, bool) {
+	return d.UpdateValue()
 }

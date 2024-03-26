@@ -77,4 +77,17 @@ func (g *Group) processRequest(request SwitchRequest) {
 	for _, d := range g.devices {
 		d.processRequest(request)
 	}
+	g.processRequestChild(request)
+}
+
+func (g *Group) UpdateValue() (float64, bool) {
+	changed := false
+	for _, d := range g.devices {
+		_, thisChanged := d.UpdateValue()
+		if thisChanged {
+			changed = true
+		}
+	}
+	g.setCurrent(g.getCurrent())
+	return g.getCurrent(), changed
 }

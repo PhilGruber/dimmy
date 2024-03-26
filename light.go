@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"math"
 	"regexp"
@@ -71,17 +70,16 @@ func (l *Light) PublishValue(mqtt mqtt.Client) {
 func (l *Light) getMessageHandler(channel chan SwitchRequest, light DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
-		var data lightStateMessage
-		err := json.Unmarshal(payload, &data)
+		value, err := strconv.Atoi(string(payload))
 		if err != nil {
-			log.Println("Error: " + err.Error())
+			log.Println("Can't parse value as int: " + err.Error())
 			return
 		}
-		log.Printf("Received state value %.2f from %s\n", data.Value, light.getMqttStateTopic())
+		log.Printf("Received state value %d from %s\n", value, light.getMqttStateTopic())
 		if l.getTarget() == math.Round(l.getCurrent()) {
-			l.setTarget(data.Value)
+			l.setTarget(float64(value))
 		}
-		l.setCurrent(data.Value)
+		l.setCurrent(float64(value))
 
 	}
 }

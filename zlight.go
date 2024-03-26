@@ -88,16 +88,23 @@ func (l *ZLight) PollValue(mqtt mqtt.Client) {
 func (l *ZLight) getMessageHandler(channel chan SwitchRequest, sw DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
-		var data Zigbee2MqttLightMessage
-		err := json.Unmarshal(payload, &data)
+		value, err := strconv.Atoi(string(payload))
+		state := value > 0
 		if err != nil {
-			log.Println("Error: " + err.Error())
-			return
+			log.Println(string(payload) + " is not a number: " + err.Error())
+			var data Zigbee2MqttLightMessage
+			err := json.Unmarshal(payload, &data)
+			if err != nil {
+				log.Println("Error: " + err.Error())
+				return
+			}
+			value = data.Brightness
+			state = data.State == "ON"
 		}
 		moving := l.Current != l.Target
-		log.Printf("Received value %d from %s", data.Brightness, l.MqttState)
-		if data.State == "ON" {
-			l.Current = float64(data.Brightness) / 2.5
+		log.Printf("Received value %d from %s", value, l.MqttState)
+		if state {
+			l.Current = float64(value) / 2.5
 		} else {
 			l.Current = 0
 		}
