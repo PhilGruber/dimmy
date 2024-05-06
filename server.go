@@ -82,7 +82,7 @@ func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, m
 	for name, _ := range devices {
 		if devices[name].getMqttStateTopic() != "" {
 			log.Println("Subscribing to " + devices[name].getMqttStateTopic())
-			client.Subscribe(devices[name].getMqttTopic(), 0, devices[name].getMessageHandler(channel, devices[name]))
+			client.Subscribe(devices[name].getMqttStateTopic(), 0, devices[name].getMessageHandler(channel, devices[name]))
 			devices[name].PollValue(client)
 		}
 	}
@@ -96,7 +96,7 @@ func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, m
 				if _, ok := devices[device]; ok {
 					devices[device].processRequest(request)
 				} else {
-					log.Println("Unknown device [" + device + "]")
+					log.Printf("Unknown device [%s (%s)]", device, request.Device)
 				}
 			}
 		}
