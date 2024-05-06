@@ -79,11 +79,13 @@ func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, m
 	hostname, _ := os.Hostname()
 	client := initMqtt(mqttServer, "goserver-"+hostname)
 
-	for name, _ := range devices {
+	for name := range devices {
 		if devices[name].getMqttStateTopic() != "" {
 			log.Println("Subscribing to " + devices[name].getMqttStateTopic())
 			client.Subscribe(devices[name].getMqttStateTopic(), 0, devices[name].getMessageHandler(channel, devices[name]))
 			devices[name].PollValue(client)
+		} else {
+			log.Println("No state topic for " + name)
 		}
 	}
 
