@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"math"
 	"regexp"
@@ -15,7 +16,8 @@ type Light struct {
 }
 
 type lightStateMessage struct {
-	Value float64 `json:"Dimmer"`
+	Value int    `json:"Dimmer"`
+	State string `json:"POWER"`
 }
 
 func makeLight(config map[string]string) Light {
@@ -71,9 +73,19 @@ func (l *Light) getMessageHandler(channel chan SwitchRequest, light DeviceInterf
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
 		value, err := strconv.Atoi(string(payload))
+		state := value > 0
 		if err != nil {
-			log.Println("Can't parse value as int: " + err.Error())
-			return
+			var data lightStateMessage
+			err := json.Unmarshal(payload, &data)
+			if err != nil {
+				log.Println("Error: " + err.Error())
+				return
+			}
+			value = data.Value
+			state = data.State == "ON"
+		}
+		if !state {
+			value = 0
 		}
 		log.Printf("Received state value %d from %s\n", value, light.getMqttStateTopic())
 		if l.getTarget() == math.Round(l.getCurrent()) {

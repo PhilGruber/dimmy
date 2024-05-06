@@ -50,7 +50,7 @@ func (t *Thermostat) PublishValue(mqtt mqtt.Client) {
 }
 
 func (t *Thermostat) processRequest(request SwitchRequest) {
-	t.TargetTemperature = float64(request.Value)
+	t.TargetTemperature = request.Value
 }
 
 func (t *Thermostat) generateRequest(payload string) (SwitchRequest, bool) {
