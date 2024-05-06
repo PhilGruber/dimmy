@@ -91,7 +91,6 @@ func (l *ZLight) getMessageHandler(channel chan SwitchRequest, sw DeviceInterfac
 		value, err := strconv.Atoi(string(payload))
 		state := value > 0
 		if err != nil {
-			log.Println(string(payload) + " is not a number: " + err.Error())
 			var data Zigbee2MqttLightMessage
 			err := json.Unmarshal(payload, &data)
 			if err != nil {
@@ -102,6 +101,10 @@ func (l *ZLight) getMessageHandler(channel chan SwitchRequest, sw DeviceInterfac
 			state = data.State == "ON"
 		}
 		moving := l.Current != l.Target
+		if moving {
+			log.Printf("Ignoring value %d from %s because light is moving", value, l.MqttState)
+			return
+		}
 		log.Printf("Received value %d from %s", value, l.MqttState)
 		if state {
 			l.Current = float64(value) / 2.5
