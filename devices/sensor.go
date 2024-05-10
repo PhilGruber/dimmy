@@ -1,7 +1,8 @@
-package main
+package devices
 
 import (
 	"encoding/json"
+	core "github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"strconv"
@@ -71,8 +72,8 @@ type SensorMessageWrapper struct {
 	TuyaReceived SensorMessage
 }
 
-func (s *Sensor) getTimeoutRequest() (SwitchRequest, bool) {
-	var request SwitchRequest
+func (s *Sensor) getTimeoutRequest() (core.SwitchRequest, bool) {
+	var request core.SwitchRequest
 
 	if !s.Active {
 		return request, false
@@ -93,8 +94,8 @@ func (s *Sensor) getTimeoutRequest() (SwitchRequest, bool) {
 
 }
 
-func (s *Sensor) generateRequest(cmd string) (SwitchRequest, bool) {
-	var request SwitchRequest
+func (s *Sensor) generateRequest(cmd string) (core.SwitchRequest, bool) {
+	var request core.SwitchRequest
 	tt := time.Now()
 	s.LastChanged = &tt
 	s.Active = true
@@ -111,12 +112,12 @@ func (s *Sensor) getStateMqttTopic() string {
 	return s.MqttState
 }
 
-func (s *Sensor) geteMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
+func (s *Sensor) geteMessageHandler(channel chan core.SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 
 		payload := mqttMessage.Payload()
 
-		if s.getCurrent() == 0 {
+		if s.GetCurrent() == 0 {
 			return
 		}
 

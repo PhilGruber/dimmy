@@ -1,11 +1,11 @@
 
 all: client server jquery
 
-client: client.go api.go
+client: client.go core/*
 	go build -o dimmy client.go api.go
 
-server: jquery server.go device.go api.go html/*
-	go build -o dimmyd server.go device.go api.go sensor.go dimmable.go light.go plug.go thermostat.go switch.go zsensor.go zlight.go zigbee2mqtt.go group.go
+server: jquery server.go devices/* core/* html/*
+	go build -o dimmyd server.go
 
 clean:
 	rm dimmy dimmyd html/assets/jquery.js

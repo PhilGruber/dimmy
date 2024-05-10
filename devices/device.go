@@ -1,6 +1,7 @@
-package main
+package devices
 
 import (
+	core "github.com/PhilGruber/dimmy/core"
 	"log"
 	"time"
 
@@ -9,19 +10,19 @@ import (
 
 type DeviceInterface interface {
 	UpdateValue() (float64, bool)
-	getTimeoutRequest() (SwitchRequest, bool)
-	generateRequest(string) (SwitchRequest, bool)
+	GetTimeoutRequest() (core.SwitchRequest, bool)
+	generateRequest(string) (core.SwitchRequest, bool)
 
 	getMqttTopic() string
-	getMqttStateTopic() string
-	getType() string
-	getMax() int
-	getMin() int
-	getCurrent() float64
+	GetMqttStateTopic() string
+	GetType() string
+	GetMax() int
+	GetMin() int
+	GetCurrent() float64
 	setCurrent(float64)
-	processRequest(SwitchRequest)
-	getMessageHandler(chan SwitchRequest, DeviceInterface) mqtt.MessageHandler
-	getStateMessageHandler(chan SwitchRequest, DeviceInterface) mqtt.MessageHandler
+	ProcessRequest(core.SwitchRequest)
+	GetMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt.MessageHandler
+	getStateMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt.MessageHandler
 
 	PublishValue(mqtt.Client)
 	PollValue(mqtt.Client)
@@ -36,7 +37,7 @@ type Device struct {
 	Hidden      bool
 }
 
-func (d *Device) getCurrent() float64 {
+func (d *Device) GetCurrent() float64 {
 	return d.Current
 }
 
@@ -52,17 +53,17 @@ func (d *Device) getMqttTopic() string {
 	return d.MqttTopic
 }
 
-func (d *Device) getMqttStateTopic() string {
+func (d *Device) GetMqttStateTopic() string {
 	return d.MqttState
 }
 
-func (d *Device) getTimeoutRequest() (SwitchRequest, bool) {
-	var r SwitchRequest
+func (d *Device) GetTimeoutRequest() (core.SwitchRequest, bool) {
+	var r core.SwitchRequest
 	return r, false
 }
 
-func (d *Device) generateRequest(cmd string) (SwitchRequest, bool) {
-	var r SwitchRequest
+func (d *Device) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
+	var r core.SwitchRequest
 	return r, false
 }
 
@@ -72,12 +73,12 @@ func (d *Device) PublishValue(mqtt.Client) {
 func (d *Device) PollValue(mqtt.Client) {
 }
 
-func (d *Device) getMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
+func (d *Device) GetMessageHandler(channel chan core.SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 	}
 }
 
-func (d *Device) getStateMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
+func (d *Device) GetStateMessageHandler(channel chan core.SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		log.Println("Received state message from " + d.MqttState)
 	}

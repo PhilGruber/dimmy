@@ -1,7 +1,8 @@
-package main
+package devices
 
 import (
 	"encoding/json"
+	core "github.com/PhilGruber/dimmy/core"
 	"log"
 	"strconv"
 
@@ -31,8 +32,8 @@ func NewSwitch(config map[string]string) *Switch {
 	return &p
 }
 
-func (s *Switch) generateRequest(cmd string) (SwitchRequest, bool) {
-	var request SwitchRequest
+func (s *Switch) generateRequest(cmd string) (core.SwitchRequest, bool) {
+	var request core.SwitchRequest
 	request.Device = s.TargetDevice
 	request.Value, _ = strconv.ParseFloat(cmd, 64)
 	request.Duration = 1
@@ -40,17 +41,17 @@ func (s *Switch) generateRequest(cmd string) (SwitchRequest, bool) {
 }
 
 type SwitchMessage struct {
-	Zigbee2MqttMessage
+	core.Zigbee2MqttMessage
 
 	Action string `json:"action"`
 }
 
-func (s *Switch) getMessageHandler(channel chan SwitchRequest, sw DeviceInterface) mqtt.MessageHandler {
+func (s *Switch) getMessageHandler(channel chan core.SwitchRequest, sw DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 
 		payload := mqttMessage.Payload()
 
-		if sw.getCurrent() == 0 {
+		if sw.GetCurrent() == 0 {
 			return
 		}
 
@@ -97,5 +98,5 @@ func (s *Switch) getCurrent() float64 {
 func (s *Switch) setCurrent(float64) {
 }
 
-func (s *Switch) processRequest(request SwitchRequest) {
+func (s *Switch) processRequest(request core.SwitchRequest) {
 }

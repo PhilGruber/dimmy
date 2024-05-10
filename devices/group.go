@@ -1,7 +1,8 @@
-package main
+package devices
 
 import (
 	"fmt"
+	core "github.com/PhilGruber/dimmy/core"
 	"math"
 	"strings"
 	"time"
@@ -48,34 +49,34 @@ func makeGroup(config map[string]string, allDevices map[string]DeviceInterface) 
 	return g
 }
 
-func (g *Group) getCurrent() float64 {
+func (g *Group) GetCurrent() float64 {
 	var current float64
 	current = 0
 	for _, d := range g.devices {
-		current = math.Max(d.getCurrent(), current)
+		current = math.Max(d.GetCurrent(), current)
 	}
 	return current
 }
 
-func (g *Group) getMax() int {
+func (g *Group) GetMax() int {
 	groupMax := 0
 	for _, d := range g.devices {
-		groupMax = int(math.Max(float64(d.getMax()), float64(groupMax)))
+		groupMax = int(math.Max(float64(d.GetMax()), float64(groupMax)))
 	}
 	return groupMax
 }
 
-func (g *Group) getMin() int {
+func (g *Group) GetMin() int {
 	groupMin := 0
 	for _, d := range g.devices {
-		groupMin = int(math.Min(float64(d.getMin()), float64(groupMin)))
+		groupMin = int(math.Min(float64(d.GetMin()), float64(groupMin)))
 	}
 	return groupMin
 }
 
-func (g *Group) processRequest(request SwitchRequest) {
+func (g *Group) processRequest(request core.SwitchRequest) {
 	for _, d := range g.devices {
-		d.processRequest(request)
+		d.ProcessRequest(request)
 	}
 	g.processRequestChild(request)
 }
@@ -88,6 +89,6 @@ func (g *Group) UpdateValue() (float64, bool) {
 			changed = true
 		}
 	}
-	g.setCurrent(g.getCurrent())
-	return g.getCurrent(), changed
+	g.setCurrent(g.GetCurrent())
+	return g.GetCurrent(), changed
 }

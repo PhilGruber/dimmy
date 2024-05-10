@@ -1,6 +1,7 @@
-package main
+package devices
 
 import (
+	core "github.com/PhilGruber/dimmy/core"
 	"log"
 	"strconv"
 
@@ -49,15 +50,15 @@ func NewThermostat(config map[string]string) *Thermostat {
 func (t *Thermostat) PublishValue(mqtt mqtt.Client) {
 }
 
-func (t *Thermostat) processRequest(request SwitchRequest) {
+func (t *Thermostat) processRequest(request core.SwitchRequest) {
 	t.TargetTemperature = request.Value
 }
 
-func (t *Thermostat) generateRequest(payload string) (SwitchRequest, bool) {
+func (t *Thermostat) generateRequest(payload string) (core.SwitchRequest, bool) {
 
 	t.Current, _ = strconv.ParseFloat(payload, 64)
 
-	var request SwitchRequest
+	var request core.SwitchRequest
 	if t.Current < (t.TargetTemperature - t.Margin/2) {
 		log.Printf("Too cold, turning on %s. Currently %.2f C, need %.2f C", t.TargetDevice, t.Current, t.TargetTemperature-t.Margin/2)
 		request.Device = t.TargetDevice
@@ -86,7 +87,7 @@ func (t *Thermostat) getMqttStateTopic() string {
 	return t.MqttTopic
 }
 
-func (t *Thermostat) getMessageHandler(channel chan SwitchRequest, thermostat DeviceInterface) mqtt.MessageHandler {
+func (t *Thermostat) getMessageHandler(channel chan core.SwitchRequest, thermostat DeviceInterface) mqtt.MessageHandler {
 	log.Println("Subscribing to " + thermostat.getMqttTopic())
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := string(mqttMessage.Payload())

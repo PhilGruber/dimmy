@@ -1,7 +1,8 @@
-package main
+package devices
 
 import (
 	"encoding/json"
+	core "github.com/PhilGruber/dimmy/core"
 	"log"
 	"math"
 	"regexp"
@@ -60,15 +61,15 @@ func (p *Plug) UpdateValue() (float64, bool) {
 	return 0, false
 }
 
-func (p *Plug) getMax() int {
+func (p *Plug) GetMax() int {
 	return p.Max
 }
 
-func (p *Plug) getMin() int {
+func (p *Plug) GetMin() int {
 	return p.Min
 }
 
-func (p *Plug) processRequest(request SwitchRequest) {
+func (p *Plug) processRequest(request core.SwitchRequest) {
 	if request.Value != p.Current {
 		p.Current = request.Value
 		if p.Current > 1 {
@@ -81,7 +82,7 @@ func (p *Plug) processRequest(request SwitchRequest) {
 	}
 }
 
-func (p *Plug) getMessageHandler(channel chan SwitchRequest, plug DeviceInterface) mqtt.MessageHandler {
+func (p *Plug) GetMessageHandler(channel chan core.SwitchRequest, plug DeviceInterface) mqtt.MessageHandler {
 	log.Println("Creating message handler for plug")
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		log.Println("Received message from plug")
@@ -93,7 +94,7 @@ func (p *Plug) getMessageHandler(channel chan SwitchRequest, plug DeviceInterfac
 			log.Println("Could parse status message from plug: " + err.Error())
 		}
 
-		log.Printf("Received state value %s from %s\n", message.Value, plug.getMqttStateTopic())
+		log.Printf("Received state value %s from %s\n", message.Value, plug.GetMqttStateTopic())
 		if message.Value == "ON" {
 			p.setCurrent(1)
 		} else {

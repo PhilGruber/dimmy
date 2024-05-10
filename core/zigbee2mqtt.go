@@ -1,4 +1,4 @@
-package main
+package core
 
 type Zigbee2MqttMessageUpdate struct {
 	state string

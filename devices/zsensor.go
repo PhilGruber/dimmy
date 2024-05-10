@@ -1,7 +1,8 @@
-package main
+package devices
 
 import (
 	"encoding/json"
+	core "github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"math"
@@ -60,17 +61,17 @@ func NewZSensor(config map[string]string) *ZSensor {
 }
 
 type ZSensorMessage struct {
-	Zigbee2MqttMessage
+	core.Zigbee2MqttMessage
 
 	Occupancy bool `json:"occupancy"`
 }
 
-func (s *ZSensor) getTimeoutRequest() (SwitchRequest, bool) {
-	var request SwitchRequest
+func (s *ZSensor) getTimeoutRequest() (core.SwitchRequest, bool) {
+	var request core.SwitchRequest
 	return request, false
 }
 
-func (s *ZSensor) getMessageHandler(channel chan SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
+func (s *ZSensor) getMessageHandler(channel chan core.SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
 	log.Println("Subscribing to " + sensor.getMqttTopic())
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 
@@ -78,7 +79,7 @@ func (s *ZSensor) getMessageHandler(channel chan SwitchRequest, sensor DeviceInt
 
 		log.Printf("%s", payload)
 
-		if sensor.getCurrent() == 0 {
+		if sensor.GetCurrent() == 0 {
 			return
 		}
 
@@ -105,8 +106,8 @@ func (s *ZSensor) getMessageHandler(channel chan SwitchRequest, sensor DeviceInt
 	}
 }
 
-func (s *ZSensor) generateRequest(cmd string) (SwitchRequest, bool) {
-	var request SwitchRequest
+func (s *ZSensor) generateRequest(cmd string) (core.SwitchRequest, bool) {
+	var request core.SwitchRequest
 	request.Device = s.TargetDevice
 	if cmd == "on" {
 		request.Value = math.Round(s.Current)

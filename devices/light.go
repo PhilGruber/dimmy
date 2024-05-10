@@ -1,7 +1,8 @@
-package main
+package devices
 
 import (
 	"encoding/json"
+	core "github.com/PhilGruber/dimmy/core"
 	"log"
 	"math"
 	"regexp"
@@ -69,7 +70,7 @@ func (l *Light) PublishValue(mqtt mqtt.Client) {
 	}
 }
 
-func (l *Light) getMessageHandler(channel chan SwitchRequest, light DeviceInterface) mqtt.MessageHandler {
+func (l *Light) GetMessageHandler(channel chan core.SwitchRequest, light DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
 		value, err := strconv.Atoi(string(payload))
@@ -87,8 +88,8 @@ func (l *Light) getMessageHandler(channel chan SwitchRequest, light DeviceInterf
 		if !state {
 			value = 0
 		}
-		log.Printf("Received state value %d from %s\n", value, light.getMqttStateTopic())
-		if l.getTarget() == math.Round(l.getCurrent()) {
+		log.Printf("Received state value %d from %s\n", value, light.GetMqttStateTopic())
+		if l.getTarget() == math.Round(l.GetCurrent()) {
 			l.setTarget(float64(value))
 		}
 		l.setCurrent(float64(value))

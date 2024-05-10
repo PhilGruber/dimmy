@@ -1,4 +1,4 @@
-package main
+package core
 
 type SwitchRequest struct {
 	Device   string  `json:"device"`

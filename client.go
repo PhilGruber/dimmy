@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	core "github.com/PhilGruber/dimmy/core"
 	"io"
 	"log"
 	"net/http"
@@ -82,7 +83,7 @@ func main() {
 
 	flag.Parse()
 
-	request := SwitchRequest{
+	request := core.SwitchRequest{
 		Device:   *device,
 		Command:  "dim",
 		Value:    *value,

@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	core "github.com/PhilGruber/dimmy/core"
+	dimmyDevices "github.com/PhilGruber/dimmy/devices"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -16,12 +18,9 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-// ms
-const cycleLength = 200
-
 func main() {
 
-	devices := make(map[string]DeviceInterface)
+	devices := make(map[string]dimmyDevices.DeviceInterface)
 
 	config, deviceConfig, err := loadConfig()
 	if err != nil {
@@ -32,19 +31,19 @@ func main() {
 		if key != "__global" {
 			switch deviceConfig[key]["type"] {
 			case "sensor":
-				devices[key] = NewSensor(deviceConfig[key])
+				devices[key] = dimmyDevices.NewSensor(deviceConfig[key])
 			case "zsensor":
-				devices[key] = NewZSensor(deviceConfig[key])
+				devices[key] = dimmyDevices.NewZSensor(deviceConfig[key])
 			case "switch":
-				devices[key] = NewSwitch(deviceConfig[key])
+				devices[key] = dimmyDevices.NewSwitch(deviceConfig[key])
 			case "light":
-				devices[key] = NewLight(deviceConfig[key])
+				devices[key] = dimmyDevices.NewLight(deviceConfig[key])
 			case "zlight":
-				devices[key] = NewZLight(deviceConfig[key])
+				devices[key] = dimmyDevices.NewZLight(deviceConfig[key])
 			case "plug":
-				devices[key] = NewPlug(deviceConfig[key])
+				devices[key] = dimmyDevices.NewPlug(deviceConfig[key])
 			case "thermostat":
-				devices[key] = NewThermostat(deviceConfig[key])
+				devices[key] = dimmyDevices.NewThermostat(deviceConfig[key])
 			case "group":
 			default:
 				log.Println("Skipping device of unknown type '" + deviceConfig[key]["type"] + "'")
@@ -56,7 +55,7 @@ func main() {
 	for key := range deviceConfig {
 		if key != "__global" {
 			if deviceConfig[key]["type"] == "group" {
-				devices[key] = NewGroup(deviceConfig[key], devices)
+				devices[key] = dimmyDevices.NewGroup(deviceConfig[key], devices)
 			}
 		}
 	}
@@ -75,14 +74,14 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+config["port"], nil))
 }
 
-func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, mqttServer string) {
+func eventLoop(devices map[string]dimmyDevices.DeviceInterface, channel chan SwitchRequest, mqttServer string) {
 	hostname, _ := os.Hostname()
 	client := initMqtt(mqttServer, "goserver-"+hostname)
 
 	for name := range devices {
-		if devices[name].getMqttStateTopic() != "" {
-			log.Println("Subscribing to " + devices[name].getMqttStateTopic())
-			client.Subscribe(devices[name].getMqttStateTopic(), 0, devices[name].getMessageHandler(channel, devices[name]))
+		if devices[name].GetMqttStateTopic() != "" {
+			log.Println("Subscribing to " + devices[name].GetMqttStateTopic())
+			client.Subscribe(devices[name].GetMqttStateTopic(), 0, devices[name].GetMessageHandler(channel, devices[name]))
 			devices[name].PollValue(client)
 		} else {
 			log.Println("No state topic for " + name)
@@ -90,13 +89,13 @@ func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, m
 	}
 
 	for {
-		time.Sleep(cycleLength * time.Millisecond)
+		time.Sleep(core.cycleLength * time.Millisecond)
 
 		for len(channel) > 0 {
 			request := <-channel
 			for _, device := range strings.Split(request.Device, ",") {
 				if _, ok := devices[device]; ok {
-					devices[device].processRequest(request)
+					devices[device].ProcessRequest(request)
 				} else {
 					log.Printf("Unknown device [%s (%s)]", device, request.Device)
 				}
@@ -110,8 +109,8 @@ func eventLoop(devices map[string]DeviceInterface, channel chan SwitchRequest, m
 		}
 
 		for name, _ := range devices {
-			if devices[name].getType() == "sensor" {
-				request, ok := devices[name].getTimeoutRequest()
+			if devices[name].GetType() == "sensor" {
+				request, ok := devices[name].GetTimeoutRequest()
 				if ok {
 					channel <- request
 				}
@@ -156,14 +155,14 @@ func ReceiveRequest(channel chan SwitchRequest) http.HandlerFunc {
 	}
 }
 
-func ShowStatus(devices *map[string]DeviceInterface) http.HandlerFunc {
+func ShowStatus(devices *map[string]dimmyDevices.DeviceInterface) http.HandlerFunc {
 	return func(output http.ResponseWriter, request *http.Request) {
 		jsonDevices, _ := json.Marshal(devices)
 		fmt.Fprintf(output, string(jsonDevices))
 	}
 }
 
-func ShowDashboard(devices map[string]DeviceInterface, channel chan SwitchRequest, webroot string) http.HandlerFunc {
+func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, channel chan SwitchRequest, webroot string) http.HandlerFunc {
 	return func(output http.ResponseWriter, request *http.Request) {
 		if request.Method == "POST" {
 			err := request.ParseForm()
@@ -174,13 +173,13 @@ func ShowDashboard(devices map[string]DeviceInterface, channel chan SwitchReques
 				target := request.FormValue("target")
 				switch target {
 				case "on":
-					sr.Value = float64(devices[sr.Device].getMax())
+					sr.Value = float64(devices[sr.Device].GetMax())
 				case "off":
-					sr.Value = float64(devices[sr.Device].getMin())
+					sr.Value = float64(devices[sr.Device].GetMin())
 				case "+":
-					sr.Value = devices[sr.Device].getCurrent() + 10
+					sr.Value = devices[sr.Device].GetCurrent() + 10
 				case "-":
-					sr.Value = devices[sr.Device].getCurrent() - 10
+					sr.Value = devices[sr.Device].GetCurrent() - 10
 				}
 				channel <- sr
 			}

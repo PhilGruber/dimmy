@@ -1,6 +1,7 @@
-package main
+package devices
 
 import (
+	core "github.com/PhilGruber/dimmy/core"
 	"math"
 	"time"
 )
@@ -16,15 +17,15 @@ type Dimmable struct {
 	TransitionTime int
 }
 
-func (d *Dimmable) getMin() int {
+func (d *Dimmable) GetMin() int {
 	return d.Min
 }
 
-func (d *Dimmable) getMax() int {
+func (d *Dimmable) GetMax() int {
 	return d.Max
 }
 
-func (d *Dimmable) getStep() float64 {
+func (d *Dimmable) GetStep() float64 {
 	return d.Step
 }
 
@@ -56,9 +57,9 @@ func (d *Dimmable) setTarget(target float64) {
 	d.Target = target
 }
 
-func (d *Dimmable) processRequest(request SwitchRequest) {
-	request.Value = math.Min(request.Value, float64(d.getMax()))
-	request.Value = math.Max(request.Value, float64(d.getMin()))
+func (d *Dimmable) ProcessRequest(request core.SwitchRequest) {
+	request.Value = math.Min(request.Value, float64(d.GetMax()))
+	request.Value = math.Max(request.Value, float64(d.GetMin()))
 
 	d.setTarget(request.Value)
 
@@ -68,9 +69,9 @@ func (d *Dimmable) processRequest(request SwitchRequest) {
 		return
 	}
 
-	diff := int(math.Abs(d.getCurrent() - request.Value))
+	diff := int(math.Abs(d.GetCurrent() - request.Value))
 	var step float64
-	cycles := request.Duration * 1000 / cycleLength
+	cycles := request.Duration * 1000 / core.cycleLength
 	if request.Duration == 0 {
 		step = float64(diff)
 	} else {
@@ -79,12 +80,12 @@ func (d *Dimmable) processRequest(request SwitchRequest) {
 	d.setStep(step)
 }
 
-func (d *Dimmable) processRequestChild(request SwitchRequest) {
-	d.processRequest(request)
+func (d *Dimmable) processRequestChild(request core.SwitchRequest) {
+	d.ProcessRequest(request)
 }
 
 func (d *Dimmable) UpdateValue() (float64, bool) {
-	current := d.getCurrent()
+	current := d.GetCurrent()
 	if current != d.Target {
 		if d.transition {
 			d.setCurrent(d.Target)
