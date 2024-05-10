@@ -11,9 +11,9 @@ import (
 type DeviceInterface interface {
 	UpdateValue() (float64, bool)
 	GetTimeoutRequest() (core.SwitchRequest, bool)
-	generateRequest(string) (core.SwitchRequest, bool)
+	GenerateRequest(string) (core.SwitchRequest, bool)
 
-	getMqttTopic() string
+	GetMqttTopic() string
 	GetMqttStateTopic() string
 	GetType() string
 	GetMax() int
@@ -22,7 +22,7 @@ type DeviceInterface interface {
 	setCurrent(float64)
 	ProcessRequest(core.SwitchRequest)
 	GetMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt.MessageHandler
-	getStateMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt.MessageHandler
+	GetStateMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt.MessageHandler
 
 	PublishValue(mqtt.Client)
 	PollValue(mqtt.Client)
@@ -45,11 +45,11 @@ func (d *Device) setCurrent(current float64) {
 	d.Current = current
 }
 
-func (d *Device) getType() string {
+func (d *Device) GetType() string {
 	return d.Type
 }
 
-func (d *Device) getMqttTopic() string {
+func (d *Device) GetMqttTopic() string {
 	return d.MqttTopic
 }
 

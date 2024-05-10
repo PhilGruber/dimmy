@@ -12,7 +12,7 @@ import (
 type Switch struct {
 	Device
 
-	TargetDevice string
+	TarGetDevice string
 	Step         int
 }
 
@@ -20,7 +20,7 @@ func makeSwitch(config map[string]string) Switch {
 	s := Switch{}
 	s.MqttTopic = config["topic"]
 	s.MqttState = config["topic"]
-	s.TargetDevice = config["target"]
+	s.TarGetDevice = config["tarGet"]
 	s.Type = "switch"
 
 	s.Hidden = true
@@ -32,9 +32,9 @@ func NewSwitch(config map[string]string) *Switch {
 	return &p
 }
 
-func (s *Switch) generateRequest(cmd string) (core.SwitchRequest, bool) {
+func (s *Switch) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
 	var request core.SwitchRequest
-	request.Device = s.TargetDevice
+	request.Device = s.TarGetDevice
 	request.Value, _ = strconv.ParseFloat(cmd, 64)
 	request.Duration = 1
 	return request, true
@@ -46,7 +46,7 @@ type SwitchMessage struct {
 	Action string `json:"action"`
 }
 
-func (s *Switch) getMessageHandler(channel chan core.SwitchRequest, sw DeviceInterface) mqtt.MessageHandler {
+func (s *Switch) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 
 		payload := mqttMessage.Payload()
@@ -71,7 +71,7 @@ func (s *Switch) getMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 
 		log.Printf("Setting device to %d", val)
 
-		request, ok := sw.generateRequest(strconv.Itoa(val))
+		request, ok := sw.GenerateRequest(strconv.Itoa(val))
 		if ok {
 			channel <- request
 		}
@@ -83,20 +83,20 @@ func (s *Switch) UpdateValue() (float64, bool) {
 	return 0, false
 }
 
-func (s *Switch) getMax() int {
+func (s *Switch) GetMax() int {
 	return 1
 }
 
-func (s *Switch) getMin() int {
+func (s *Switch) GetMin() int {
 	return 0
 }
 
-func (s *Switch) getCurrent() float64 {
+func (s *Switch) GetCurrent() float64 {
 	return 1
 }
 
 func (s *Switch) setCurrent(float64) {
 }
 
-func (s *Switch) processRequest(request core.SwitchRequest) {
+func (s *Switch) ProcessRequest(request core.SwitchRequest) {
 }

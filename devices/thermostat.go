@@ -34,11 +34,11 @@ func MakeThermostat(config map[string]string) Thermostat {
 	return t
 }
 
-func (t *Thermostat) getMin() int {
+func (t *Thermostat) GetMin() int {
 	return 0
 }
 
-func (t *Thermostat) getMax() int {
+func (t *Thermostat) GetMax() int {
 	return 99
 }
 
@@ -50,11 +50,11 @@ func NewThermostat(config map[string]string) *Thermostat {
 func (t *Thermostat) PublishValue(mqtt mqtt.Client) {
 }
 
-func (t *Thermostat) processRequest(request core.SwitchRequest) {
+func (t *Thermostat) ProcessRequest(request core.SwitchRequest) {
 	t.TargetTemperature = request.Value
 }
 
-func (t *Thermostat) generateRequest(payload string) (core.SwitchRequest, bool) {
+func (t *Thermostat) GenerateRequest(payload string) (core.SwitchRequest, bool) {
 
 	t.Current, _ = strconv.ParseFloat(payload, 64)
 
@@ -83,17 +83,17 @@ func (t *Thermostat) UpdateValue() (float64, bool) {
 	return 0, false
 }
 
-func (t *Thermostat) getMqttStateTopic() string {
+func (t *Thermostat) GetMqttStateTopic() string {
 	return t.MqttTopic
 }
 
 func (t *Thermostat) getMessageHandler(channel chan core.SwitchRequest, thermostat DeviceInterface) mqtt.MessageHandler {
-	log.Println("Subscribing to " + thermostat.getMqttTopic())
+	log.Println("Subscribing to " + thermostat.GetMqttTopic())
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := string(mqttMessage.Payload())
 		log.Println("Received new temperature: " + string(payload))
 
-		if request, ok := thermostat.generateRequest(payload[:]); ok {
+		if request, ok := thermostat.GenerateRequest(payload[:]); ok {
 			channel <- request
 		}
 	}

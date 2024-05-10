@@ -33,7 +33,7 @@ func (d *Dimmable) setStep(step float64) {
 	d.Step = step
 }
 
-func (d *Dimmable) getLastSent() int {
+func (d *Dimmable) GetLastSent() int {
 	return d.LastSent
 }
 
@@ -41,7 +41,7 @@ func (d *Dimmable) setLastSent(lastSent int) {
 	d.LastSent = lastSent
 }
 
-func (d *Dimmable) getLastChanged() *time.Time {
+func (d *Dimmable) GetLastChanged() *time.Time {
 	return d.LastChanged
 }
 
@@ -49,7 +49,7 @@ func (d *Dimmable) setLastChanged(lastSent *time.Time) {
 	d.LastChanged = lastSent
 }
 
-func (d *Dimmable) getTarget() float64 {
+func (d *Dimmable) GetTarget() float64 {
 	return d.Target
 }
 
@@ -71,7 +71,7 @@ func (d *Dimmable) ProcessRequest(request core.SwitchRequest) {
 
 	diff := int(math.Abs(d.GetCurrent() - request.Value))
 	var step float64
-	cycles := request.Duration * 1000 / core.cycleLength
+	cycles := request.Duration * 1000 / core.CycleLength
 	if request.Duration == 0 {
 		step = float64(diff)
 	} else {
@@ -80,7 +80,7 @@ func (d *Dimmable) ProcessRequest(request core.SwitchRequest) {
 	d.setStep(step)
 }
 
-func (d *Dimmable) processRequestChild(request core.SwitchRequest) {
+func (d *Dimmable) ProcessRequestChild(request core.SwitchRequest) {
 	d.ProcessRequest(request)
 }
 

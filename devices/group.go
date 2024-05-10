@@ -74,11 +74,11 @@ func (g *Group) GetMin() int {
 	return groupMin
 }
 
-func (g *Group) processRequest(request core.SwitchRequest) {
+func (g *Group) ProcessRequest(request core.SwitchRequest) {
 	for _, d := range g.devices {
 		d.ProcessRequest(request)
 	}
-	g.processRequestChild(request)
+	g.ProcessRequestChild(request)
 }
 
 func (g *Group) UpdateValue() (float64, bool) {

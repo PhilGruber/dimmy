@@ -69,7 +69,7 @@ func (p *Plug) GetMin() int {
 	return p.Min
 }
 
-func (p *Plug) processRequest(request core.SwitchRequest) {
+func (p *Plug) ProcessRequest(request core.SwitchRequest) {
 	if request.Value != p.Current {
 		p.Current = request.Value
 		if p.Current > 1 {

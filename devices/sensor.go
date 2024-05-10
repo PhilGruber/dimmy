@@ -72,7 +72,7 @@ type SensorMessageWrapper struct {
 	TuyaReceived SensorMessage
 }
 
-func (s *Sensor) getTimeoutRequest() (core.SwitchRequest, bool) {
+func (s *Sensor) GetTimeoutRequest() (core.SwitchRequest, bool) {
 	var request core.SwitchRequest
 
 	if !s.Active {
@@ -94,7 +94,7 @@ func (s *Sensor) getTimeoutRequest() (core.SwitchRequest, bool) {
 
 }
 
-func (s *Sensor) generateRequest(cmd string) (core.SwitchRequest, bool) {
+func (s *Sensor) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
 	var request core.SwitchRequest
 	tt := time.Now()
 	s.LastChanged = &tt
@@ -108,11 +108,11 @@ func (s *Sensor) generateRequest(cmd string) (core.SwitchRequest, bool) {
 func (s *Sensor) PublishValue(mqtt mqtt.Client) {
 }
 
-func (s *Sensor) getStateMqttTopic() string {
+func (s *Sensor) GetStateMqttTopic() string {
 	return s.MqttState
 }
 
-func (s *Sensor) geteMessageHandler(channel chan core.SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
+func (s *Sensor) GetMessageHandler(channel chan core.SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 
 		payload := mqttMessage.Payload()
@@ -132,7 +132,7 @@ func (s *Sensor) geteMessageHandler(channel chan core.SwitchRequest, sensor Devi
 
 		if message.Cmnd == 5 || message.Cmnd == 2 {
 			log.Printf("Motion detected (%d)", message.Cmnd)
-			request, ok := s.generateRequest(message.CmndData)
+			request, ok := s.GenerateRequest(message.CmndData)
 			if ok {
 				channel <- request
 			}

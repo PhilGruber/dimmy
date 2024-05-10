@@ -66,13 +66,13 @@ type ZSensorMessage struct {
 	Occupancy bool `json:"occupancy"`
 }
 
-func (s *ZSensor) getTimeoutRequest() (core.SwitchRequest, bool) {
+func (s *ZSensor) GetTimeoutRequest() (core.SwitchRequest, bool) {
 	var request core.SwitchRequest
 	return request, false
 }
 
-func (s *ZSensor) getMessageHandler(channel chan core.SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
-	log.Println("Subscribing to " + sensor.getMqttTopic())
+func (s *ZSensor) GetMessageHandler(channel chan core.SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
+	log.Println("Subscribing to " + sensor.GetMqttTopic())
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 
 		payload := mqttMessage.Payload()
@@ -96,8 +96,8 @@ func (s *ZSensor) getMessageHandler(channel chan core.SwitchRequest, sensor Devi
 		} else {
 			val = "off"
 		}
-		log.Println(sensor.getMqttTopic() + " is " + val)
-		request, ok := sensor.generateRequest(val)
+		log.Println(sensor.GetMqttTopic() + " is " + val)
+		request, ok := sensor.GenerateRequest(val)
 
 		if ok {
 			channel <- request
@@ -106,7 +106,7 @@ func (s *ZSensor) getMessageHandler(channel chan core.SwitchRequest, sensor Devi
 	}
 }
 
-func (s *ZSensor) generateRequest(cmd string) (core.SwitchRequest, bool) {
+func (s *ZSensor) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
 	var request core.SwitchRequest
 	request.Device = s.TargetDevice
 	if cmd == "on" {

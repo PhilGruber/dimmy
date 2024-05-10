@@ -60,7 +60,7 @@ func main() {
 		}
 	}
 
-	channel := make(chan SwitchRequest, 10)
+	channel := make(chan core.SwitchRequest, 10)
 
 	go eventLoop(devices, channel, config["mqtt_server"])
 
@@ -74,7 +74,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+config["port"], nil))
 }
 
-func eventLoop(devices map[string]dimmyDevices.DeviceInterface, channel chan SwitchRequest, mqttServer string) {
+func eventLoop(devices map[string]dimmyDevices.DeviceInterface, channel chan core.SwitchRequest, mqttServer string) {
 	hostname, _ := os.Hostname()
 	client := initMqtt(mqttServer, "goserver-"+hostname)
 
@@ -89,7 +89,7 @@ func eventLoop(devices map[string]dimmyDevices.DeviceInterface, channel chan Swi
 	}
 
 	for {
-		time.Sleep(core.cycleLength * time.Millisecond)
+		time.Sleep(core.CycleLength * time.Millisecond)
 
 		for len(channel) > 0 {
 			request := <-channel
@@ -121,7 +121,7 @@ func eventLoop(devices map[string]dimmyDevices.DeviceInterface, channel chan Swi
 	}
 }
 
-func ReceiveRequest(channel chan SwitchRequest) http.HandlerFunc {
+func ReceiveRequest(channel chan core.SwitchRequest) http.HandlerFunc {
 	return func(output http.ResponseWriter, httpRequest *http.Request) {
 
 		jsonResponse := func(result bool, request interface{}, message string) string {
@@ -140,7 +140,7 @@ func ReceiveRequest(channel chan SwitchRequest) http.HandlerFunc {
 			return
 		}
 
-		var request SwitchRequest
+		var request core.SwitchRequest
 
 		err = json.Unmarshal(body, &request)
 
@@ -162,12 +162,12 @@ func ShowStatus(devices *map[string]dimmyDevices.DeviceInterface) http.HandlerFu
 	}
 }
 
-func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, channel chan SwitchRequest, webroot string) http.HandlerFunc {
+func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, channel chan core.SwitchRequest, webroot string) http.HandlerFunc {
 	return func(output http.ResponseWriter, request *http.Request) {
 		if request.Method == "POST" {
 			err := request.ParseForm()
 			if err == nil {
-				var sr SwitchRequest
+				var sr core.SwitchRequest
 				sr.Duration = 0
 				sr.Device = request.FormValue("device")
 				target := request.FormValue("target")

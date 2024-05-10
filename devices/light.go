@@ -89,7 +89,7 @@ func (l *Light) GetMessageHandler(channel chan core.SwitchRequest, light DeviceI
 			value = 0
 		}
 		log.Printf("Received state value %d from %s\n", value, light.GetMqttStateTopic())
-		if l.getTarget() == math.Round(l.GetCurrent()) {
+		if l.GetTarget() == math.Round(l.GetCurrent()) {
 			l.setTarget(float64(value))
 		}
 		l.setCurrent(float64(value))
