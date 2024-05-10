@@ -39,7 +39,12 @@ func makeZLight(config map[string]string) ZLight {
 
 	d.Hidden = false
 	if val, ok := config["hidden"]; ok {
-		d.Hidden = (val == "true")
+		d.Hidden = val == "true"
+	}
+
+	d.transition = false
+	if val, ok := config["transition"]; ok {
+		d.transition = val == "true"
 	}
 
 	tt := time.Now()
@@ -67,6 +72,11 @@ func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 			State:      state,
 			Brightness: brightness,
 		}
+
+		if l.transition {
+			msg.Transition = &l.TransitionTime
+		}
+
 		s, _ := json.Marshal(msg)
 		mqtt.Publish(l.MqttTopic+"/set", 0, false, s)
 	}

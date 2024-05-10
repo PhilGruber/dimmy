@@ -241,6 +241,7 @@ func loadConfig() (map[string]string, map[string]map[string]string, error) {
 		} else if strings.Contains(line, "=") {
 			kv := strings.Split(line, "=")
 			config[deviceName][strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
+
 		} else {
 			log.Fatal("unknown config line: " + line)
 		}
