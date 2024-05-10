@@ -96,12 +96,14 @@ func (l *ZLight) PollValue(mqtt mqtt.Client) {
 	}
 }
 
-func (l *ZLight) getMessageHandler(channel chan core.SwitchRequest, sw DeviceInterface) mqtt.MessageHandler {
+func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
 		value, err := strconv.Atoi(string(payload))
-		state := value > 0
-		if err != nil {
+		var state bool
+		if err == nil {
+			state = value > 0
+		} else {
 			var data core.Zigbee2MqttLightMessage
 			err := json.Unmarshal(payload, &data)
 			if err != nil {
