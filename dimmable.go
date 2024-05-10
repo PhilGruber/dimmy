@@ -95,14 +95,10 @@ func (d *Dimmable) UpdateValue() (float64, bool) {
 		}
 		if current > d.Target {
 			current -= d.Step
-			if current <= d.Target {
-				current = d.Target
-			}
+			current = math.Max(current, d.Target)
 		} else {
 			current += d.Step
-			if current >= d.Target {
-				current = d.Target
-			}
+			current = math.Min(current, d.Target)
 		}
 		d.setCurrent(current)
 		return current, true
