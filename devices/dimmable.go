@@ -2,6 +2,7 @@ package devices
 
 import (
 	core "github.com/PhilGruber/dimmy/core"
+	"log"
 	"math"
 	"time"
 )
@@ -58,10 +59,13 @@ func (d *Dimmable) setTarget(target float64) {
 }
 
 func (d *Dimmable) ProcessRequest(request core.SwitchRequest) {
+	log.Printf("Setting %s to %f within %d seconds\n", d.GetMqttTopic(), request.Value, request.Duration)
 	request.Value = math.Min(request.Value, float64(d.GetMax()))
 	request.Value = math.Max(request.Value, float64(d.GetMin()))
 
 	d.setTarget(request.Value)
+
+	log.Printf("Setting %s to %f within %d seconds\n", d.GetMqttTopic(), request.Value, request.Duration)
 
 	if d.transition {
 		d.TransitionTime = request.Duration

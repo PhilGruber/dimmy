@@ -29,7 +29,7 @@ func makeZLight(config core.DeviceConfig) ZLight {
 
 	d.Hidden = false
 	d.Min = 0
-	d.Max = 0
+	d.Max = 100
 	d.transition = false
 
 	if config.Options != nil {
@@ -73,7 +73,7 @@ func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 		}
 
 		if l.transition {
-			msg.Transition = &l.TransitionTime
+			msg.Transition = l.TransitionTime
 		}
 
 		s, _ := json.Marshal(msg)

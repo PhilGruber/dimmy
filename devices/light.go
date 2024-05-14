@@ -40,7 +40,7 @@ func makeLight(config core.DeviceConfig) Light {
 		if config.Options.Min != nil {
 			d.Min = *config.Options.Min
 		}
-		d.Max = 0
+		d.Max = 100
 		if config.Options.Max != nil {
 			d.Max = *config.Options.Max
 		}
