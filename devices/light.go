@@ -45,6 +45,7 @@ func makeLight(config map[string]string) Light {
 	d.Max, _ = strconv.Atoi(max)
 
 	d.Hidden = false
+
 	if val, ok := config["hidden"]; ok {
 		d.Hidden = val == "true"
 	}

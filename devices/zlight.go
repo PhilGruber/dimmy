@@ -75,7 +75,7 @@ func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 		}
 
 		if l.transition {
-			msg.Transition = &l.TransitionTime
+			msg.Transition = l.TransitionTime
 		}
 
 		s, _ := json.Marshal(msg)

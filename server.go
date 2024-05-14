@@ -95,6 +95,7 @@ func eventLoop(devices map[string]dimmyDevices.DeviceInterface, channel chan cor
 			request := <-channel
 			for _, device := range strings.Split(request.Device, ",") {
 				if _, ok := devices[device]; ok {
+					log.Println("Processing request for " + device)
 					devices[device].ProcessRequest(request)
 				} else {
 					log.Printf("Unknown device [%s (%s)]", device, request.Device)

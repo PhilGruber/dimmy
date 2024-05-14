@@ -2,7 +2,7 @@
 all: client server jquery
 
 client: client.go core/*
-	go build -o dimmy client.go api.go
+	go build -o dimmy client.go
 
 server: jquery server.go devices/* core/* html/*
 	go build -o dimmyd server.go
