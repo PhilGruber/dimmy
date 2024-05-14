@@ -1,0 +1,77 @@
+
+mqtt_server: himbeere.fritz.box
+port: 8080
+webroot: html
+devices:
+- name: "Livingroom-Lamp1"
+  type: zlight
+  topic: zigbee/Livingroom-1
+  options:
+    hidden: true
+
+- name: "Livingroom-Lamp2"
+  type: light
+  topic: cmnd/livingroom/filament/dimmer
+  options:
+    max: 50
+    hidden: true
+
+- name: "Livingroom-Spotlight"
+  type: light
+  topic: cmnd/livingroom/ceiling/dimmer
+  options:
+    hidden: true
+
+- name: "Livingroom"
+  type: group
+  devices: Livingroom-Lamp1,Livingroom-Lamp2,Livingroom-Spotlight
+
+- name: "Bedroom"
+  type: zlight
+  topic: zigbee/led-strip-1
+
+- name: "Dining Table"
+  type: light
+  topic: cmnd/dining/ceiling/dimmer
+
+- name: "Balcony"
+  type: light
+  topic: cmnd/balcony/light/dimmer
+  hidden: true
+
+- name: "Sensor1"
+  type: sensor
+  topic: tele/motion/sensor1/RESULT
+  options:
+    hidden: true
+    target: Bedroom
+    targetOnDuration: 3
+    targetOffDuration: 420
+    timeout: 420
+
+- name: "Livingroom-Sensor"
+  type: zsensor
+  topic: zigbee/motion-sensor-livingroom
+  options:
+    target: Livingroom
+    targetOnDuration: 3
+    targetOffDuration: 300
+    hidden: true
+
+- name: "Bedroom Switch"
+  type: switch
+  topic: zigbee/switch-1
+  options:
+    target: Bedroom
+    hidden: true
+
+- name: "Livingroom Switch"
+  type: switch
+  topic: zigbee/switch-2
+  options:
+    target: Livingroom
+    hidden: true
+
+- name: "Kidsroom Speaker"
+  type: plug
+  topic: cmnd/kidsroom/music/POWER

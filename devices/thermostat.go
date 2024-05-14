@@ -16,18 +16,22 @@ type Thermostat struct {
 	Margin            float64
 }
 
-func MakeThermostat(config map[string]string) Thermostat {
+func MakeThermostat(config core.DeviceConfig) Thermostat {
 	t := Thermostat{}
-	t.MqttTopic = config["topic"]
-	t.TargetDevice = config["target"]
-
-	var val string
-	var ok bool
-
-	if val, ok = config["margin"]; !ok {
-		val = "0.5"
+	t.MqttTopic = config.Topic
+	if config.Options == nil {
+		log.Fatalf("Thermostat %s does not have any options", config.Name)
 	}
-	t.Margin, _ = strconv.ParseFloat(val, 64)
+	if config.Options.Target == nil {
+		log.Fatalf("Thermostat %s does not have a target device", config.Name)
+	}
+	t.TargetDevice = *config.Options.Target
+
+	t.Margin = 0.5
+	if config.Options.Margin != nil {
+		t.Margin = *config.Options.Margin
+	}
+
 	t.TargetTemperature = 18
 	t.Current = 0
 	t.Type = "thermostat"
@@ -42,7 +46,7 @@ func (t *Thermostat) GetMax() int {
 	return 99
 }
 
-func NewThermostat(config map[string]string) *Thermostat {
+func NewThermostat(config core.DeviceConfig) *Thermostat {
 	s := MakeThermostat(config)
 	return &s
 }

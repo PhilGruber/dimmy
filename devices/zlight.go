@@ -15,42 +15,40 @@ type ZLight struct {
 	Light
 }
 
-func NewZLight(config map[string]string) *ZLight {
+func NewZLight(config core.DeviceConfig) *ZLight {
 	d := makeZLight(config)
 	return &d
 }
 
-func makeZLight(config map[string]string) ZLight {
+func makeZLight(config core.DeviceConfig) ZLight {
 	d := ZLight{}
-	d.MqttTopic = config["topic"]
-	d.MqttState = config["topic"]
+	d.MqttTopic = config.Topic
+	d.MqttState = config.Topic
 	d.Current = 0
 	d.Target = 0
-	min, ok := config["min"]
-	if !ok {
-		min = "0"
-	}
-	max, ok := config["max"]
-	if !ok {
-		max = "100"
-	}
-
-	d.Min, _ = strconv.Atoi(min)
-	d.Max, _ = strconv.Atoi(max)
 
 	d.Hidden = false
-	if val, ok := config["hidden"]; ok {
-		d.Hidden = val == "true"
-	}
-
+	d.Min = 0
+	d.Max = 0
 	d.transition = false
-	if val, ok := config["transition"]; ok {
-		d.transition = val == "true"
+
+	if config.Options != nil {
+		if config.Options.Hidden != nil {
+			d.Hidden = *config.Options.Hidden
+		}
+		if config.Options.Min != nil {
+			d.Min = *config.Options.Min
+		}
+		if config.Options.Max != nil {
+			d.Max = *config.Options.Max
+		}
+		if config.Options.Transition != nil {
+			d.transition = *config.Options.Transition
+		}
 	}
 
 	tt := time.Now()
 	d.LastChanged = &tt
-	d.Type = "zlight"
 	return d
 }
 

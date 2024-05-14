@@ -13,30 +13,33 @@ type Group struct {
 	devices []DeviceInterface
 }
 
-func NewGroup(config map[string]string, allDevices map[string]DeviceInterface) *Group {
-	d := makeGroup(config, allDevices)
-	return &d
-}
-
-func makeGroup(config map[string]string, allDevices map[string]DeviceInterface) Group {
+func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *Group {
 	g := Group{}
 
 	g.Hidden = false
-	if val, ok := config["hidden"]; ok {
-		g.Hidden = val == "true"
+	deviceType := ""
+	var devices []string
+	if config.Options != nil {
+		if config.Options.Hidden != nil {
+			g.Hidden = *config.Options.Hidden
+		}
+
+		devices = strings.Split(*config.Options.Devices, ",")
+		g.devices = make([]DeviceInterface, len(devices))
 	}
 
-	tt := time.Now()
-	g.LastChanged = &tt
-
-	devices := strings.Split(config["devices"], ",")
-	g.devices = make([]DeviceInterface, len(devices))
 	i := 0
 	for _, key := range devices {
 		_, ok := allDevices[key]
 		if ok {
 			dev, ok := allDevices[key]
 			if ok {
+				if deviceType == "" {
+					deviceType = dev.GetType()
+				} else if deviceType != dev.GetType() {
+					fmt.Println("Can't add device " + key + " to group, as it is of a different type than the other devices in the group")
+					return nil
+				}
 				g.devices[i] = dev
 				i = i + 1
 			}
@@ -45,8 +48,11 @@ func makeGroup(config map[string]string, allDevices map[string]DeviceInterface) 
 		}
 	}
 
+	tt := time.Now()
+	g.LastChanged = &tt
+
 	g.Type = "group"
-	return g
+	return &g
 }
 
 func (g *Group) GetCurrent() float64 {

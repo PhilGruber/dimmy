@@ -21,32 +21,29 @@ type lightStateMessage struct {
 	State string `json:"POWER"`
 }
 
-func makeLight(config map[string]string) Light {
+func makeLight(config core.DeviceConfig) Light {
 	d := Light{}
-	d.MqttTopic = config["topic"]
+	d.MqttTopic = config.Topic
+
 	var re = regexp.MustCompile("^cmnd/(.+)/dimmer$")
 	d.MqttState = re.ReplaceAllString(d.MqttTopic, "tele/$1/STATE")
 
-	if state, ok := config["state"]; ok {
-		d.MqttState = state
-	}
 	d.Current = 0
 	d.Target = 0
-	min, ok := config["min"]
-	if !ok {
-		min = "0"
-	}
-	max, ok := config["max"]
-	if !ok {
-		max = "100"
-	}
-
-	d.Min, _ = strconv.Atoi(min)
-	d.Max, _ = strconv.Atoi(max)
 
 	d.Hidden = false
-	if val, ok := config["hidden"]; ok {
-		d.Hidden = val == "true"
+	if config.Options != nil {
+		if config.Options.Hidden != nil {
+			d.Hidden = *config.Options.Hidden
+		}
+		d.Min = 0
+		if config.Options.Min != nil {
+			d.Min = *config.Options.Min
+		}
+		d.Max = 0
+		if config.Options.Max != nil {
+			d.Max = *config.Options.Max
+		}
 	}
 
 	tt := time.Now()
@@ -55,7 +52,7 @@ func makeLight(config map[string]string) Light {
 	return d
 }
 
-func NewLight(config map[string]string) *Light {
+func NewLight(config core.DeviceConfig) *Light {
 	d := makeLight(config)
 	return &d
 }

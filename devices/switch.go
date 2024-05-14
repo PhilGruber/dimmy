@@ -12,29 +12,29 @@ import (
 type Switch struct {
 	Device
 
-	TarGetDevice string
+	TargetDevice string
 	Step         int
 }
 
-func makeSwitch(config map[string]string) Switch {
+func makeSwitch(config core.DeviceConfig) Switch {
 	s := Switch{}
-	s.MqttTopic = config["topic"]
-	s.MqttState = config["topic"]
-	s.TarGetDevice = config["tarGet"]
+	s.MqttTopic = config.Topic
+	s.MqttState = config.Topic
+	s.TargetDevice = *config.Options.Target
 	s.Type = "switch"
 
 	s.Hidden = true
 	return s
 }
 
-func NewSwitch(config map[string]string) *Switch {
+func NewSwitch(config core.DeviceConfig) *Switch {
 	p := makeSwitch(config)
 	return &p
 }
 
 func (s *Switch) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
 	var request core.SwitchRequest
-	request.Device = s.TarGetDevice
+	request.Device = s.TargetDevice
 	request.Value, _ = strconv.ParseFloat(cmd, 64)
 	request.Duration = 1
 	return request, true

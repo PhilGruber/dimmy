@@ -6,7 +6,6 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"math"
-	"strconv"
 )
 
 type ZSensor struct {
@@ -18,35 +17,32 @@ type ZSensor struct {
 	Timeout           int
 }
 
-func MakeZSensor(config map[string]string) ZSensor {
+func MakeZSensor(config core.DeviceConfig) ZSensor {
 	s := ZSensor{}
-	s.MqttTopic = config["topic"]
-	s.TargetDevice = config["target"]
+	s.MqttTopic = config.Topic
+	s.TargetDevice = *config.Options.Target
 
 	s.Max = 100
 	s.Min = 0
 
-	var val string
-	var ok bool
-
-	if val, ok = config["TargetOnDuration"]; !ok {
-		val = "3"
+	s.TargetOnDuration = 3
+	if config.Options.TargetOnDuration != nil {
+		s.TargetOnDuration = *config.Options.TargetOnDuration
 	}
-	s.TargetOnDuration, _ = strconv.Atoi(val)
 
-	if val, ok = config["TargetOffDuration"]; !ok {
-		val = "120"
+	s.TargetOffDuration = 120
+	if config.Options.TargetOffDuration != nil {
+		s.TargetOffDuration = *config.Options.TargetOffDuration
 	}
-	s.TargetOffDuration, _ = strconv.Atoi(val)
 
-	if val, ok = config["Timeout"]; !ok {
-		val = "10"
+	s.Timeout = 10
+	if config.Options.Timeout != nil {
+		s.Timeout = *config.Options.Timeout
 	}
-	s.Timeout, _ = strconv.Atoi(val)
 
 	s.Hidden = false
-	if val, ok := config["hidden"]; ok {
-		s.Hidden = val == "true"
+	if config.Options != nil && config.Options.Hidden != nil {
+		s.Hidden = *config.Options.Hidden
 	}
 
 	s.Current = 0
@@ -55,7 +51,7 @@ func MakeZSensor(config map[string]string) ZSensor {
 	return s
 }
 
-func NewZSensor(config map[string]string) *ZSensor {
+func NewZSensor(config core.DeviceConfig) *ZSensor {
 	s := MakeZSensor(config)
 	return &s
 }

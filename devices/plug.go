@@ -23,16 +23,16 @@ type plugStateMessage struct {
 	Value string `json:"POWER"`
 }
 
-func makePlug(config map[string]string) Plug {
+func makePlug(config core.DeviceConfig) Plug {
 	p := Plug{}
-	p.MqttTopic = config["topic"]
+	p.MqttTopic = config.Topic
 	var re = regexp.MustCompile("^cmnd/(.+)/POWER$")
 	p.MqttState = re.ReplaceAllString(p.MqttTopic, "tele/$1/STATE")
 	p.Current = 0
 
 	p.Hidden = false
-	if val, ok := config["hidden"]; ok {
-		p.Hidden = (val == "true")
+	if config.Options != nil && config.Options.Hidden != nil {
+		p.Hidden = *config.Options.Hidden
 	}
 
 	tt := time.Now()
@@ -44,7 +44,7 @@ func makePlug(config map[string]string) Plug {
 	return p
 }
 
-func NewPlug(config map[string]string) *Plug {
+func NewPlug(config core.DeviceConfig) *Plug {
 	p := makePlug(config)
 	return &p
 }

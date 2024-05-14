@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	core "github.com/PhilGruber/dimmy/core"
+	"github.com/PhilGruber/dimmy/core"
 	dimmyDevices "github.com/PhilGruber/dimmy/devices"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"gopkg.in/yaml.v3"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -14,64 +16,64 @@ import (
 	"os"
 	"strings"
 	"time"
-
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 func main() {
 
 	devices := make(map[string]dimmyDevices.DeviceInterface)
 
-	config, deviceConfig, err := loadConfig()
+	config, err := loadConfig()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err.Error())
+		return
 	}
 
-	for key := range deviceConfig {
-		if key != "__global" {
-			switch deviceConfig[key]["type"] {
-			case "sensor":
-				devices[key] = dimmyDevices.NewSensor(deviceConfig[key])
-			case "zsensor":
-				devices[key] = dimmyDevices.NewZSensor(deviceConfig[key])
-			case "switch":
-				devices[key] = dimmyDevices.NewSwitch(deviceConfig[key])
-			case "light":
-				devices[key] = dimmyDevices.NewLight(deviceConfig[key])
-			case "zlight":
-				devices[key] = dimmyDevices.NewZLight(deviceConfig[key])
-			case "plug":
-				devices[key] = dimmyDevices.NewPlug(deviceConfig[key])
-			case "thermostat":
-				devices[key] = dimmyDevices.NewThermostat(deviceConfig[key])
-			case "group":
-			default:
-				log.Println("Skipping device of unknown type '" + deviceConfig[key]["type"] + "'")
-			}
+	log.Println("MQTT: " + config.MqttServer)
+
+	for _, device := range config.Devices {
+		switch device.Type {
+		case "sensor":
+			devices[device.Name] = dimmyDevices.NewSensor(device)
+		case "zsensor":
+			devices[device.Name] = dimmyDevices.NewZSensor(device)
+		case "switch":
+			devices[device.Name] = dimmyDevices.NewSwitch(device)
+		case "light":
+			devices[device.Name] = dimmyDevices.NewLight(device)
+		case "zlight":
+			devices[device.Name] = dimmyDevices.NewZLight(device)
+		case "plug":
+			devices[device.Name] = dimmyDevices.NewPlug(device)
+		case "thermostat":
+			devices[device.Name] = dimmyDevices.NewThermostat(device)
+		case "group":
+		default:
+			log.Println("Skipping device of unknown type '" + device.Type + "'")
 		}
 	}
 
 	// Parse Groups separately at the end, to make sure all referencing Devices exist at that point
-	for key := range deviceConfig {
-		if key != "__global" {
-			if deviceConfig[key]["type"] == "group" {
-				devices[key] = dimmyDevices.NewGroup(deviceConfig[key], devices)
+	for _, device := range config.Devices {
+		if device.Type == "group" {
+			group := dimmyDevices.NewGroup(device, devices)
+			if group != nil {
+				devices[device.Name] = group
 			}
 		}
 	}
 
 	channel := make(chan core.SwitchRequest, 10)
 
-	go eventLoop(devices, channel, config["mqtt_server"])
+	go eventLoop(devices, channel, config.MqttServer)
 
-	assets := http.FileServer(http.Dir(config["webroot"] + "/assets"))
+	assets := http.FileServer(http.Dir(config.WebRoot + "/assets"))
 	http.Handle("/assets/", http.StripPrefix("/assets/", assets))
 	http.Handle("/api/switch", ReceiveRequest(channel))
 	http.Handle("/api/status", ShowStatus(&devices))
-	http.Handle("/", ShowDashboard(devices, channel, config["webroot"]))
+	http.Handle("/", ShowDashboard(devices, channel, config.WebRoot))
 
-	log.Println("Listening on port " + config["port"])
-	log.Fatal(http.ListenAndServe(":"+config["port"], nil))
+	log.Printf("Listening on port %d", config.Port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
 }
 
 func eventLoop(devices map[string]dimmyDevices.DeviceInterface, channel chan core.SwitchRequest, mqttServer string) {
@@ -194,7 +196,29 @@ func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, channel chan
 	}
 }
 
-func loadConfig() (map[string]string, map[string]map[string]string, error) {
+func loadConfig() (*core.ServerConfig, error) {
+
+	var filename string
+	if _, err := os.Stat("/etc/dimmyd.conf.yaml"); err == nil {
+		filename = "/etc/dimmyd.conf.yaml"
+	} else if _, err := os.Stat("dimmyd.conf.yaml"); err == nil {
+		filename = "dimmyd.conf.yaml"
+	} else {
+		return nil, errors.New("could not find config file /etc/dimmyd.conf.yaml")
+	}
+
+	log.Println("Loading config file " + filename)
+
+	var config core.ServerConfig
+	configYaml, _ := os.ReadFile(filename)
+	err := yaml.Unmarshal(configYaml, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return &config, nil
+}
+
+func loadLegacyConfig() (map[string]string, map[string]map[string]string, error) {
 	config := map[string]map[string]string{}
 
 	var filename string
