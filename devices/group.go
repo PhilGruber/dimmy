@@ -3,8 +3,8 @@ package devices
 import (
 	"fmt"
 	core "github.com/PhilGruber/dimmy/core"
+	"log"
 	"math"
-	"strings"
 	"time"
 )
 
@@ -16,20 +16,31 @@ type Group struct {
 func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *Group {
 	g := Group{}
 
+	g.Type = "group"
 	g.Hidden = false
 	deviceType := ""
-	var devices []string
-	if config.Options != nil {
-		if config.Options.Hidden != nil {
-			g.Hidden = *config.Options.Hidden
-		}
 
-		devices = strings.Split(*config.Options.Devices, ",")
-		g.devices = make([]DeviceInterface, len(devices))
+	tt := time.Now()
+	g.LastChanged = &tt
+
+	if config.Options == nil {
+		log.Println("Group " + config.Name + " has no options")
+		return &g
 	}
 
+	if config.Options == nil || config.Options.Devices == nil {
+		log.Println("Group " + config.Name + " has no devices")
+		return &g
+	}
+
+	if config.Options.Hidden != nil {
+		g.Hidden = *config.Options.Hidden
+	}
+
+	g.devices = make([]DeviceInterface, len(*config.Options.Devices))
+
 	i := 0
-	for _, key := range devices {
+	for _, key := range *config.Options.Devices {
 		_, ok := allDevices[key]
 		if ok {
 			dev, ok := allDevices[key]
@@ -37,7 +48,8 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 				if deviceType == "" {
 					deviceType = dev.GetType()
 				} else if deviceType != dev.GetType() {
-					fmt.Println("Can't add device " + key + " to group, as it is of a different type than the other devices in the group")
+					log.Println("Can't add device " + key + " to group, as it is of a different type than the other devices in the group")
+					fmt.Printf("%s != %s", deviceType, dev.GetType())
 					return nil
 				}
 				g.devices[i] = dev
@@ -48,10 +60,8 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 		}
 	}
 
-	tt := time.Now()
-	g.LastChanged = &tt
+	log.Println("Created group " + config.Name + " with " + fmt.Sprint(len(g.devices)) + " devices")
 
-	g.Type = "group"
 	return &g
 }
 

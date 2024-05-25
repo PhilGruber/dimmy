@@ -24,7 +24,10 @@ devices:
 
 - name: "Livingroom"
   type: group
-  devices: Livingroom-Lamp1,Livingroom-Lamp2,Livingroom-Spotlight
+  devices:
+    - Livingroom-Lamp1
+    - Livingroom-Lamp2
+    - Livingroom-Spotlight
 
 - name: "Bedroom"
   type: zlight

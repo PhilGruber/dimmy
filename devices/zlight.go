@@ -31,6 +31,7 @@ func makeZLight(config core.DeviceConfig) ZLight {
 	d.Min = 0
 	d.Max = 100
 	d.transition = false
+	d.Type = "light"
 
 	if config.Options != nil {
 		if config.Options.Hidden != nil {

@@ -142,6 +142,7 @@ func ReceiveRequest(channel chan core.SwitchRequest) http.HandlerFunc {
 			fmt.Fprintf(output, "Invalid JSON data")
 			return
 		}
+		log.Println("Received payload from api: " + string(body[:]))
 
 		var request core.SwitchRequest
 
