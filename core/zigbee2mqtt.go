@@ -14,5 +14,5 @@ type Zigbee2MqttMessage struct {
 type Zigbee2MqttLightMessage struct {
 	State      string `json:"state"`
 	Brightness int    `json:"brightness"`
-	Transition int    `json:"transition"`
+	Transition *int   `json:"transition"`
 }
