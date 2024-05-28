@@ -217,6 +217,19 @@ func loadConfig() (*core.ServerConfig, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	if config.WebRoot == "" {
+		config.WebRoot = "/usr/share/dimmy"
+	}
+
+	if config.MqttServer == "" {
+		config.MqttServer = "127.0.0.1"
+	}
+
+	if config.Port == 0 {
+		config.Port = 80
+	}
+
 	return &config, nil
 }
 
