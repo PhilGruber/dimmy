@@ -32,15 +32,16 @@ func makeLight(config core.DeviceConfig) Light {
 	d.Target = 0
 
 	d.Hidden = false
+	d.Min = 0
+	d.Max = 100
+
 	if config.Options != nil {
 		if config.Options.Hidden != nil {
 			d.Hidden = *config.Options.Hidden
 		}
-		d.Min = 0
 		if config.Options.Min != nil {
 			d.Min = *config.Options.Min
 		}
-		d.Max = 100
 		if config.Options.Max != nil {
 			d.Max = *config.Options.Max
 		}
