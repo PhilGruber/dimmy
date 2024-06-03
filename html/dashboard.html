@@ -22,8 +22,10 @@
                                 $("#separator" + name).removeClass('hidden');
                             }
                             $("#target_" + name).text(Math.round(data[name].TargetTemperature));
+                        } else if (data[name].Type === 'temperature') {
+                            $("#value_" + name).text(Math.round(data[name].value));
                         } else {
-                            $("#value_" + name).text(Math.round(data[name].value) + "%");
+                            $("#value_" + name).text(Math.round(data[name].value) + '%');
                         }
                     }
                 }, "json");
@@ -68,6 +70,12 @@
                         <span class='value' id='value_{{ $name }}'></span>
                         <a class='right' onClick="switchDevice('{{ $name }}', 100);">on</a>
                         <a class='right' onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) + 10);">+</a>
+                    {{ end }}
+
+                    {{ if eq $device.Type "temperature" }}
+                        <span class='value'>
+                            <span id='value_{{ $name }}'></span> °C
+                        </span>
                     {{ end }}
 
                     {{ if eq $device.Type "thermostat" }}

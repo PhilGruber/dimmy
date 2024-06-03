@@ -30,25 +30,27 @@ func main() {
 
 	log.Println("MQTT: " + config.MqttServer)
 
-	for _, device := range config.Devices {
-		switch device.Type {
+	for _, deviceConfig := range config.Devices {
+		switch deviceConfig.Type {
 		case "sensor":
-			devices[device.Name] = dimmyDevices.NewSensor(device)
+			devices[deviceConfig.Name] = dimmyDevices.NewSensor(deviceConfig)
 		case "zsensor":
-			devices[device.Name] = dimmyDevices.NewZSensor(device)
+			devices[deviceConfig.Name] = dimmyDevices.NewZSensor(deviceConfig)
 		case "switch":
-			devices[device.Name] = dimmyDevices.NewSwitch(device)
+			devices[deviceConfig.Name] = dimmyDevices.NewSwitch(deviceConfig)
 		case "light":
-			devices[device.Name] = dimmyDevices.NewLight(device)
+			devices[deviceConfig.Name] = dimmyDevices.NewLight(deviceConfig)
 		case "zlight":
-			devices[device.Name] = dimmyDevices.NewZLight(device)
+			devices[deviceConfig.Name] = dimmyDevices.NewZLight(deviceConfig)
 		case "plug":
-			devices[device.Name] = dimmyDevices.NewPlug(device)
+			devices[deviceConfig.Name] = dimmyDevices.NewPlug(deviceConfig)
+		case "temperature":
+			devices[deviceConfig.Name] = dimmyDevices.NewTemperature(deviceConfig)
 		case "thermostat":
-			devices[device.Name] = dimmyDevices.NewThermostat(device)
+			devices[deviceConfig.Name] = dimmyDevices.NewThermostat(deviceConfig)
 		case "group":
 		default:
-			log.Println("Skipping device of unknown type '" + device.Type + "'")
+			log.Println("Skipping deviceConfig of unknown type '" + deviceConfig.Type + "'")
 		}
 	}
 
@@ -100,7 +102,7 @@ func eventLoop(devices map[string]dimmyDevices.DeviceInterface, channel chan cor
 					log.Println("Processing request for " + device)
 					devices[device].ProcessRequest(request)
 				} else {
-					log.Printf("Unknown device [%s (%s)]", device, request.Device)
+					log.Printf("Can't find device for request [%s (%s)]", device, request.Device)
 				}
 			}
 		}
