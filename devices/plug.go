@@ -102,3 +102,17 @@ func (p *Plug) GetMessageHandler(channel chan core.SwitchRequest, plug DeviceInt
 		}
 	}
 }
+
+func (p *Plug) PercentageToValue(percentage float64) int {
+	if percentage <= 0.99 {
+		return 0
+	}
+	return 1
+}
+
+func (p *Plug) ValueToPercentage(value int) float64 {
+	if value == 0 {
+		return 0
+	}
+	return 1
+}

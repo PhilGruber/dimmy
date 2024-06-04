@@ -28,8 +28,6 @@ func main() {
 		return
 	}
 
-	log.Println("MQTT: " + config.MqttServer)
-
 	for _, deviceConfig := range config.Devices {
 		switch deviceConfig.Type {
 		case "sensor":
@@ -179,9 +177,9 @@ func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, channel chan
 				target := request.FormValue("target")
 				switch target {
 				case "on":
-					sr.Value = float64(devices[sr.Device].GetMax())
+					sr.Value = 100
 				case "off":
-					sr.Value = float64(devices[sr.Device].GetMin())
+					sr.Value = 0
 				case "+":
 					sr.Value = devices[sr.Device].GetCurrent() + 10
 				case "-":

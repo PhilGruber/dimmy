@@ -3,6 +3,7 @@ package devices
 import (
 	core "github.com/PhilGruber/dimmy/core"
 	"log"
+	"math"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -29,6 +30,7 @@ type DeviceInterface interface {
 }
 
 type Device struct {
+	DeviceInterface
 	MqttTopic   string     `json:"-"`
 	MqttState   string     `json:"-"`
 	Current     float64    `json:"value"`
@@ -82,4 +84,24 @@ func (d *Device) GetStateMessageHandler(channel chan core.SwitchRequest, sensor 
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		log.Println("Received state message from " + d.MqttState)
 	}
+}
+
+func (d *Device) PercentageToValue(percentage float64) int {
+	if percentage <= 1.0 {
+		return d.GetMin() + int(math.Round(percentage))
+	}
+	return d.GetMin() + 1 + int(float64(d.GetMax()-d.GetMin()-1)*(percentage-1)/99)
+}
+
+func (d *Device) ValueToPercentage(value int) float64 {
+	if value <= d.GetMin() {
+		return 0
+	}
+	if value <= d.GetMin()+1 {
+		return 1
+	}
+	if value >= d.GetMax() {
+		return 100
+	}
+	return 1 + float64(value-d.GetMin()-1)*99/float64(d.GetMax()-d.GetMin()-1)
 }

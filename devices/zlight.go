@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	core "github.com/PhilGruber/dimmy/core"
 	"log"
-	"math"
 	"strconv"
 	"time"
 
@@ -29,7 +28,7 @@ func makeZLight(config core.DeviceConfig) ZLight {
 
 	d.Hidden = false
 	d.Min = 0
-	d.Max = 100
+	d.Max = 254
 	d.transition = false
 	d.Type = "light"
 
@@ -55,7 +54,7 @@ func makeZLight(config core.DeviceConfig) ZLight {
 
 func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 	tt := time.Now()
-	newVal := int(math.Round(l.Current * 2.5))
+	newVal := l.PercentageToValue(l.Current)
 	var state string
 	if newVal != l.LastSent {
 		l.LastChanged = &tt
@@ -66,11 +65,10 @@ func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 		} else {
 			state = "OFF"
 		}
-		brightness := int(math.Round(l.Current * 2.5))
 
 		msg := core.Zigbee2MqttLightMessage{
 			State:      state,
-			Brightness: brightness,
+			Brightness: newVal,
 		}
 
 		if l.transition {
@@ -99,9 +97,9 @@ func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
 		value, err := strconv.Atoi(string(payload))
-		var state bool
+		var on bool
 		if err == nil {
-			state = value > 0
+			on = value > 0
 		} else {
 			var data core.Zigbee2MqttLightMessage
 			err := json.Unmarshal(payload, &data)
@@ -110,7 +108,7 @@ func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 				return
 			}
 			value = data.Brightness
-			state = data.State == "ON"
+			on = data.State == "ON"
 		}
 		moving := l.Current != l.Target
 		if moving {
@@ -118,13 +116,11 @@ func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 			return
 		}
 		log.Printf("Received value %d from %s", value, l.MqttState)
-		if state {
-			l.Current = float64(value) / 2.5
+		if on {
+			l.Current = l.ValueToPercentage(value)
 		} else {
 			l.Current = 0
 		}
-		if !moving {
-			l.Target = l.Current
-		}
+		l.Target = l.Current
 	}
 }

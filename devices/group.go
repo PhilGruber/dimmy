@@ -75,19 +75,11 @@ func (g *Group) GetCurrent() float64 {
 }
 
 func (g *Group) GetMax() int {
-	groupMax := 0
-	for _, d := range g.devices {
-		groupMax = int(math.Max(float64(d.GetMax()), float64(groupMax)))
-	}
-	return groupMax
+	return 100
 }
 
 func (g *Group) GetMin() int {
-	groupMin := 0
-	for _, d := range g.devices {
-		groupMin = int(math.Min(float64(d.GetMin()), float64(groupMin)))
-	}
-	return groupMin
+	return 0
 }
 
 func (g *Group) ProcessRequest(request core.SwitchRequest) {

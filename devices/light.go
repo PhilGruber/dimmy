@@ -60,11 +60,11 @@ func NewLight(config core.DeviceConfig) *Light {
 
 func (l *Light) PublishValue(mqtt mqtt.Client) {
 	tt := time.Now()
-	newVal := int(math.Round(l.Current))
+	newVal := l.PercentageToValue(l.Current)
 	if newVal != l.LastSent {
 		l.LastChanged = &tt
 		l.LastSent = newVal
-		mqtt.Publish(l.MqttTopic, 0, false, strconv.Itoa(int(math.Round(l.Current))))
+		mqtt.Publish(l.MqttTopic, 0, false, strconv.Itoa(newVal))
 	}
 }
 
@@ -87,10 +87,13 @@ func (l *Light) GetMessageHandler(channel chan core.SwitchRequest, light DeviceI
 			value = 0
 		}
 		log.Printf("Received state value %d from %s\n", value, light.GetMqttStateTopic())
-		if l.GetTarget() == math.Round(l.GetCurrent()) {
-			l.setTarget(float64(value))
+		if l.GetTarget() != math.Round(l.GetCurrent()) {
+			log.Printf("Ignoring value %d from %s because light is moving", value, l.MqttState)
+			return
 		}
-		l.setCurrent(float64(value))
+		percentage := l.ValueToPercentage(value)
+		l.setTarget(percentage)
+		l.setCurrent(percentage)
 
 	}
 }
