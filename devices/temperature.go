@@ -4,6 +4,7 @@ import (
 	core "github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
+	"strconv"
 )
 
 type Temperature struct {
@@ -46,14 +47,16 @@ func (t *Temperature) GetMqttStateTopic() string {
 	return t.MqttTopic
 }
 
-func (t *Temperature) getMessageHandler(channel chan core.SwitchRequest, temperature DeviceInterface) mqtt.MessageHandler {
-	log.Println("Subscribing to " + temperature.GetMqttTopic())
+func (t *Temperature) GetMessageHandler(channel chan core.SwitchRequest, temperature DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := string(mqttMessage.Payload())
 		log.Println("Received new temperature: " + string(payload))
+		temperature, err := strconv.ParseFloat(payload[:], 64)
+		if err != nil {
+			log.Println("Received invalid temperature " + payload[:] + ": " + err.Error())
+			return
 
-		if request, ok := temperature.GenerateRequest(payload[:]); ok {
-			channel <- request
 		}
+		t.setCurrent(temperature)
 	}
 }
