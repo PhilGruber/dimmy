@@ -97,3 +97,23 @@ func (l *Light) GetMessageHandler(channel chan core.SwitchRequest, light DeviceI
 
 	}
 }
+
+func (l *Light) PercentageToValue(percentage float64) int {
+	if percentage <= 1.0 {
+		return l.GetMin() + int(math.Round(percentage))
+	}
+	return l.GetMin() + 1 + int(float64(l.GetMax()-l.GetMin()-1)*(percentage-1)/99)
+}
+
+func (l *Light) ValueToPercentage(value int) float64 {
+	if value <= l.GetMin() {
+		return 0
+	}
+	if value <= l.GetMin()+1 {
+		return 1
+	}
+	if value >= l.GetMax() {
+		return 100
+	}
+	return 1 + float64(value-l.GetMin()-1)*99/float64(l.GetMax()-l.GetMin()-1)
+}
