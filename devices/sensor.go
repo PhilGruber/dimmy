@@ -20,6 +20,7 @@ type Sensor struct {
 
 func MakeSensor(config core.DeviceConfig) Sensor {
 	s := Sensor{}
+	s.Name = config.Name
 	s.MqttTopic = config.Topic
 	s.TargetDevice = *config.Options.Target
 
@@ -135,4 +136,8 @@ func (s *Sensor) GetMessageHandler(channel chan core.SwitchRequest, sensor Devic
 		}
 
 	}
+}
+
+func (s *Sensor) GetTriggerValue(key string) interface{} {
+	return nil
 }

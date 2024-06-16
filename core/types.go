@@ -9,6 +9,23 @@ type DeviceConfig struct {
 	Options *configOptions `yaml:"options"`
 }
 
+type RuleConfig struct {
+	Triggers []struct {
+		DeviceName string `yaml:"device"`
+		Key        string `yaml:"key"`
+		Active     bool   `yaml:"active"`
+		Condition  struct {
+			Operator string `yaml:"operator"`
+			Value    any    `yaml:"value"`
+		} `yaml:"condition"`
+	} `yaml:"triggers"`
+	Receivers []struct {
+		DeviceName string `yaml:"device"`
+		Key        string `yaml:"key"`
+		Value      any    `yaml:"value"`
+	} `yaml:"receivers"`
+}
+
 type configOptions struct {
 	Hidden            *bool     `yaml:"hidden"`
 	Timeout           *int      `yaml:"timeout"`
@@ -27,4 +44,5 @@ type ServerConfig struct {
 	MqttServer string         `yaml:"mqtt_server"`
 	WebRoot    string         `yaml:"webroot"`
 	Devices    []DeviceConfig `yaml:"devices"`
+	Rules      []RuleConfig   `yaml:"rules"`
 }

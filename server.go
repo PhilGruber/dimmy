@@ -62,9 +62,17 @@ func main() {
 		}
 	}
 
+	var rules []dimmyDevices.Rule
+	for _, ruleConfig := range config.Rules {
+		rule := dimmyDevices.NewRule(ruleConfig, devices)
+		if rule != nil {
+			rules = append(rules, *rule)
+		}
+	}
+
 	channel := make(chan core.SwitchRequest, 10)
 
-	go eventLoop(devices, channel, config.MqttServer)
+	go eventLoop(devices, rules, channel, config.MqttServer)
 
 	assets := http.FileServer(http.Dir(config.WebRoot + "/assets"))
 	http.Handle("/assets/", http.StripPrefix("/assets/", assets))
@@ -76,7 +84,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
 }
 
-func eventLoop(devices map[string]dimmyDevices.DeviceInterface, channel chan core.SwitchRequest, mqttServer string) {
+func eventLoop(devices map[string]dimmyDevices.DeviceInterface, rules []dimmyDevices.Rule, channel chan core.SwitchRequest, mqttServer string) {
 	hostname, _ := os.Hostname()
 	client := initMqtt(mqttServer, "goserver-"+hostname)
 
@@ -117,7 +125,12 @@ func eventLoop(devices map[string]dimmyDevices.DeviceInterface, channel chan cor
 				if ok {
 					channel <- request
 				}
+			}
+		}
 
+		for _, rule := range rules {
+			if rule.CheckTriggers() {
+				rule.Fire(channel)
 			}
 		}
 
@@ -155,7 +168,7 @@ func ReceiveRequest(channel chan core.SwitchRequest) http.HandlerFunc {
 			return
 		}
 		channel <- request
-		fmt.Fprintf(output, jsonResponse(true, request, fmt.Sprintf("Sent %s command to %s", request.Command, request.Device)))
+		fmt.Fprintf(output, jsonResponse(true, request, fmt.Sprintf("Sent command to %s", request.Device)))
 	}
 }
 

@@ -19,6 +19,7 @@ type ZSensor struct {
 
 func MakeZSensor(config core.DeviceConfig) ZSensor {
 	s := ZSensor{}
+	s.Name = config.Name
 	s.MqttTopic = config.Topic
 	s.TargetDevice = *config.Options.Target
 

@@ -23,6 +23,7 @@ type lightStateMessage struct {
 
 func makeLight(config core.DeviceConfig) Light {
 	d := Light{}
+	d.Name = config.Name
 	d.MqttTopic = config.Topic
 
 	var re = regexp.MustCompile("^cmnd/(.+)/dimmer$")
@@ -34,6 +35,8 @@ func makeLight(config core.DeviceConfig) Light {
 	d.Hidden = false
 	d.Min = 0
 	d.Max = 100
+
+	d.Receivers = []string{"brightness", "duration"}
 
 	if config.Options != nil {
 		if config.Options.Hidden != nil {
@@ -56,6 +59,21 @@ func makeLight(config core.DeviceConfig) Light {
 func NewLight(config core.DeviceConfig) *Light {
 	d := makeLight(config)
 	return &d
+}
+
+func (l *Light) SetReceiverValue(key string, value interface{}) {
+	switch key {
+	case "brightness":
+		brightness := value.(float64)
+		l.setTarget(brightness)
+	case "duration":
+		duration := value.(int)
+		log.Printf("Setting duration to %d seconds\n", duration)
+	}
+}
+
+func (l *Light) GetTriggerValue(key string) interface{} {
+	return nil
 }
 
 func (l *Light) PublishValue(mqtt mqtt.Client) {

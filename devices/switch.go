@@ -18,10 +18,12 @@ type Switch struct {
 
 func makeSwitch(config core.DeviceConfig) Switch {
 	s := Switch{}
+	s.Name = config.Name
 	s.MqttTopic = config.Topic
 	s.MqttState = config.Topic
 	s.TargetDevice = *config.Options.Target
 	s.Type = "switch"
+	s.Triggers = []string{"button"}
 
 	s.Hidden = true
 	return s
@@ -63,6 +65,10 @@ func (s *Switch) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 		}
 
 		log.Printf("Button pressed (%s)", data.Action)
+
+		// TODO: send message to server to trigger rule
+		// remove everything else
+
 		val := 0
 
 		if data.Action == "on" {

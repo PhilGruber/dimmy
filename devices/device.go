@@ -1,7 +1,7 @@
 package devices
 
 import (
-	core "github.com/PhilGruber/dimmy/core"
+	"github.com/PhilGruber/dimmy/core"
 	"log"
 	"time"
 
@@ -23,18 +23,30 @@ type DeviceInterface interface {
 	ProcessRequest(core.SwitchRequest)
 	GetMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt.MessageHandler
 	GetStateMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt.MessageHandler
+	GetName() string
+	GetTriggers() []string
+	GetReceivers() []string
+	SetReceiverValue(string, any)
+	GetTriggerValue(string) any
 
 	PublishValue(mqtt.Client)
 	PollValue(mqtt.Client)
 }
 
 type Device struct {
+	Name        string
 	MqttTopic   string     `json:"-"`
 	MqttState   string     `json:"-"`
 	Current     float64    `json:"value"`
 	LastChanged *time.Time `json:"-"`
 	Type        string
 	Hidden      bool
+	Triggers    []string
+	Receivers   []string
+}
+
+func (d *Device) GetName() string {
+	return d.Name
 }
 
 func (d *Device) GetCurrent() float64 {
@@ -82,4 +94,19 @@ func (d *Device) GetStateMessageHandler(channel chan core.SwitchRequest, sensor 
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		log.Println("Received state message from " + d.MqttState)
 	}
+}
+
+func (d *Device) GetTriggers() []string {
+	return d.Triggers
+}
+
+func (d *Device) GetReceivers() []string {
+	return d.Receivers
+}
+
+func (d *Device) SetReceiverValue(key string, value any) {
+}
+
+func (d *Device) GetTriggerValue(key string) any {
+	return nil
 }

@@ -18,6 +18,7 @@ type Thermostat struct {
 
 func MakeThermostat(config core.DeviceConfig) Thermostat {
 	t := Thermostat{}
+	t.Name = config.Name
 	t.MqttTopic = config.Topic
 	if config.Options == nil {
 		log.Fatalf("Thermostat %s does not have any options", config.Name)

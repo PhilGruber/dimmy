@@ -13,6 +13,7 @@ type Temperature struct {
 
 func MakeTemperature(config core.DeviceConfig) Temperature {
 	t := Temperature{}
+	t.Name = config.Name
 	t.MqttTopic = config.Topic
 
 	t.Current = 0

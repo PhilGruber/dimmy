@@ -85,7 +85,6 @@ func main() {
 
 	request := core.SwitchRequest{
 		Device:   *device,
-		Command:  "dim",
 		Value:    *value,
 		Duration: *duration,
 	}

@@ -16,6 +16,7 @@ type Group struct {
 func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *Group {
 	g := Group{}
 
+	g.Name = config.Name
 	g.Type = "group"
 	g.Hidden = false
 	deviceType := ""

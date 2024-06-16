@@ -25,6 +25,7 @@ type plugStateMessage struct {
 
 func makePlug(config core.DeviceConfig) Plug {
 	p := Plug{}
+	p.Name = config.Name
 	p.MqttTopic = config.Topic
 	var re = regexp.MustCompile("^cmnd/(.+)/POWER$")
 	p.MqttState = re.ReplaceAllString(p.MqttTopic, "tele/$1/STATE")
@@ -115,4 +116,15 @@ func (p *Plug) ValueToPercentage(value int) float64 {
 		return 0
 	}
 	return 1
+}
+
+func (p *Plug) GetTriggerValue(key string) interface{} {
+	return nil
+}
+
+func (p *Plug) SetReceiverValue(key string, value interface{}) {
+	if key != "state" {
+		return
+	}
+	p.ProcessRequest(core.SwitchRequest{Device: "", Value: value.(float64)})
 }

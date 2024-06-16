@@ -2,7 +2,7 @@ package devices
 
 import (
 	"encoding/json"
-	core "github.com/PhilGruber/dimmy/core"
+	"github.com/PhilGruber/dimmy/core"
 	"log"
 	"strconv"
 	"time"
@@ -21,6 +21,7 @@ func NewZLight(config core.DeviceConfig) *ZLight {
 
 func makeZLight(config core.DeviceConfig) ZLight {
 	d := ZLight{}
+	d.Name = config.Name
 	d.MqttTopic = config.Topic
 	d.MqttState = config.Topic
 	d.Current = 0
