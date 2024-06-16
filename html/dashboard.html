@@ -1,4 +1,4 @@
-<html>
+<html lang="en">
     <head>
         <title>
             Dimmy Dashboard
@@ -25,7 +25,7 @@
                         } else if (data[name].Type === 'temperature') {
                             $("#value_" + name).text(Math.round(data[name].value));
                         } else {
-                            $("#value_" + name).text(Math.round(data[name].value) + '%');
+                            updateProgressBar(name, data[name].value);
                         }
                     }
                 }, "json");
@@ -41,12 +41,30 @@
             $.post('/api/switch', JSON.stringify(data), null, 'json');
         }
 
+        function updateProgressBar(name, value) {
+            let displayValue = Math.round(value * .999);
+            let device = document.getElementById("progress_" + name);
+            if (device == null) {
+                return;
+            }
+            device.style.width = displayValue + "%";
+        }
+
+        function updateValue(name) {
+            return function() {
+                let value = (this.value - this.min) / (this.max - this.min) * 100;
+                updateProgressBar(name, value)
+                switchDevice(name, value);
+            }
+        }
+
         function thermostatOffset(current, target) {
             if (target == 0) {
                 return Math.round(current);
             }
             return target;
         }
+
         </script>
     </head>
     <body>
@@ -65,11 +83,13 @@
                     {{ end }}
 
                     {{ if (or (eq $device.Type "light") (eq $device.Type "sensor") (eq $device.Type "zlight") (eq $device.Type "group")) }}
-                        <a class='left' onClick="switchDevice('{{ $name }}', 0);">off</a>
-                        <a class='left' onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) - 10);">-</a>
-                        <span class='value' id='value_{{ $name }}'></span>
-                        <a class='right' onClick="switchDevice('{{ $name }}', 100);">on</a>
-                        <a class='right' onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) + 10);">+</a>
+                        <div class="progress-container">
+                            <input type="range" min="0" max="100" value="50" class="slider" id="value_{{ $name }}">
+                            <div class="progress" id="progress_{{ $name }}"></div>
+                        </div>
+                        <script>
+                            document.getElementById("value_{{ $name }}").oninput = updateValue({{ $name }})
+                        </script>
                     {{ end }}
 
                     {{ if eq $device.Type "temperature" }}

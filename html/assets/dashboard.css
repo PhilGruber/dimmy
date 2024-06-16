@@ -1,12 +1,12 @@
 
 body {
     font-family: Verdana, Sans-Serif;
-    font-size: 30pt;
+    font-size: 26pt;
 }
 
 .device {
     border: 3px solid #67D0DD;
-    padding: 2px;
+    padding: 0px;
     max-width: 360px;
     margin-bottom: 5px;
 }
@@ -14,12 +14,12 @@ body {
 .title {
     background-color: #67D0DD;
     color: #F6E785;
-    padding: 6px;
+    padding: 4px;
     text-align: center;
 }
 
 .buttons {
-    padding: 2px;
+    padding: 0;
     text-align: center;
 }
 
@@ -39,7 +39,6 @@ body {
     width: 140px;
     display: inline-block;
     text-align: center;
-    word-wrap: no-wrap;
     color: #666;
     height: 38px;
 }
@@ -53,5 +52,43 @@ body {
 }
 
 .hidden {
-    visibility: none;
+    visibility: hidden;
+}
+
+
+.progress-container {
+    width: 100%;
+    position: relative;
+    margin: 0;
+    padding: 0;
+}
+
+.slider {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 38px;
+    opacity: 0;
+}
+
+.slider::-moz-range-thumb {
+    width: 10px;
+    height: 38px;
+    background: #FCAF50;
+    cursor: pointer;
+    opacity: 1;
+    border-radius: 0;
+    z-index: 999;
+    left:10px;
+}
+
+.progress {
+    height: 42px;
+    background: #97E3EC;
+    width: 50%;
+    position: absolute;
+    opacity: 1;
+    top: 0;
+    left: 0;
+    z-index: 3;
 }
