@@ -12,6 +12,9 @@ import (
 type Switch struct {
 	Device
 
+	onPressed  bool
+	offPressed bool
+
 	TargetDevice string
 	Step         int
 }
@@ -23,7 +26,9 @@ func makeSwitch(config core.DeviceConfig) Switch {
 	s.MqttState = config.Topic
 	s.TargetDevice = *config.Options.Target
 	s.Type = "switch"
-	s.Triggers = []string{"button"}
+	s.Triggers = []string{"on", "off"}
+	s.onPressed = false
+	s.offPressed = false
 
 	s.Hidden = true
 	return s
@@ -66,22 +71,11 @@ func (s *Switch) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 
 		log.Printf("Button pressed (%s)", data.Action)
 
-		// TODO: send message to server to trigger rule
-		// remove everything else
-
-		val := 0
-
 		if data.Action == "on" {
-			val = 100
+			s.onPressed = true
+		} else {
+			s.offPressed = true
 		}
-
-		log.Printf("Setting device to %d", val)
-
-		request, ok := sw.GenerateRequest(strconv.Itoa(val))
-		if ok {
-			channel <- request
-		}
-
 	}
 }
 
@@ -105,4 +99,16 @@ func (s *Switch) setCurrent(float64) {
 }
 
 func (s *Switch) ProcessRequest(request core.SwitchRequest) {
+}
+
+func (s *Switch) GetTriggerValue(key string) any {
+	if key == "on" && s.onPressed {
+		s.onPressed = false
+		return 1
+	}
+	if key == "off" && s.offPressed {
+		s.offPressed = false
+		return 1
+	}
+	return 0
 }

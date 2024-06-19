@@ -89,41 +89,48 @@ func (r *Rule) Fire(channel chan core.SwitchRequest) {
 	}
 }
 
+func (r *Rule) CheckTrigger(device DeviceInterface, key string, value any) bool {
+	for _, trigger := range r.Triggers {
+		if trigger.device.GetName() == device.GetName() && trigger.key == key {
+			return r.checkCondition(value, trigger.condition.Operator, trigger.condition.Value)
+		}
+	}
+	return false
+}
+
+func (r *Rule) checkCondition(value any, condition string, target any) bool {
+	switch condition {
+	case "==":
+		return value == target
+	case "!=":
+		return value != target
+	case ">":
+		switch value.(type) {
+		case int:
+			return value.(int) > target.(int)
+		case float64:
+			return value.(float64) > target.(float64)
+		}
+	case "<":
+		switch value.(type) {
+		case int:
+			return value.(int) < target.(int)
+		case float64:
+			return value.(float64) < target.(float64)
+		}
+	}
+	return false
+
+}
+
 func (r *Rule) CheckTriggers() bool {
 	matches := 0
 	for _, trigger := range r.Triggers {
-		switch trigger.condition.Operator {
-		case "==":
-			if trigger.device.GetTriggerValue(trigger.key) == trigger.condition.Value {
-				log.Printf("Trigger %s == %s matches\n", trigger.key, trigger.condition.Value)
-				matches++
-			}
-		case "!=":
-			if trigger.device.GetTriggerValue(trigger.key) == trigger.condition.Value {
-				matches++
-			}
-		case ">":
-			switch trigger.condition.Value.(type) {
-			case int:
-				if trigger.device.GetTriggerValue(trigger.key).(int) > trigger.condition.Value.(int) {
-					matches++
-				}
-			case float64:
-				if trigger.device.GetTriggerValue(trigger.key).(float64) > trigger.condition.Value.(float64) {
-					matches++
-				}
-			}
-		case "<":
-			switch trigger.condition.Value.(type) {
-			case int:
-				if trigger.device.GetTriggerValue(trigger.key).(int) < trigger.condition.Value.(int) {
-					matches++
-				}
-			case float64:
-				if trigger.device.GetTriggerValue(trigger.key).(float64) < trigger.condition.Value.(float64) {
-					matches++
-				}
-			}
+		if !trigger.active {
+			return false
+		}
+		if r.checkCondition(trigger.device.GetTriggerValue(trigger.key), trigger.condition.Operator, trigger.condition.Value) {
+			matches++
 		}
 	}
 
