@@ -9,7 +9,6 @@ type Rule struct {
 	Triggers []struct {
 		device    DeviceInterface
 		key       string
-		active    bool
 		condition struct {
 			Operator string
 			Value    any
@@ -30,7 +29,6 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 		trigger := struct {
 			device    DeviceInterface
 			key       string
-			active    bool
 			condition struct {
 				Operator string
 				Value    any
@@ -38,7 +36,6 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 		}{
 			device: devices[triggerConfig.DeviceName],
 			key:    triggerConfig.Key,
-			active: triggerConfig.Active,
 			condition: struct {
 				Operator string
 				Value    any
@@ -126,9 +123,6 @@ func (r *Rule) checkCondition(value any, condition string, target any) bool {
 func (r *Rule) CheckTriggers() bool {
 	matches := 0
 	for _, trigger := range r.Triggers {
-		if !trigger.active {
-			return false
-		}
 		if r.checkCondition(trigger.device.GetTriggerValue(trigger.key), trigger.condition.Operator, trigger.condition.Value) {
 			matches++
 		}

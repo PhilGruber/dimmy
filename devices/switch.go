@@ -26,7 +26,7 @@ func makeSwitch(config core.DeviceConfig) Switch {
 	s.MqttState = config.Topic
 	s.TargetDevice = *config.Options.Target
 	s.Type = "switch"
-	s.Triggers = []string{"on", "off"}
+	s.Triggers = []string{"button"}
 	s.onPressed = false
 	s.offPressed = false
 
@@ -102,13 +102,15 @@ func (s *Switch) ProcessRequest(request core.SwitchRequest) {
 }
 
 func (s *Switch) GetTriggerValue(key string) any {
-	if key == "on" && s.onPressed {
-		s.onPressed = false
-		return 1
-	}
-	if key == "off" && s.offPressed {
-		s.offPressed = false
-		return 1
+	if key == "button" {
+		if s.onPressed {
+			s.onPressed = false
+			return "on"
+		}
+		if s.offPressed {
+			s.offPressed = false
+			return "off"
+		}
 	}
 	return 0
 }
