@@ -20,17 +20,17 @@ func MakeTemperature(config core.DeviceConfig) Temperature {
 	return t
 }
 
+func NewTemperature(config core.DeviceConfig) *Temperature {
+	s := MakeTemperature(config)
+	return &s
+}
+
 func (t *Temperature) GetMin() int {
 	return 0
 }
 
 func (t *Temperature) GetMax() int {
 	return 99
-}
-
-func NewTemperature(config core.DeviceConfig) *Temperature {
-	s := MakeTemperature(config)
-	return &s
 }
 
 func (t *Temperature) PublishValue(mqtt mqtt.Client) {
@@ -55,7 +55,6 @@ func (t *Temperature) GetMessageHandler(channel chan core.SwitchRequest, tempera
 		if err != nil {
 			log.Println("Received invalid temperature " + payload[:] + ": " + err.Error())
 			return
-
 		}
 		t.setCurrent(temperature)
 	}
