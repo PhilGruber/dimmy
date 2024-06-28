@@ -44,13 +44,10 @@ func main() {
 			devices[deviceConfig.Name] = dimmyDevices.NewPlug(deviceConfig)
 		case "temperature":
 			devices[deviceConfig.Name] = dimmyDevices.NewTemperature(deviceConfig)
-<<<<<<< Updated upstream
 		case "thermostat":
 			devices[deviceConfig.Name] = dimmyDevices.NewThermostat(deviceConfig)
-=======
 		case "ztemperature":
 			devices[deviceConfig.Name] = dimmyDevices.NewZTemperature(deviceConfig)
->>>>>>> Stashed changes
 		case "group":
 		default:
 			log.Println("Skipping deviceConfig of unknown type '" + deviceConfig.Type + "'")

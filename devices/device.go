@@ -35,6 +35,7 @@ type Device struct {
 	LastChanged *time.Time `json:"-"`
 	Type        string
 	Hidden      bool
+	Name        string
 }
 
 func (d *Device) GetCurrent() float64 {
