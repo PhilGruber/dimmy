@@ -3,10 +3,8 @@ package devices
 import (
 	"encoding/json"
 	core "github.com/PhilGruber/dimmy/core"
-	"log"
-	"strconv"
-
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"log"
 )
 
 type Switch struct {
@@ -15,8 +13,7 @@ type Switch struct {
 	onPressed  bool
 	offPressed bool
 
-	TargetDevice string
-	Step         int
+	Step int
 }
 
 func makeSwitch(config core.DeviceConfig) Switch {
@@ -24,7 +21,7 @@ func makeSwitch(config core.DeviceConfig) Switch {
 	s.Name = config.Name
 	s.MqttTopic = config.Topic
 	s.MqttState = config.Topic
-	s.TargetDevice = *config.Options.Target
+
 	s.Type = "switch"
 	s.Triggers = []string{"button"}
 	s.onPressed = false
@@ -37,14 +34,6 @@ func makeSwitch(config core.DeviceConfig) Switch {
 func NewSwitch(config core.DeviceConfig) *Switch {
 	p := makeSwitch(config)
 	return &p
-}
-
-func (s *Switch) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
-	var request core.SwitchRequest
-	request.Device = s.TargetDevice
-	request.Value, _ = strconv.ParseFloat(cmd, 64)
-	request.Duration = 1
-	return request, true
 }
 
 type SwitchMessage struct {
