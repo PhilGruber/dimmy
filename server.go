@@ -8,7 +8,6 @@ import (
 	"github.com/PhilGruber/dimmy/core"
 	dimmyDevices "github.com/PhilGruber/dimmy/devices"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"gopkg.in/yaml.v3"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -21,8 +20,9 @@ import (
 func main() {
 
 	devices := make(map[string]dimmyDevices.DeviceInterface)
+	panels := make(map[string]dimmyDevices.Panel)
 
-	config, err := loadConfig()
+	config, err := core.LoadConfig()
 	if err != nil {
 		log.Println(err.Error())
 		return
@@ -64,6 +64,10 @@ func main() {
 		}
 	}
 
+	for _, panel := range config.Panels {
+		panels[panel.Label] = dimmyDevices.NewPanel(panel, &devices)
+	}
+
 	channel := make(chan core.SwitchRequest, 10)
 
 	go eventLoop(devices, channel, config.MqttServer)
@@ -72,7 +76,7 @@ func main() {
 	http.Handle("/assets/", http.StripPrefix("/assets/", assets))
 	http.Handle("/api/switch", ReceiveRequest(channel))
 	http.Handle("/api/status", ShowStatus(&devices))
-	http.Handle("/", ShowDashboard(devices, channel, config.WebRoot))
+	http.Handle("/", ShowDashboard(devices, panels, channel, config.WebRoot))
 
 	log.Printf("Listening on port %d", config.Port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
@@ -168,7 +172,7 @@ func ShowStatus(devices *map[string]dimmyDevices.DeviceInterface) http.HandlerFu
 	}
 }
 
-func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, channel chan core.SwitchRequest, webroot string) http.HandlerFunc {
+func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, panels map[string]dimmyDevices.Panel, channel chan core.SwitchRequest, webroot string) http.HandlerFunc {
 	return func(output http.ResponseWriter, request *http.Request) {
 		if request.Method == "POST" {
 			err := request.ParseForm()
@@ -192,47 +196,15 @@ func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, channel chan
 		}
 
 		templ, _ := template.ParseFiles(webroot + "/dashboard.html")
-		err := templ.Execute(output, devices)
+		err := templ.Execute(output, struct {
+			Devices map[string]dimmyDevices.DeviceInterface
+			Panels  map[string]dimmyDevices.Panel
+		}{devices, panels})
 		if err != nil {
 			log.Println(err)
 			return
 		}
 	}
-}
-
-func loadConfig() (*core.ServerConfig, error) {
-
-	var filename string
-	if _, err := os.Stat("/etc/dimmyd.conf.yaml"); err == nil {
-		filename = "/etc/dimmyd.conf.yaml"
-	} else if _, err := os.Stat("dimmyd.conf.yaml"); err == nil {
-		filename = "dimmyd.conf.yaml"
-	} else {
-		return nil, errors.New("could not find config file /etc/dimmyd.conf.yaml")
-	}
-
-	log.Println("Loading config file " + filename)
-
-	var config core.ServerConfig
-	configYaml, _ := os.ReadFile(filename)
-	err := yaml.Unmarshal(configYaml, &config)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if config.WebRoot == "" {
-		config.WebRoot = "/usr/share/dimmy"
-	}
-
-	if config.MqttServer == "" {
-		config.MqttServer = "127.0.0.1"
-	}
-
-	if config.Port == 0 {
-		config.Port = 80
-	}
-
-	return &config, nil
 }
 
 func loadLegacyConfig() (map[string]string, map[string]map[string]string, error) {

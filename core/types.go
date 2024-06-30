@@ -6,7 +6,14 @@ type DeviceConfig struct {
 	Type    string         `yaml:"type"`
 	Topic   string         `yaml:"topic"`
 	Name    string         `yaml:"name"`
+	Label   string         `yaml:"label"`
+	Emoji   string         `yaml:"emoji"`
 	Options *configOptions `yaml:"options"`
+}
+
+type PanelConfig struct {
+	Label   string   `yaml:"label"`
+	Devices []string `yaml:"devices"`
 }
 
 type configOptions struct {
@@ -27,4 +34,5 @@ type ServerConfig struct {
 	MqttServer string         `yaml:"mqtt_server"`
 	WebRoot    string         `yaml:"webroot"`
 	Devices    []DeviceConfig `yaml:"devices"`
+	Panels     []PanelConfig  `yaml:"panels"`
 }

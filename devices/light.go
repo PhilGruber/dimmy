@@ -23,7 +23,8 @@ type lightStateMessage struct {
 
 func makeLight(config core.DeviceConfig) Light {
 	d := Light{}
-	d.MqttTopic = config.Topic
+	d.Emoji = "💡"
+	d.setBaseConfig(config)
 
 	var re = regexp.MustCompile("^cmnd/(.+)/dimmer$")
 	d.MqttState = re.ReplaceAllString(d.MqttTopic, "tele/$1/STATE")
@@ -31,14 +32,10 @@ func makeLight(config core.DeviceConfig) Light {
 	d.Current = 0
 	d.Target = 0
 
-	d.Hidden = false
 	d.Min = 0
 	d.Max = 100
 
 	if config.Options != nil {
-		if config.Options.Hidden != nil {
-			d.Hidden = *config.Options.Hidden
-		}
 		if config.Options.Min != nil {
 			d.Min = *config.Options.Min
 		}

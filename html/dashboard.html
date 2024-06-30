@@ -3,7 +3,7 @@
         <title>
             Dimmy Dashboard
         </title>
-        <link rel='stylesheet' type='text/css' href='/assets/dashboard.css' />
+        <link rel='stylesheet' type='text/css' href='/assets/dashboard.css?4' />
         <script src='/assets/jquery.js'></script>
         <script>
         $(document).ready(function() {
@@ -23,7 +23,10 @@
                             }
                             $("#target_" + name).text(Math.round(data[name].TargetTemperature));
                         } else if (data[name].Type === 'temperature') {
-                            $("#value_" + name).text(Math.round(data[name].value));
+                            $("#value_" + name).text(Math.round(data[name].value*10)/10);
+                            if (data[name].Humidity != 0) {
+                                $("#humidity_" + name).text(Math.round(data[name].Humidity));
+                            }
                         } else {
                             $("#value_" + name).text(Math.round(data[name].value) + '%');
                         }
@@ -50,11 +53,51 @@
         </script>
     </head>
     <body>
-        {{ range $name, $device := . }}
+        {{ range .Panels }}
+        <div class='device'>
+            <div class='title'>
+                {{ .GetLabel }}
+            </div>
+            {{ range .GetDevices }}
+            <div class="panel panel-{{ .GetType }} buttons">
+
+                {{ if eq .GetType "temperature" }}
+                    <span class="left value wide">
+                        🌡<span id='value_{{ .Name }}'>{{ .GetCurrent }}</span> °C
+                    </span>
+                    {{ if .HasHumidity }}
+                        <span class="right value wide">
+                            &nbsp; 💧 <span id="humidity_{{ .Name }}">{{ .GetHumidity }}</span>%
+                        </span>
+                    {{ end }}
+                    <br/>
+                {{ end }}
+
+                {{ if eq .GetType "plug" }}
+                    <span class="left emoji">{{ .Emoji }}</span>
+                    <a class='left' onClick="switchDevice('{{ .GetName }}', 0);">off</a>
+                    <span class='value wide' id='value_{{ .GetName }}'></span>
+                    <a class='right' onClick="switchDevice('{{ .GetName }}', 100);">on</a>
+                {{ end }}
+
+                {{ if eq .GetType "light" }}
+                    <span class="left emoji">{{ .Emoji }}</span>
+                    <a class='left' onClick="switchDevice('{{ .GetName }}', 0);">off</a>
+                    <a class='left' onClick="switchDevice('{{ .GetName }}', parseInt($('#value_{{.GetName}}').text()) - 10);">-</a>
+                    <span class='value narrow' id='value_{{ .GetName }}'></span>
+                    <a class='right' onClick="switchDevice('{{ .GetName }}', 100);">on</a>
+                    <a class='right' onClick="switchDevice('{{ .GetName }}', parseInt($('#value_{{.GetName}}').text()) + 10);">+</a>
+                    <br/>
+                {{ end }}
+            </div>
+            {{ end }}
+        </div>
+        {{ end }}
+        {{ range $name, $device := .Devices }}
             {{ if not $device.Hidden }}
             <div class='device'>
                 <div class='title'>
-                    {{ $name }}
+                    {{ $device.Label }}
                 </div>
                 <div class='buttons'>
 

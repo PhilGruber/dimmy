@@ -15,10 +15,9 @@ type Group struct {
 
 func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *Group {
 	g := Group{}
+	g.setBaseConfig(config)
 
-	g.Type = "group"
-	g.Hidden = false
-	deviceType := ""
+	g.Type = ""
 
 	tt := time.Now()
 	g.LastChanged = &tt
@@ -33,10 +32,6 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 		return &g
 	}
 
-	if config.Options.Hidden != nil {
-		g.Hidden = *config.Options.Hidden
-	}
-
 	g.devices = make([]DeviceInterface, len(*config.Options.Devices))
 
 	i := 0
@@ -45,11 +40,11 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 		if ok {
 			dev, ok := allDevices[key]
 			if ok {
-				if deviceType == "" {
-					deviceType = dev.GetType()
-				} else if deviceType != dev.GetType() {
+				if g.Type == "" {
+					g.Type = dev.GetType()
+				} else if g.Type != dev.GetType() {
 					log.Println("Can't add device " + key + " to group, as it is of a different type than the other devices in the group")
-					fmt.Printf("%s != %s", deviceType, dev.GetType())
+					fmt.Printf("%s != %s", g.Type, dev.GetType())
 					return nil
 				}
 				g.devices[i] = dev

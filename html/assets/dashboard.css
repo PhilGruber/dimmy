@@ -1,7 +1,7 @@
 
 body {
     font-family: Verdana, Sans-Serif;
-    font-size: 30pt;
+    font-size: 26pt;
 }
 
 .device {
@@ -27,7 +27,7 @@ body {
     width: 40px;
     height: 36px;
     border-radius: 20px;
-    background-color: #FAAFa5;
+    background-color: #FAAFA5;
     font-size: 22pt;
     padding: 2px 5px;
     display: inline-block;
@@ -36,12 +36,19 @@ body {
 }
 
 .buttons .value {
-    width: 140px;
     display: inline-block;
     text-align: center;
     word-wrap: no-wrap;
     color: #666;
     height: 38px;
+}
+
+.buttons .narrow {
+    width: 120px;
+}
+
+.buttons .wide {
+    width: 160px;
 }
 
 .right {
@@ -54,4 +61,18 @@ body {
 
 .hidden {
     visibility: none;
+}
+
+.emoji {
+    float: left;
+    text-align: left;
+}
+
+.panel {
+    clear: both;
+    text-align: left;
+}
+
+.panel-temperature .left {
+    text-align: left;
 }

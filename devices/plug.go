@@ -25,15 +25,11 @@ type plugStateMessage struct {
 
 func makePlug(config core.DeviceConfig) Plug {
 	p := Plug{}
-	p.MqttTopic = config.Topic
+	p.Emoji = "🔌"
+	p.setBaseConfig(config)
+
 	var re = regexp.MustCompile("^cmnd/(.+)/POWER$")
 	p.MqttState = re.ReplaceAllString(p.MqttTopic, "tele/$1/STATE")
-	p.Current = 0
-
-	p.Hidden = false
-	if config.Options != nil && config.Options.Hidden != nil {
-		p.Hidden = *config.Options.Hidden
-	}
 
 	tt := time.Now()
 	p.LastChanged = &tt

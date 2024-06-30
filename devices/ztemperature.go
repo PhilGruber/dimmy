@@ -7,14 +7,21 @@ import (
 	"log"
 )
 
+type ZTemperature struct {
+	Temperature
+	Humidity float64
+}
+
 func MakeZTemperature(config core.DeviceConfig) ZTemperature {
 	t := ZTemperature{}
-	t.Name = config.Name
-	t.MqttTopic = config.Topic
+	t.Emoji = "🌡️"
+	t.setBaseConfig(config)
 
 	t.Current = 0
 	t.Humidity = 0
+	t.HasHumidity = false
 	t.Type = "temperature"
+
 	return t
 }
 
@@ -23,15 +30,10 @@ func NewZTemperature(config core.DeviceConfig) *ZTemperature {
 	return &t
 }
 
-type ZTemperature struct {
-	Temperature
-	Humidity float64
-}
-
 type ZTemperatureMessage struct {
 	core.Zigbee2MqttMessage
-	Temperature float64 `json:"temperature"`
-	Humidity    float64 `json:"humidity"`
+	Temperature float64  `json:"temperature"`
+	Humidity    *float64 `json:"humidity"`
 }
 
 func (t *ZTemperature) GetMessageHandler(channel chan core.SwitchRequest, temperature DeviceInterface) mqtt.MessageHandler {
@@ -44,8 +46,13 @@ func (t *ZTemperature) GetMessageHandler(channel chan core.SwitchRequest, temper
 			log.Printf("Received invalid json payload from %s: %v\n\tError: %s ", t.MqttTopic, payload, err.Error())
 			return
 		}
-		log.Printf("Received new temperature: %.2f Humidity: %.2f", data.Temperature, data.Humidity)
+		log.Printf("Received new temperature for %s: %.2f Humidity: %.2f", t.Name, data.Temperature, *data.Humidity)
 		t.setCurrent(data.Temperature)
-		t.Humidity = data.Humidity
+		if data.Humidity != nil {
+			t.HasHumidity = true
+			t.Humidity = *data.Humidity
+		} else {
+			t.HasHumidity = false
+		}
 	}
 }
