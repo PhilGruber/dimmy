@@ -21,8 +21,10 @@ type DeviceInterface interface {
 	GetLabel() string
 	GetMax() int
 	GetMin() int
+	GetHidden() bool
 	GetCurrent() float64
 	setCurrent(float64)
+	GetEmoji() string
 	ProcessRequest(core.SwitchRequest)
 	GetMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt.MessageHandler
 	GetStateMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt.MessageHandler
@@ -128,4 +130,12 @@ func (d *Device) GetStateMessageHandler(channel chan core.SwitchRequest, sensor 
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		log.Println("Received state message from " + d.MqttState)
 	}
+}
+
+func (d *Device) GetHidden() bool {
+	return d.Hidden
+}
+
+func (d *Device) GetEmoji() string {
+	return d.Emoji
 }

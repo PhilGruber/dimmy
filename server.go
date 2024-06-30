@@ -68,6 +68,12 @@ func main() {
 		panels[panel.Label] = dimmyDevices.NewPanel(panel, &devices)
 	}
 
+	for _, device := range devices {
+		if !device.GetHidden() {
+			panels[device.GetLabel()] = dimmyDevices.NewPanelFromDevice(device)
+		}
+	}
+
 	channel := make(chan core.SwitchRequest, 10)
 
 	go eventLoop(devices, channel, config.MqttServer)

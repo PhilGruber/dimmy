@@ -34,6 +34,7 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 
 	g.devices = make([]DeviceInterface, len(*config.Options.Devices))
 
+	g.Emoji = "🏠"
 	i := 0
 	for _, key := range *config.Options.Devices {
 		_, ok := allDevices[key]
@@ -42,6 +43,7 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 			if ok {
 				if g.Type == "" {
 					g.Type = dev.GetType()
+					g.Emoji = dev.GetEmoji()
 				} else if g.Type != dev.GetType() {
 					log.Println("Can't add device " + key + " to group, as it is of a different type than the other devices in the group")
 					fmt.Printf("%s != %s", g.Type, dev.GetType())

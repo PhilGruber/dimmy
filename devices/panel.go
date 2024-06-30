@@ -25,6 +25,14 @@ func NewPanel(config core.PanelConfig, devices *map[string]DeviceInterface) Pane
 	return p
 }
 
+func NewPanelFromDevice(device DeviceInterface) Panel {
+	p := Panel{}
+	p.Label = device.GetLabel()
+	p.Devices = append(p.Devices, device)
+	log.Println("Created panel from device " + device.GetName())
+	return p
+}
+
 func (p Panel) GetLabel() string {
 	return p.Label
 }

@@ -3,7 +3,7 @@
         <title>
             Dimmy Dashboard
         </title>
-        <link rel='stylesheet' type='text/css' href='/assets/dashboard.css?4' />
+        <link rel='stylesheet' type='text/css' href='/assets/dashboard.css' />
         <script src='/assets/jquery.js'></script>
         <script>
         $(document).ready(function() {
@@ -92,46 +92,6 @@
             </div>
             {{ end }}
         </div>
-        {{ end }}
-        {{ range $name, $device := .Devices }}
-            {{ if not $device.Hidden }}
-            <div class='device'>
-                <div class='title'>
-                    {{ $device.Label }}
-                </div>
-                <div class='buttons'>
-
-                    {{ if eq $device.Type "plug" }}
-                        <a class='left' onClick="switchDevice('{{ $name }}', 0);">off</a>
-                        <span class='value' id='value_{{ $name }}'></span>
-                        <a class='right' onClick="switchDevice('{{ $name }}', 100);">on</a>
-                    {{ end }}
-
-                    {{ if (or (eq $device.Type "light") (eq $device.Type "sensor") (eq $device.Type "zlight") (eq $device.Type "group")) }}
-                        <a class='left' onClick="switchDevice('{{ $name }}', 0);">off</a>
-                        <a class='left' onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) - 10);">-</a>
-                        <span class='value' id='value_{{ $name }}'></span>
-                        <a class='right' onClick="switchDevice('{{ $name }}', 100);">on</a>
-                        <a class='right' onClick="switchDevice('{{ $name }}', parseInt($('#value_{{$name}}').text()) + 10);">+</a>
-                    {{ end }}
-
-                    {{ if eq $device.Type "temperature" }}
-                        <span class='value'>
-                            <span id='value_{{ $name }}'></span> °C
-                        </span>
-                    {{ end }}
-
-                    {{ if eq $device.Type "thermostat" }}
-                        <a class='left' onClick="switchDevice('{{ $name }}', parseInt($('#target_{{$name}}').text()) - 1);">-</a>
-                        <span class='value'>
-                            <span id='value_{{ $name }}'></span><span id="separator_{{ $name }}">/</span><span id='target_{{ $name }}'></span>
-                        </span>
-                        <a class='right' onClick="switchDevice('{{ $name }}', parseInt($('#target_{{$name}}').text()) + 1);">+</a>
-                    {{ end }}
-
-                </div>
-            </div>
-            {{ end }}
         {{ end }}
     </body>
 </html>
