@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/PhilGruber/dimmy/core"
 	dimmyDevices "github.com/PhilGruber/dimmy/devices"
@@ -213,77 +211,6 @@ func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, panels map[s
 			return
 		}
 	}
-}
-
-func loadLegacyConfig() (map[string]string, map[string]map[string]string, error) {
-	config := map[string]map[string]string{}
-
-	var filename string
-
-	if _, err := os.Stat("/etc/dimmyd.conf"); err == nil {
-		filename = "/etc/dimmyd.conf"
-	} else if _, err := os.Stat("dimmyd.conf"); err == nil {
-		filename = "dimmyd.conf"
-	} else {
-		return nil, nil, errors.New("Could not find config file /etc/dimmyd.conf")
-	}
-
-	log.Println("Loading config file " + filename)
-
-	file, err := os.Open(filename)
-
-	if err != nil {
-		return nil, nil, err
-	}
-	defer file.Close()
-
-	reader := bufio.NewReader(file)
-
-	var line string
-	deviceName := "__global"
-	config[deviceName] = map[string]string{}
-	for {
-		line, err = reader.ReadString('\n')
-		line = strings.TrimSpace(line)
-
-		if len(line) < 3 {
-			if err != nil {
-				break
-			}
-			continue
-		}
-
-		if line[0] == '#' || len(line) < 3 {
-			/* skip comments, empty lines */
-		} else if line[0] == '[' && line[len(line)-1:] == "]" {
-			deviceName = line[1 : len(line)-1]
-			config[deviceName] = map[string]string{}
-		} else if strings.Contains(line, "=") {
-			kv := strings.Split(line, "=")
-			config[deviceName][strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
-
-		} else {
-			log.Fatal("unknown config line: " + line)
-		}
-
-		if err != nil {
-			break
-		}
-	}
-
-	if _, ok := config["__global"]["port"]; !ok {
-		config["__global"]["port"] = "80"
-	}
-
-	if _, ok := config["__global"]["mqtt_server"]; !ok {
-		config["__global"]["mqtt_server"] = "127.0.0.1"
-	}
-
-	if _, ok := config["__global"]["webroot"]; !ok {
-		config["__global"]["webroot"] = "/usr/share/dimmy"
-	}
-
-	return config["__global"], config, nil
 }
 
 func initMqtt(hostname string, clientId string) mqtt.Client {
