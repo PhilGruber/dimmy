@@ -35,7 +35,7 @@ func NewSwitch(config core.DeviceConfig) *Switch {
 func (s *Switch) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
 	var request core.SwitchRequest
 	request.Device = s.TargetDevice
-	request.Value, _ = strconv.ParseFloat(cmd, 64)
+	request.Value = cmd
 	request.Duration = 1
 	return request, true
 }

@@ -66,8 +66,9 @@ func (p *Plug) GetMin() int {
 }
 
 func (p *Plug) ProcessRequest(request core.SwitchRequest) {
-	if request.Value != p.Current {
-		p.Current = request.Value
+	val, _ := strconv.ParseFloat(request.Value, 64)
+	if val != p.Current {
+		p.Current = val
 		if p.Current > 1 {
 			p.Current = 1
 		}

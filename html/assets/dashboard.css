@@ -35,6 +35,10 @@ body {
     color: #FFDAC1;
 }
 
+.textbutton {
+    width: 100px;
+}
+
 .buttons .value {
     display: inline-block;
     text-align: center;

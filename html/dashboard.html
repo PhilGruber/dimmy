@@ -89,6 +89,15 @@
                     <a class='right' onClick="switchDevice('{{ .GetName }}', parseInt($('#value_{{.GetName}}').text()) + 10);">+</a>
                     <br/>
                 {{ end }}
+
+                {{ if eq .GetType "IRControl" }}
+                    <span class="left emoji">{{ .Emoji }}</span>
+                    {{ $name := .GetName }}
+                    {{ range $cmd := .GetCommands }}
+                        <a class='textbutton' onClick="switchDevice('{{ $name }}', '{{ $cmd }}');">{{ $cmd }}</a>
+                    {{ end }}
+                    <br/>
+                {{ end }}
             </div>
             {{ end }}
         </div>

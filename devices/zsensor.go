@@ -2,10 +2,10 @@ package devices
 
 import (
 	"encoding/json"
+	"fmt"
 	core "github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
-	"math"
 )
 
 type ZSensor struct {
@@ -106,10 +106,10 @@ func (s *ZSensor) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
 	var request core.SwitchRequest
 	request.Device = s.TargetDevice
 	if cmd == "on" {
-		request.Value = math.Round(s.Current)
+		request.Value = fmt.Sprintf("%.f", s.Current)
 		request.Duration = s.TargetOnDuration
 	} else {
-		request.Value = 0
+		request.Value = "0"
 		request.Duration = s.TargetOffDuration
 	}
 	return request, true

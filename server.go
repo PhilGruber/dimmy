@@ -44,10 +44,10 @@ func main() {
 			devices[deviceConfig.Name] = dimmyDevices.NewPlug(deviceConfig)
 		case "temperature":
 			devices[deviceConfig.Name] = dimmyDevices.NewTemperature(deviceConfig)
-		case "thermostat":
-			devices[deviceConfig.Name] = dimmyDevices.NewThermostat(deviceConfig)
 		case "ztemperature":
 			devices[deviceConfig.Name] = dimmyDevices.NewZTemperature(deviceConfig)
+		case "ircontrol":
+			devices[deviceConfig.Name] = dimmyDevices.NewIrControl(deviceConfig)
 		case "group":
 		default:
 			log.Println("Skipping deviceConfig of unknown type '" + deviceConfig.Type + "'")
@@ -151,7 +151,7 @@ func ReceiveRequest(channel chan core.SwitchRequest) http.HandlerFunc {
 		body, err := ioutil.ReadAll(httpRequest.Body)
 		if err != nil {
 			log.Println("Error: ", err)
-			fmt.Fprintf(output, "Invalid JSON data")
+			_, _ = fmt.Fprintf(output, "Invalid JSON data")
 			return
 		}
 		log.Println("Received payload from api: " + string(body[:]))
@@ -163,18 +163,20 @@ func ReceiveRequest(channel chan core.SwitchRequest) http.HandlerFunc {
 		if err != nil {
 			log.Println("Error: ", err)
 			log.Println(string(body[:]))
-			fmt.Fprintf(output, "Invalid JSON data")
+			_, _ = fmt.Fprintf(output, "Invalid JSON data")
 			return
 		}
+		log.Printf("Unmarshalled json: %v\n", request)
 		channel <- request
-		fmt.Fprintf(output, jsonResponse(true, request, fmt.Sprintf("Sent %s command to %s", request.Command, request.Device)))
+		log.Printf("Sent %v command to %s", request.Command, request.Device)
+		_, _ = fmt.Fprintf(output, jsonResponse(true, request, fmt.Sprintf("Sent %s command to %s", request.Command, request.Device)))
 	}
 }
 
 func ShowStatus(devices *map[string]dimmyDevices.DeviceInterface) http.HandlerFunc {
 	return func(output http.ResponseWriter, request *http.Request) {
 		jsonDevices, _ := json.Marshal(devices)
-		fmt.Fprintf(output, string(jsonDevices))
+		_, _ = fmt.Fprintf(output, string(jsonDevices))
 	}
 }
 
@@ -189,13 +191,13 @@ func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, panels map[s
 				target := request.FormValue("target")
 				switch target {
 				case "on":
-					sr.Value = 100
+					sr.Value = "100"
 				case "off":
-					sr.Value = 0
+					sr.Value = "0"
 				case "+":
-					sr.Value = devices[sr.Device].GetCurrent() + 10
+					sr.Value = fmt.Sprintf("%.3f", devices[sr.Device].GetCurrent()+10)
 				case "-":
-					sr.Value = devices[sr.Device].GetCurrent() - 10
+					sr.Value = fmt.Sprintf("%.3f", devices[sr.Device].GetCurrent()-10)
 				}
 				channel <- sr
 			}

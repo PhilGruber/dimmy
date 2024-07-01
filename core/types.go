@@ -17,16 +17,17 @@ type PanelConfig struct {
 }
 
 type configOptions struct {
-	Hidden            *bool     `yaml:"hidden"`
-	Timeout           *int      `yaml:"timeout"`
-	TargetOnDuration  *int      `yaml:"targetOnDuration"`
-	TargetOffDuration *int      `yaml:"targetOffDuration"`
-	Target            *string   `yaml:"target"`
-	Min               *int      `yaml:"min"`
-	Max               *int      `yaml:"max"`
-	Devices           *[]string `yaml:"devices,flow"`
-	Margin            *float64  `yaml:"margin"`
-	Transition        *bool     `yaml:"transition"`
+	Hidden            *bool              `yaml:"hidden"`
+	Timeout           *int               `yaml:"timeout"`
+	TargetOnDuration  *int               `yaml:"targetOnDuration"`
+	TargetOffDuration *int               `yaml:"targetOffDuration"`
+	Target            *string            `yaml:"target"`
+	Min               *int               `yaml:"min"`
+	Max               *int               `yaml:"max"`
+	Devices           *[]string          `yaml:"devices,flow"`
+	Margin            *float64           `yaml:"margin"`
+	Transition        *bool              `yaml:"transition"`
+	Commands          *map[string]string `yaml:"commands,flow"`
 }
 
 type ServerConfig struct {
