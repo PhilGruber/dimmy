@@ -164,9 +164,7 @@ func ReceiveRequest(channel chan core.SwitchRequest) http.HandlerFunc {
 			_, _ = fmt.Fprintf(output, "Invalid JSON data")
 			return
 		}
-		log.Printf("Unmarshalled json: %v\n", request)
 		channel <- request
-		log.Printf("Sent %v command to %s", request.Command, request.Device)
 		_, _ = fmt.Fprintf(output, jsonResponse(true, request, fmt.Sprintf("Sent %s command to %s", request.Command, request.Device)))
 	}
 }

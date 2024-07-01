@@ -28,7 +28,7 @@
         function switchDevice(device, value) {
             var data = {
                 device: device,
-                value: value,
+                value: value.toString(),
                 duration: 1,
             };
             $.post('/api/switch', JSON.stringify(data), null, 'json');
