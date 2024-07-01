@@ -12,16 +12,6 @@
                      for (name in data) {
                         if (data[name].Type === 'plug') {
                             $("#value_" + name).text(data[name].value ? "on" : "off");
-                        } else if (data[name].Type === 'thermostat') {
-                            $("#value_" + name).text(Math.round(data[name].value*10)/10 + "");
-                            if (data[name].TargetTemperature === 0) {
-                                $("#target_" + name).addClass('hidden');
-                                $("#separator" + name).addClass('hidden');
-                            } else {
-                                $("#target_" + name).removeClass('hidden');
-                                $("#separator" + name).removeClass('hidden');
-                            }
-                            $("#target_" + name).text(Math.round(data[name].TargetTemperature));
                         } else if (data[name].Type === 'temperature') {
                             $("#value_" + name).text(Math.round(data[name].value*10)/10);
                             if (data[name].Humidity != 0) {
@@ -44,12 +34,6 @@
             $.post('/api/switch', JSON.stringify(data), null, 'json');
         }
 
-        function thermostatOffset(current, target) {
-            if (target == 0) {
-                return Math.round(current);
-            }
-            return target;
-        }
         </script>
     </head>
     <body>
