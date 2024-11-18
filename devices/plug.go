@@ -25,16 +25,11 @@ type plugStateMessage struct {
 
 func makePlug(config core.DeviceConfig) Plug {
 	p := Plug{}
-	p.Name = config.Name
-	p.MqttTopic = config.Topic
+	p.Emoji = "🔌"
+	p.setBaseConfig(config)
+
 	var re = regexp.MustCompile("^cmnd/(.+)/POWER$")
 	p.MqttState = re.ReplaceAllString(p.MqttTopic, "tele/$1/STATE")
-	p.Current = 0
-
-	p.Hidden = false
-	if config.Options != nil && config.Options.Hidden != nil {
-		p.Hidden = *config.Options.Hidden
-	}
 
 	tt := time.Now()
 	p.LastChanged = &tt
@@ -71,8 +66,9 @@ func (p *Plug) GetMin() int {
 }
 
 func (p *Plug) ProcessRequest(request core.SwitchRequest) {
-	if request.Value != p.Current {
-		p.Current = request.Value
+	val, _ := strconv.ParseFloat(request.Value, 64)
+	if val != p.Current {
+		p.Current = val
 		if p.Current > 1 {
 			p.Current = 1
 		}
@@ -126,5 +122,5 @@ func (p *Plug) SetReceiverValue(key string, value interface{}) {
 	if key != "state" {
 		return
 	}
-	p.ProcessRequest(core.SwitchRequest{Device: "", Value: value.(float64)})
+	p.ProcessRequest(core.SwitchRequest{Device: "", Value: value.(string)})
 }

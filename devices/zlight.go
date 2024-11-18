@@ -21,22 +21,18 @@ func NewZLight(config core.DeviceConfig) *ZLight {
 
 func makeZLight(config core.DeviceConfig) ZLight {
 	d := ZLight{}
-	d.Name = config.Name
-	d.MqttTopic = config.Topic
+	d.Emoji = "💡"
+	d.setBaseConfig(config)
 	d.MqttState = config.Topic
-	d.Current = 0
+
 	d.Target = 0
 
-	d.Hidden = false
 	d.Min = 0
 	d.Max = 254
 	d.transition = false
 	d.Type = "light"
 
 	if config.Options != nil {
-		if config.Options.Hidden != nil {
-			d.Hidden = *config.Options.Hidden
-		}
 		if config.Options.Min != nil {
 			d.Min = *config.Options.Min
 		}

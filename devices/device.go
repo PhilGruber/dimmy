@@ -2,6 +2,7 @@ package devices
 
 import (
 	"github.com/PhilGruber/dimmy/core"
+	"github.com/google/uuid"
 	"log"
 	"time"
 
@@ -16,14 +17,17 @@ type DeviceInterface interface {
 	GetMqttTopic() string
 	GetMqttStateTopic() string
 	GetType() string
+	GetName() string
+	GetLabel() string
 	GetMax() int
 	GetMin() int
+	GetHidden() bool
 	GetCurrent() float64
 	setCurrent(float64)
+	GetEmoji() string
 	ProcessRequest(core.SwitchRequest)
 	GetMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt.MessageHandler
 	GetStateMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt.MessageHandler
-	GetName() string
 	GetTriggers() []string
 	GetReceivers() []string
 	SetReceiverValue(string, any)
@@ -41,12 +45,39 @@ type Device struct {
 	LastChanged *time.Time `json:"-"`
 	Type        string
 	Hidden      bool
+	Label       string
+	Emoji       string
 	Triggers    []string
 	Receivers   []string
 }
 
-func (d *Device) GetName() string {
-	return d.Name
+func (d *Device) setBaseConfig(config core.DeviceConfig) {
+	d.MqttTopic = config.Topic
+	d.Current = 0
+	if config.Emoji != "" {
+		d.Emoji = config.Emoji
+	}
+
+	if config.Name != "" {
+		d.Name = config.Name
+	} else {
+		d.Name = uuid.NewString()
+	}
+
+	if config.Label != "" {
+		log.Println("Setting label to " + config.Label)
+		d.Label = config.Label
+	} else {
+		log.Println("No label found, setting label to Name: " + d.Name)
+		d.Label = d.Name
+	}
+
+	d.Hidden = false
+	if config.Options != nil {
+		if config.Options.Hidden != nil {
+			d.Hidden = *config.Options.Hidden
+		}
+	}
 }
 
 func (d *Device) GetCurrent() float64 {
@@ -67,6 +98,17 @@ func (d *Device) GetMqttTopic() string {
 
 func (d *Device) GetMqttStateTopic() string {
 	return d.MqttState
+}
+
+func (d *Device) GetName() string {
+	return d.Name
+}
+
+func (d *Device) GetLabel() string {
+	if d.Label != "" {
+		return d.Label
+	}
+	return d.Name
 }
 
 func (d *Device) GetTimeoutRequest() (core.SwitchRequest, bool) {
@@ -109,4 +151,12 @@ func (d *Device) SetReceiverValue(key string, value any) {
 
 func (d *Device) GetTriggerValue(key string) any {
 	return nil
+}
+
+func (d *Device) GetHidden() bool {
+	return d.Hidden
+}
+
+func (d *Device) GetEmoji() string {
+	return d.Emoji
 }

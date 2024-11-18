@@ -1,14 +1,11 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/PhilGruber/dimmy/core"
 	dimmyDevices "github.com/PhilGruber/dimmy/devices"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"gopkg.in/yaml.v3"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -21,8 +18,9 @@ import (
 func main() {
 
 	devices := make(map[string]dimmyDevices.DeviceInterface)
+	panels := make(map[string]dimmyDevices.Panel)
 
-	config, err := loadConfig()
+	config, err := core.LoadConfig()
 	if err != nil {
 		log.Println(err.Error())
 		return
@@ -44,6 +42,10 @@ func main() {
 			devices[deviceConfig.Name] = dimmyDevices.NewPlug(deviceConfig)
 		case "temperature":
 			devices[deviceConfig.Name] = dimmyDevices.NewTemperature(deviceConfig)
+		case "ztemperature":
+			devices[deviceConfig.Name] = dimmyDevices.NewZTemperature(deviceConfig)
+		case "ircontrol":
+			devices[deviceConfig.Name] = dimmyDevices.NewIrControl(deviceConfig)
 		case "group":
 		default:
 			log.Println("Skipping deviceConfig of unknown type '" + deviceConfig.Type + "'")
@@ -68,6 +70,16 @@ func main() {
 		}
 	}
 
+	for _, panel := range config.Panels {
+		panels[panel.Label] = dimmyDevices.NewPanel(panel, &devices)
+	}
+
+	for _, device := range devices {
+		if !device.GetHidden() {
+			panels[device.GetLabel()] = dimmyDevices.NewPanelFromDevice(device)
+		}
+	}
+
 	channel := make(chan core.SwitchRequest, 10)
 
 	go eventLoop(devices, rules, channel, config.MqttServer)
@@ -76,7 +88,7 @@ func main() {
 	http.Handle("/assets/", http.StripPrefix("/assets/", assets))
 	http.Handle("/api/switch", ReceiveRequest(channel))
 	http.Handle("/api/status", ShowStatus(&devices))
-	http.Handle("/", ShowDashboard(devices, channel, config.WebRoot))
+	http.Handle("/", ShowDashboard(devices, panels, channel, config.WebRoot))
 
 	log.Printf("Listening on port %d", config.Port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
@@ -150,7 +162,7 @@ func ReceiveRequest(channel chan core.SwitchRequest) http.HandlerFunc {
 		body, err := ioutil.ReadAll(httpRequest.Body)
 		if err != nil {
 			log.Println("Error: ", err)
-			fmt.Fprintf(output, "Invalid JSON data")
+			_, _ = fmt.Fprintf(output, "Invalid JSON data")
 			return
 		}
 		log.Println("Received payload from api: " + string(body[:]))
@@ -162,22 +174,22 @@ func ReceiveRequest(channel chan core.SwitchRequest) http.HandlerFunc {
 		if err != nil {
 			log.Println("Error: ", err)
 			log.Println(string(body[:]))
-			fmt.Fprintf(output, "Invalid JSON data")
+			_, _ = fmt.Fprintf(output, "Invalid JSON data")
 			return
 		}
 		channel <- request
-		fmt.Fprintf(output, jsonResponse(true, request, fmt.Sprintf("Sent command to %s", request.Device)))
+		_, _ = fmt.Fprintf(output, jsonResponse(true, request, fmt.Sprintf("Sent %s command to %s", request.Command, request.Device)))
 	}
 }
 
 func ShowStatus(devices *map[string]dimmyDevices.DeviceInterface) http.HandlerFunc {
 	return func(output http.ResponseWriter, request *http.Request) {
 		jsonDevices, _ := json.Marshal(devices)
-		fmt.Fprintf(output, string(jsonDevices))
+		_, _ = fmt.Fprintf(output, string(jsonDevices))
 	}
 }
 
-func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, channel chan core.SwitchRequest, webroot string) http.HandlerFunc {
+func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, panels map[string]dimmyDevices.Panel, channel chan core.SwitchRequest, webroot string) http.HandlerFunc {
 	return func(output http.ResponseWriter, request *http.Request) {
 		if request.Method == "POST" {
 			err := request.ParseForm()
@@ -188,131 +200,28 @@ func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, channel chan
 				target := request.FormValue("target")
 				switch target {
 				case "on":
-					sr.Value = 100
+					sr.Value = "100"
 				case "off":
-					sr.Value = 0
+					sr.Value = "0"
 				case "+":
-					sr.Value = devices[sr.Device].GetCurrent() + 10
+					sr.Value = fmt.Sprintf("%.3f", devices[sr.Device].GetCurrent()+10)
 				case "-":
-					sr.Value = devices[sr.Device].GetCurrent() - 10
+					sr.Value = fmt.Sprintf("%.3f", devices[sr.Device].GetCurrent()-10)
 				}
 				channel <- sr
 			}
 		}
 
 		templ, _ := template.ParseFiles(webroot + "/dashboard.html")
-		err := templ.Execute(output, devices)
+		err := templ.Execute(output, struct {
+			Devices map[string]dimmyDevices.DeviceInterface
+			Panels  map[string]dimmyDevices.Panel
+		}{devices, panels})
 		if err != nil {
 			log.Println(err)
 			return
 		}
 	}
-}
-
-func loadConfig() (*core.ServerConfig, error) {
-
-	var filename string
-	if _, err := os.Stat("/etc/dimmyd.conf.yaml"); err == nil {
-		filename = "/etc/dimmyd.conf.yaml"
-	} else if _, err := os.Stat("dimmyd.conf.yaml"); err == nil {
-		filename = "dimmyd.conf.yaml"
-	} else {
-		return nil, errors.New("could not find config file /etc/dimmyd.conf.yaml")
-	}
-
-	log.Println("Loading config file " + filename)
-
-	var config core.ServerConfig
-	configYaml, _ := os.ReadFile(filename)
-	err := yaml.Unmarshal(configYaml, &config)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if config.WebRoot == "" {
-		config.WebRoot = "/usr/share/dimmy"
-	}
-
-	if config.MqttServer == "" {
-		config.MqttServer = "127.0.0.1"
-	}
-
-	if config.Port == 0 {
-		config.Port = 80
-	}
-
-	return &config, nil
-}
-
-func loadLegacyConfig() (map[string]string, map[string]map[string]string, error) {
-	config := map[string]map[string]string{}
-
-	var filename string
-
-	if _, err := os.Stat("/etc/dimmyd.conf"); err == nil {
-		filename = "/etc/dimmyd.conf"
-	} else if _, err := os.Stat("dimmyd.conf"); err == nil {
-		filename = "dimmyd.conf"
-	} else {
-		return nil, nil, errors.New("Could not find config file /etc/dimmyd.conf")
-	}
-
-	log.Println("Loading config file " + filename)
-
-	file, err := os.Open(filename)
-
-	if err != nil {
-		return nil, nil, err
-	}
-	defer file.Close()
-
-	reader := bufio.NewReader(file)
-
-	var line string
-	deviceName := "__global"
-	config[deviceName] = map[string]string{}
-	for {
-		line, err = reader.ReadString('\n')
-		line = strings.TrimSpace(line)
-
-		if len(line) < 3 {
-			if err != nil {
-				break
-			}
-			continue
-		}
-
-		if line[0] == '#' || len(line) < 3 {
-			/* skip comments, empty lines */
-		} else if line[0] == '[' && line[len(line)-1:] == "]" {
-			deviceName = line[1 : len(line)-1]
-			config[deviceName] = map[string]string{}
-		} else if strings.Contains(line, "=") {
-			kv := strings.Split(line, "=")
-			config[deviceName][strings.TrimSpace(kv[0])] = strings.TrimSpace(kv[1])
-
-		} else {
-			log.Fatal("unknown config line: " + line)
-		}
-
-		if err != nil {
-			break
-		}
-	}
-
-	if _, ok := config["__global"]["port"]; !ok {
-		config["__global"]["port"] = "80"
-	}
-
-	if _, ok := config["__global"]["mqtt_server"]; !ok {
-		config["__global"]["mqtt_server"] = "127.0.0.1"
-	}
-
-	if _, ok := config["__global"]["webroot"]; !ok {
-		config["__global"]["webroot"] = "/usr/share/dimmy"
-	}
-
-	return config["__global"], config, nil
 }
 
 func initMqtt(hostname string, clientId string) mqtt.Client {

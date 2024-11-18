@@ -76,7 +76,7 @@ func main() {
 	host = flag.String("host", "", "hostname to connect to")
 	port = flag.Int("port", *port, "port to connect to")
 
-	value := flag.Float64("value", 100, "Value to set the device to [0-100]")
+	value := flag.String("value", "100", "Value to send to device")
 	device := flag.String("device", "", "Device to send command to")
 	duration := flag.Int("duration", 0, "Duration of the dimming curve (seconds)")
 	list := flag.Bool("list", false, "List devices and their status")

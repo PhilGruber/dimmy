@@ -4,6 +4,7 @@ import (
 	core "github.com/PhilGruber/dimmy/core"
 	"log"
 	"math"
+	"strconv"
 	"time"
 )
 
@@ -59,13 +60,14 @@ func (d *Dimmable) setTarget(target float64) {
 }
 
 func (d *Dimmable) ProcessRequest(request core.SwitchRequest) {
-	log.Printf("Setting %s to %f within %d seconds\n", d.GetMqttTopic(), request.Value, request.Duration)
-	request.Value = math.Min(request.Value, 100)
-	request.Value = math.Max(request.Value, 0)
+	log.Printf("Setting %s to %s within %d seconds\n", d.GetMqttTopic(), request.Value, request.Duration)
+	value, _ := strconv.ParseFloat(request.Value, 64)
+	value = math.Min(value, 100)
+	value = math.Max(value, 0)
 
-	d.setTarget(request.Value)
+	d.setTarget(value)
 
-	log.Printf("Setting %s to %f within %d seconds\n", d.GetMqttTopic(), request.Value, request.Duration)
+	log.Printf("Setting %s to %f within %d seconds\n", d.GetMqttTopic(), value, request.Duration)
 
 	if d.transition {
 		d.TransitionTime = request.Duration
@@ -73,7 +75,7 @@ func (d *Dimmable) ProcessRequest(request core.SwitchRequest) {
 		return
 	}
 
-	diff := int(math.Abs(d.GetCurrent() - request.Value))
+	diff := int(math.Abs(d.GetCurrent() - value))
 	var step float64
 	cycles := request.Duration * 1000 / core.CycleLength
 	if request.Duration == 0 {

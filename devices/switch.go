@@ -36,6 +36,16 @@ func NewSwitch(config core.DeviceConfig) *Switch {
 	return &p
 }
 
+/*
+func (s *Switch) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
+	var request core.SwitchRequest
+	request.Device = s.TargetDevice
+	request.Value = cmd
+	request.Duration = 1
+	return request, true
+}
+*/
+
 type SwitchMessage struct {
 	core.Zigbee2MqttMessage
 

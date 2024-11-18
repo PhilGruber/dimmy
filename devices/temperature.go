@@ -9,16 +9,24 @@ import (
 
 type Temperature struct {
 	Device
+	HasHumidity bool
 }
 
 func MakeTemperature(config core.DeviceConfig) Temperature {
 	t := Temperature{}
-	t.Name = config.Name
-	t.MqttTopic = config.Topic
+	t.Emoji = "🌡️"
+	t.setBaseConfig(config)
 
 	t.Current = 0
 	t.Type = "temperature"
+	t.HasHumidity = false
+
 	return t
+}
+
+func NewTemperature(config core.DeviceConfig) *Temperature {
+	s := MakeTemperature(config)
+	return &s
 }
 
 func (t *Temperature) GetMin() int {
@@ -27,11 +35,6 @@ func (t *Temperature) GetMin() int {
 
 func (t *Temperature) GetMax() int {
 	return 99
-}
-
-func NewTemperature(config core.DeviceConfig) *Temperature {
-	s := MakeTemperature(config)
-	return &s
 }
 
 func (t *Temperature) PublishValue(mqtt mqtt.Client) {
@@ -51,13 +54,16 @@ func (t *Temperature) GetMqttStateTopic() string {
 func (t *Temperature) GetMessageHandler(channel chan core.SwitchRequest, temperature DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := string(mqttMessage.Payload())
-		log.Println("Received new temperature: " + string(payload))
+		log.Printf("Received new temperature for %s: %s", t.Name, payload)
 		temperature, err := strconv.ParseFloat(payload[:], 64)
 		if err != nil {
 			log.Println("Received invalid temperature " + payload[:] + ": " + err.Error())
 			return
-
 		}
 		t.setCurrent(temperature)
 	}
+}
+
+func (t *Temperature) GetHumidity() float64 {
+	return 0
 }

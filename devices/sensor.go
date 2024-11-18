@@ -2,6 +2,7 @@ package devices
 
 import (
 	"encoding/json"
+	"fmt"
 	core "github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
@@ -81,7 +82,7 @@ func (s *Sensor) GetTimeoutRequest() (core.SwitchRequest, bool) {
 		s.Active = false
 
 		request.Device = s.TargetDevice
-		request.Value = 0
+		request.Value = "0"
 		request.Duration = s.TargetOffDuration
 
 		return request, true
@@ -97,7 +98,7 @@ func (s *Sensor) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
 	s.LastChanged = &tt
 	s.Active = true
 	request.Device = s.TargetDevice
-	request.Value = s.Current
+	request.Value = fmt.Sprintf("%.2f", s.Current)
 	request.Duration = s.TargetOnDuration
 	return request, true
 }
