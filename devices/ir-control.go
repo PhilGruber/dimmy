@@ -40,7 +40,7 @@ func (i *IRControl) ProcessRequest(request core.SwitchRequest) {
 	log.Printf("Processing request for device %s: %v\n", i.Name, request.Value)
 	command, ok := i.commands[request.Value]
 	if !ok {
-		log.Printf("Device %s does not support command %s. Please define this in config file.\n", i.Name, request.Command)
+		log.Printf("Device %s does not support command %s. Please define this in config file.\n", i.Name, request.Value)
 		return
 	}
 	req := IrControlMessage{IrCode: command}

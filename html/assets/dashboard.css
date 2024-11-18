@@ -52,7 +52,7 @@ body {
 }
 
 .buttons .wide {
-    width: 160px;
+    width: 180px;
 }
 
 .right {
@@ -70,6 +70,7 @@ body {
 .emoji {
     float: left;
     text-align: left;
+    padding-right: 5px;
 }
 
 .panel {

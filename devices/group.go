@@ -86,6 +86,7 @@ func (g *Group) ProcessRequest(request core.SwitchRequest) {
 	g.ProcessRequestChild(request)
 }
 
+/*
 func (g *Group) UpdateValue() (float64, bool) {
 	changed := false
 	for _, d := range g.devices {
@@ -97,3 +98,4 @@ func (g *Group) UpdateValue() (float64, bool) {
 	g.setCurrent(g.GetCurrent())
 	return g.GetCurrent(), changed
 }
+*/
