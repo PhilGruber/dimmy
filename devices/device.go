@@ -32,6 +32,7 @@ type DeviceInterface interface {
 	GetReceivers() []string
 	SetReceiverValue(string, any)
 	GetTriggerValue(string) any
+	ClearTrigger(string)
 
 	PublishValue(mqtt.Client)
 	PollValue(mqtt.Client)
@@ -151,6 +152,9 @@ func (d *Device) SetReceiverValue(key string, value any) {
 
 func (d *Device) GetTriggerValue(key string) any {
 	return nil
+}
+
+func (d *Device) ClearTrigger(key string) {
 }
 
 func (d *Device) GetHidden() bool {

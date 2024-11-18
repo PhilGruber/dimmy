@@ -138,12 +138,17 @@ func eventLoop(devices map[string]dimmyDevices.DeviceInterface, rules []dimmyDev
 			}
 		}
 
+		var firedRules []dimmyDevices.Rule
 		for _, rule := range rules {
 			if rule.CheckTriggers() {
 				rule.Fire(channel)
+				firedRules = append(firedRules, rule)
 			}
 		}
 
+		for _, rule := range firedRules {
+			rule.ClearTriggers()
+		}
 	}
 }
 

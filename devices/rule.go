@@ -14,11 +14,13 @@ type Rule struct {
 			Value    any
 		}
 	}
-	Receivers []struct {
-		device DeviceInterface
-		key    string
-		value  any
-	}
+	Receivers []Receiver
+}
+
+type Receiver struct {
+	device DeviceInterface
+	key    string
+	value  any
 }
 
 func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
@@ -64,9 +66,10 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 	return &r
 }
 
-func (r *Rule) Fire(channel chan core.SwitchRequest) {
+func (r *Rule) Fire(channel chan core.SwitchRequest) []Receiver {
 	log.Printf("Firing rule %v\n", r)
 	var requests map[string]core.SwitchRequest
+	firedReceivers := []Receiver{}
 	for _, receiver := range r.Receivers {
 		request, ok := requests[receiver.device.GetName()]
 		if !ok {
@@ -74,25 +77,19 @@ func (r *Rule) Fire(channel chan core.SwitchRequest) {
 		}
 		switch receiver.key {
 		case "value":
-			request.Value = receiver.value.(float64)
+			request.Value = receiver.value.(string)
 		case "duration":
 			request.Duration = receiver.value.(int)
 		}
 		requests[receiver.device.GetName()] = request
+		firedReceivers = append(firedReceivers, receiver)
 	}
 
 	for _, request := range requests {
 		channel <- request
 	}
-}
 
-func (r *Rule) CheckTrigger(device DeviceInterface, key string, value any) bool {
-	for _, trigger := range r.Triggers {
-		if trigger.device.GetName() == device.GetName() && trigger.key == key {
-			return r.checkCondition(value, trigger.condition.Operator, trigger.condition.Value)
-		}
-	}
-	return false
+	return firedReceivers
 }
 
 func (r *Rule) checkCondition(value any, condition string, target any) bool {
@@ -120,6 +117,15 @@ func (r *Rule) checkCondition(value any, condition string, target any) bool {
 
 }
 
+func (r *Rule) CheckTrigger(device DeviceInterface, key string, value any) bool {
+	for _, trigger := range r.Triggers {
+		if trigger.device.GetName() == device.GetName() && trigger.key == key {
+			return r.checkCondition(value, trigger.condition.Operator, trigger.condition.Value)
+		}
+	}
+	return false
+}
+
 func (r *Rule) CheckTriggers() bool {
 	matches := 0
 	for _, trigger := range r.Triggers {
@@ -129,4 +135,10 @@ func (r *Rule) CheckTriggers() bool {
 	}
 
 	return matches > 0 && matches == len(r.Triggers)
+}
+
+func (r *Rule) ClearTriggers() {
+	for _, trigger := range r.Triggers {
+		trigger.device.ClearTrigger(trigger.key)
+	}
 }
