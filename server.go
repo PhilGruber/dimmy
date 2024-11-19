@@ -34,6 +34,8 @@ func main() {
 			devices[deviceConfig.Name] = dimmyDevices.NewZSensor(deviceConfig)
 		case "switch":
 			devices[deviceConfig.Name] = dimmyDevices.NewSwitch(deviceConfig)
+		case "door-sensor":
+			devices[deviceConfig.Name] = dimmyDevices.NewDoorSensor(deviceConfig)
 		case "light":
 			devices[deviceConfig.Name] = dimmyDevices.NewLight(deviceConfig)
 		case "zlight":

@@ -12,8 +12,6 @@ type Switch struct {
 
 	onPressed  bool
 	offPressed bool
-
-	Step int
 }
 
 func makeSwitch(config core.DeviceConfig) Switch {
@@ -48,13 +46,11 @@ func (s *Switch) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
 
 type SwitchMessage struct {
 	core.Zigbee2MqttMessage
-
 	Action string `json:"action"`
 }
 
 func (s *Switch) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
-
 		payload := mqttMessage.Payload()
 
 		if sw.GetCurrent() == 0 {
@@ -103,13 +99,18 @@ func (s *Switch) ProcessRequest(request core.SwitchRequest) {
 func (s *Switch) GetTriggerValue(key string) any {
 	if key == "button" {
 		if s.onPressed {
-			s.onPressed = false
 			return "on"
 		}
 		if s.offPressed {
-			s.offPressed = false
 			return "off"
 		}
 	}
-	return 0
+	return nil
+}
+
+func (s *Switch) ClearTrigger(key string) {
+	if key == "button" {
+		s.onPressed = false
+		s.offPressed = false
+	}
 }
