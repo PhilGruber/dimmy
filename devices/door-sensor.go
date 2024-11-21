@@ -16,12 +16,14 @@ type DoorSensor struct {
 
 type DoorSensorMessage struct {
 	core.Zigbee2MqttMessage
-	Contact string `json:"contact"`
+	Contact bool `json:"contact"`
 }
 
 func MakeDoorSensor(config core.DeviceConfig) DoorSensor {
+	log.Println("Creating new door sensor with topic " + config.Topic)
 	s := DoorSensor{}
 	s.setBaseConfig(config)
+	s.MqttState = config.Topic
 
 	s.Type = "door-sensor"
 	s.Triggers = []string{"sensor"}
@@ -38,6 +40,7 @@ func NewDoorSensor(config core.DeviceConfig) *DoorSensor {
 
 func (s *DoorSensor) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
+		log.Println("Door sensor message received")
 		payload := mqttMessage.Payload()
 		var data DoorSensorMessage
 		err := json.Unmarshal(payload, &data)
@@ -45,10 +48,10 @@ func (s *DoorSensor) GetMessageHandler(channel chan core.SwitchRequest, sw Devic
 			log.Println("Error: " + err.Error())
 			return
 		}
-		if data.Contact == "true" {
-			s.state = "open"
-		} else {
+		if data.Contact {
 			s.state = "closed"
+		} else {
+			s.state = "open"
 		}
 		log.Printf("Door is %s\n", s.state)
 
