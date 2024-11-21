@@ -11,7 +11,6 @@ import (
 
 type DeviceInterface interface {
 	UpdateValue() (float64, bool)
-	GetTimeoutRequest() (core.SwitchRequest, bool)
 	GenerateRequest(string) (core.SwitchRequest, bool)
 
 	GetMqttTopic() string
@@ -112,11 +111,6 @@ func (d *Device) GetLabel() string {
 	return d.Name
 }
 
-func (d *Device) GetTimeoutRequest() (core.SwitchRequest, bool) {
-	var r core.SwitchRequest
-	return r, false
-}
-
 func (d *Device) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
 	var r core.SwitchRequest
 	return r, false
@@ -165,11 +159,11 @@ func (d *Device) GetEmoji() string {
 	return d.Emoji
 }
 
-func (s *Device) GetMax() int {
+func (d *Device) GetMax() int {
 	return 1
 }
-func (s *Device) GetMin() int {
+func (d *Device) GetMin() int {
 	return 0
 }
-func (s *Device) ProcessRequest(request core.SwitchRequest) {
+func (d *Device) ProcessRequest(request core.SwitchRequest) {
 }

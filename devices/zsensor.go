@@ -63,11 +63,6 @@ type ZSensorMessage struct {
 	Occupancy bool `json:"occupancy"`
 }
 
-func (s *ZSensor) GetTimeoutRequest() (core.SwitchRequest, bool) {
-	var request core.SwitchRequest
-	return request, false
-}
-
 func (s *ZSensor) GetMessageHandler(channel chan core.SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
 	log.Println("Subscribing to " + sensor.GetMqttTopic())
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {

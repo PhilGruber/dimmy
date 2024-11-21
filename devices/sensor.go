@@ -70,28 +70,6 @@ type SensorMessageWrapper struct {
 	TuyaReceived SensorMessage
 }
 
-func (s *Sensor) GetTimeoutRequest() (core.SwitchRequest, bool) {
-	var request core.SwitchRequest
-
-	if !s.Active {
-		return request, false
-	}
-
-	if (s.LastChanged.Local().Add(time.Second * time.Duration(s.Timeout))).Before(time.Now()) {
-		log.Println("Timeout")
-		s.Active = false
-
-		request.Device = s.TargetDevice
-		request.Value = "0"
-		request.Duration = s.TargetOffDuration
-
-		return request, true
-	}
-
-	return request, false
-
-}
-
 func (s *Sensor) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
 	var request core.SwitchRequest
 	tt := time.Now()

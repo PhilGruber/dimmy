@@ -133,15 +133,6 @@ func eventLoop(devices map[string]dimmyDevices.DeviceInterface, rules []dimmyDev
 			}
 		}
 
-		for name, _ := range devices {
-			if devices[name].GetType() == "sensor" {
-				request, ok := devices[name].GetTimeoutRequest()
-				if ok {
-					channel <- request
-				}
-			}
-		}
-
 		var firedRules []dimmyDevices.Rule
 		for _, rule := range rules {
 			if rule.CheckTriggers() {
