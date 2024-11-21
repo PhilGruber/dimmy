@@ -12,8 +12,9 @@
                      for (name in data) {
                         if (data[name].Type === 'plug') {
                             $("#value_" + name).text(data[name].value ? "on" : "off");
+                        } else if (data[name].Type === 'temperature') {
                             $("#value_" + name).text(Math.round(data[name].value*10)/10);
-                            if (data[name].Humidity != 0) {
+                            if (data[name].Humidity !== 0) {
                                 $("#humidity_" + name).text(Math.round(data[name].Humidity));
                             }
                         } else {
