@@ -3,6 +3,7 @@ package devices
 import (
 	"github.com/PhilGruber/dimmy/core"
 	"log"
+	"strconv"
 )
 
 type Rule struct {
@@ -20,7 +21,7 @@ type Rule struct {
 type Receiver struct {
 	device DeviceInterface
 	key    string
-	value  any
+	value  string
 }
 
 func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
@@ -54,7 +55,7 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 		receiver := struct {
 			device DeviceInterface
 			key    string
-			value  any
+			value  string
 		}{
 			device: devices[receiverConfig.DeviceName],
 			key:    receiverConfig.Key,
@@ -68,18 +69,24 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 
 func (r *Rule) Fire(channel chan core.SwitchRequest) []Receiver {
 	log.Printf("Firing rule %v\n", r)
-	var requests map[string]core.SwitchRequest
-	firedReceivers := []Receiver{}
+	requests := make(map[string]core.SwitchRequest)
+	var firedReceivers []Receiver
 	for _, receiver := range r.Receivers {
 		request, ok := requests[receiver.device.GetName()]
 		if !ok {
 			request = core.SwitchRequest{Device: receiver.device.GetName()}
 		}
+		request.Command = receiver.key
 		switch receiver.key {
-		case "value":
-			request.Value = receiver.value.(string)
+		case "brightness":
+			request.Value = receiver.value
 		case "duration":
-			request.Duration = receiver.value.(int)
+			duration, err := strconv.Atoi(receiver.value)
+			if err != nil {
+				log.Printf("Error parsing duration %s: %s\n", receiver.value, err)
+				continue
+			}
+			request.Duration = duration
 		}
 		requests[receiver.device.GetName()] = request
 		firedReceivers = append(firedReceivers, receiver)

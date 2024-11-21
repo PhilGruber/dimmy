@@ -24,7 +24,7 @@ type RuleConfig struct {
 	Receivers []struct {
 		DeviceName string `yaml:"device"`
 		Key        string `yaml:"key"`
-		Value      any    `yaml:"value"`
+		Value      string `yaml:"value"`
 	} `yaml:"receivers"`
 }
 
