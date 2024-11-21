@@ -74,3 +74,14 @@ func (i *IRControl) GetCommands() []string {
 	}
 	return commands
 }
+
+func (i *IRControl) SetReceiverValue(key string, value interface{}) {
+	switch key {
+	case "command":
+
+	}
+}
+
+func (i *IRControl) GetTriggerValue(key string) interface{} {
+	return nil
+}

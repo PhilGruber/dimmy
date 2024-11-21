@@ -106,7 +106,7 @@ func (r *Rule) checkCondition(value any, condition string, target any) bool {
 	case "!=":
 		return value != target
 	case ">":
-		switch value.(type) {
+		switch target.(type) {
 		case int:
 			return value.(int) > target.(int)
 		case float64:

@@ -21,6 +21,8 @@ func MakeTemperature(config core.DeviceConfig) Temperature {
 	t.Type = "temperature"
 	t.HasHumidity = false
 
+	t.Triggers = []string{"temperature", "humidity"}
+
 	return t
 }
 
@@ -65,5 +67,15 @@ func (t *Temperature) GetMessageHandler(channel chan core.SwitchRequest, tempera
 }
 
 func (t *Temperature) GetHumidity() float64 {
-	return 0
+	return -1
+}
+
+func (t *Temperature) GetTriggerValue(trigger string) interface{} {
+	if trigger == "temperature" {
+		return t.GetCurrent()
+	}
+	if trigger == "humidity" {
+		return t.GetHumidity()
+	}
+	return nil
 }
