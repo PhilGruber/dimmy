@@ -62,6 +62,7 @@ func (l *Light) SetReceiverValue(key string, value interface{}) {
 	case "brightness":
 		brightness := value.(float64)
 		l.setTarget(brightness)
+		log.Printf("Setting brightness to %f\n", brightness)
 	case "duration":
 		duration := value.(int)
 		log.Printf("Setting duration to %d seconds\n", duration)

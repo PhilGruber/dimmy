@@ -75,15 +75,6 @@ func (s *DoorSensor) ClearTrigger(trigger string) {
 func (s *DoorSensor) UpdateValue() (float64, bool) {
 	return 0, false
 }
-
-func (s *DoorSensor) GetMax() int {
-	return 1
-}
-func (s *DoorSensor) GetMin() int {
-	return 0
-}
 func (s *DoorSensor) GetCurrent() float64 {
 	return 1
-}
-func (s *DoorSensor) ProcessRequest(request core.SwitchRequest) {
 }

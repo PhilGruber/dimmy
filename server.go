@@ -54,6 +54,8 @@ func main() {
 		}
 	}
 
+	devices["time"] = dimmyDevices.NewDimmyTime(core.DeviceConfig{Name: "time", Type: "time"})
+
 	// Parse Groups separately at the end, to make sure all referencing Devices exist at that point
 	for _, device := range config.Devices {
 		if device.Type == "group" {

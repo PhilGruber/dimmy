@@ -164,3 +164,12 @@ func (d *Device) GetHidden() bool {
 func (d *Device) GetEmoji() string {
 	return d.Emoji
 }
+
+func (s *Device) GetMax() int {
+	return 1
+}
+func (s *Device) GetMin() int {
+	return 0
+}
+func (s *Device) ProcessRequest(request core.SwitchRequest) {
+}
