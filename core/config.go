@@ -10,12 +10,12 @@ import (
 func LoadConfig() (*ServerConfig, error) {
 
 	var filename string
-	if _, err := os.Stat("/etc/dimmyd.conf.yaml"); err == nil {
-		filename = "/etc/dimmyd.conf.yaml"
+	if _, err := os.Stat("/etc/dimmy/dimmyd.conf.yaml"); err == nil {
+		filename = "/etc/dimmy/dimmyd.conf.yaml"
 	} else if _, err := os.Stat("dimmyd.conf.yaml"); err == nil {
 		filename = "dimmyd.conf.yaml"
 	} else {
-		return nil, errors.New("could not find config file /etc/dimmyd.conf.yaml")
+		return nil, errors.New("could not find config file /etc/dimmy/dimmyd.conf.yaml")
 	}
 
 	log.Println("Loading config file " + filename)
