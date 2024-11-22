@@ -2,10 +2,10 @@ package devices
 
 import (
 	"encoding/json"
-	"fmt"
 	core "github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
+	"time"
 )
 
 type ZSensor struct {
@@ -85,28 +85,22 @@ func (s *ZSensor) GetMessageHandler(channel chan core.SwitchRequest, sensor Devi
 		val := "on"
 		if data.Occupancy {
 			val = "on"
+			now := time.Now()
+			s.LastChanged = &now
+			s.setCurrent(1)
 		} else {
 			val = "off"
+			if s.GetCurrent() == 1 {
+				now := time.Now()
+				s.LastChanged = &now
+			}
+			s.setCurrent(0)
 		}
 		log.Println(sensor.GetMqttTopic() + " is " + val)
-		request, ok := sensor.GenerateRequest(val)
-
-		if ok {
-			channel <- request
-		}
-
 	}
 }
 
 func (s *ZSensor) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
 	var request core.SwitchRequest
-	request.Device = s.TargetDevice
-	if cmd == "on" {
-		request.Value = fmt.Sprintf("%.f", s.Current)
-		request.Duration = s.TargetOnDuration
-	} else {
-		request.Value = "0"
-		request.Duration = s.TargetOffDuration
-	}
 	return request, true
 }

@@ -2,8 +2,7 @@ package devices
 
 import (
 	"encoding/json"
-	"fmt"
-	core "github.com/PhilGruber/dimmy/core"
+	"github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"time"
@@ -12,41 +11,15 @@ import (
 type Sensor struct {
 	Dimmable
 
-	TargetDevice      string
-	TargetOnDuration  int
-	TargetOffDuration int
-	Timeout           int
-	Active            bool
+	Active bool
 }
 
 func MakeSensor(config core.DeviceConfig) Sensor {
 	s := Sensor{}
-	s.Name = config.Name
-	s.MqttTopic = config.Topic
-	s.TargetDevice = *config.Options.Target
+	s.setBaseConfig(config)
 
 	s.Max = 100
 	s.Min = 0
-
-	s.TargetOnDuration = 3
-	if config.Options.TargetOnDuration != nil {
-		s.TargetOnDuration = *config.Options.TargetOnDuration
-	}
-
-	s.TargetOffDuration = 120
-	if config.Options.TargetOffDuration != nil {
-		s.TargetOffDuration = *config.Options.TargetOffDuration
-	}
-
-	s.Timeout = 10
-	if config.Options.Timeout != nil {
-		s.Timeout = *config.Options.Timeout
-	}
-
-	s.Hidden = false
-	if config.Options != nil && config.Options.Hidden != nil {
-		s.Hidden = *config.Options.Hidden
-	}
 
 	s.Active = false
 	s.Current = 0
@@ -70,25 +43,14 @@ type SensorMessageWrapper struct {
 	TuyaReceived SensorMessage
 }
 
-func (s *Sensor) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
-	var request core.SwitchRequest
-	tt := time.Now()
-	s.LastChanged = &tt
-	s.Active = true
-	request.Device = s.TargetDevice
-	request.Value = fmt.Sprintf("%.2f", s.Current)
-	request.Duration = s.TargetOnDuration
-	return request, true
-}
-
-func (s *Sensor) PublishValue(mqtt mqtt.Client) {
+func (s *Sensor) PublishValue(mqtt.Client) {
 }
 
 func (s *Sensor) GetStateMqttTopic() string {
 	return s.MqttState
 }
 
-func (s *Sensor) GetMessageHandler(channel chan core.SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
+func (s *Sensor) GetMessageHandler(channel chan core.SwitchRequest, _ DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 
 		payload := mqttMessage.Payload()
@@ -118,5 +80,8 @@ func (s *Sensor) GetMessageHandler(channel chan core.SwitchRequest, sensor Devic
 }
 
 func (s *Sensor) GetTriggerValue(key string) interface{} {
+	if key == "noMotion" {
+		return time.Now().Unix() - s.LastChanged.Unix()
+	}
 	return nil
 }

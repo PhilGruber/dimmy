@@ -72,5 +72,7 @@ func (s *DimmyTime) GetTriggerValue(trigger string) interface{} {
 }
 
 func (s *DimmyTime) ClearTrigger(trigger string) {
-	s.triggerValues[trigger] = -1
+	if trigger == "minute" || trigger == "second" {
+		s.triggerValues[trigger] = -1
+	}
 }
