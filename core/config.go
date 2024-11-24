@@ -10,10 +10,13 @@ import (
 func LoadConfig() (*ServerConfig, error) {
 
 	var filename string
+	var rulesFile string
 	if _, err := os.Stat("/etc/dimmy/dimmyd.conf.yaml"); err == nil {
 		filename = "/etc/dimmy/dimmyd.conf.yaml"
+		rulesFile = "/etc/dimmy/rules.conf.yaml"
 	} else if _, err := os.Stat("dimmyd.conf.yaml"); err == nil {
 		filename = "dimmyd.conf.yaml"
+		rulesFile = "rules.conf.yaml"
 	} else {
 		return nil, errors.New("could not find config file /etc/dimmy/dimmyd.conf.yaml")
 	}
@@ -25,6 +28,15 @@ func LoadConfig() (*ServerConfig, error) {
 	err := yaml.Unmarshal(configYaml, &config)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if _, err := os.Stat(rulesFile); err == nil {
+		log.Println("Loading rules file " + rulesFile)
+		rulesYaml, _ := os.ReadFile(rulesFile)
+		err := yaml.Unmarshal(rulesYaml, &config.Rules)
+		if err != nil {
+			log.Println("Could not load rules.conf.yaml: " + err.Error())
+		}
 	}
 
 	if config.WebRoot == "" {
