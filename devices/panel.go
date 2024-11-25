@@ -29,7 +29,7 @@ func NewPanelFromDevice(device DeviceInterface) Panel {
 	p := Panel{}
 	p.Label = device.GetLabel()
 	p.Devices = append(p.Devices, device)
-	log.Println("Created panel from device " + device.GetName())
+	log.Println("Created panel from Device " + device.GetName())
 	return p
 }
 

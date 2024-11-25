@@ -9,46 +9,15 @@ import (
 )
 
 type ZSensor struct {
-	Dimmable
-
-	TargetDevice      string
-	TargetOnDuration  int
-	TargetOffDuration int
-	Timeout           int
+	Device
 }
 
 func MakeZSensor(config core.DeviceConfig) ZSensor {
 	s := ZSensor{}
-	s.Name = config.Name
-	s.MqttTopic = config.Topic
-	s.TargetDevice = *config.Options.Target
-
-	s.Max = 100
-	s.Min = 0
-
-	s.TargetOnDuration = 3
-	if config.Options.TargetOnDuration != nil {
-		s.TargetOnDuration = *config.Options.TargetOnDuration
-	}
-
-	s.TargetOffDuration = 120
-	if config.Options.TargetOffDuration != nil {
-		s.TargetOffDuration = *config.Options.TargetOffDuration
-	}
-
-	s.Timeout = 10
-	if config.Options.Timeout != nil {
-		s.Timeout = *config.Options.Timeout
-	}
-
-	s.Hidden = false
-	if config.Options != nil && config.Options.Hidden != nil {
-		s.Hidden = *config.Options.Hidden
-	}
-
-	s.Current = 0
-	s.Target = 0
+	s.setBaseConfig(config)
+	s.MqttState = config.Topic
 	s.Type = "sensor"
+
 	return s
 }
 
@@ -71,10 +40,6 @@ func (s *ZSensor) GetMessageHandler(channel chan core.SwitchRequest, sensor Devi
 
 		log.Printf("%s", payload)
 
-		if sensor.GetCurrent() == 0 {
-			return
-		}
-
 		var data ZSensorMessage
 		err := json.Unmarshal(payload, &data)
 		if err != nil {
@@ -87,20 +52,37 @@ func (s *ZSensor) GetMessageHandler(channel chan core.SwitchRequest, sensor Devi
 			val = "on"
 			now := time.Now()
 			s.LastChanged = &now
-			s.setCurrent(1)
+			s.SetCurrent(1)
 		} else {
 			val = "off"
 			if s.GetCurrent() == 1 {
 				now := time.Now()
 				s.LastChanged = &now
 			}
-			s.setCurrent(0)
+			s.SetCurrent(0)
 		}
 		log.Println(sensor.GetMqttTopic() + " is " + val)
+	}
+}
+
+func (s *ZSensor) GetTriggerValue(trigger string) interface{} {
+	if trigger == "sensor" {
+		return s.GetCurrent()
+	}
+	return nil
+}
+
+func (s *ZSensor) ClearTrigger(trigger string) {
+	if trigger == "sensor" {
+		s.SetCurrent(-1)
 	}
 }
 
 func (s *ZSensor) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
 	var request core.SwitchRequest
 	return request, true
+}
+
+func (s *ZSensor) UpdateValue() (float64, bool) {
+	return 0, false
 }

@@ -45,7 +45,7 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 					g.Type = dev.GetType()
 					g.Emoji = dev.GetEmoji()
 				} else if g.Type != dev.GetType() {
-					log.Println("Can't add device " + key + " to group, as it is of a different type than the other devices in the group")
+					log.Println("Can't add Device " + key + " to group, as it is of a different type than the other devices in the group")
 					fmt.Printf("%s != %s", g.Type, dev.GetType())
 					return nil
 				}
@@ -53,7 +53,7 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 				i = i + 1
 			}
 		} else {
-			fmt.Println("Could not find device " + key + ", as part of a group")
+			fmt.Println("Could not find Device " + key + ", as part of a group")
 		}
 	}
 
@@ -95,7 +95,7 @@ func (g *Group) UpdateValue() (float64, bool) {
 			changed = true
 		}
 	}
-	g.setCurrent(g.GetCurrent())
+	g.SetCurrent(g.GetCurrent())
 	return g.GetCurrent(), changed
 }
 */

@@ -22,7 +22,7 @@ type DeviceInterface interface {
 	GetMin() int
 	GetHidden() bool
 	GetCurrent() float64
-	setCurrent(float64)
+	SetCurrent(float64)
 	GetEmoji() string
 	ProcessRequest(core.SwitchRequest)
 	GetMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt.MessageHandler
@@ -41,7 +41,7 @@ type Device struct {
 	Name        string
 	MqttTopic   string     `json:"-"`
 	MqttState   string     `json:"-"`
-	Current     float64    `json:"value"`
+	Current     float64    `json:"Value"`
 	LastChanged *time.Time `json:"-"`
 	Type        string
 	Hidden      bool
@@ -84,7 +84,7 @@ func (d *Device) GetCurrent() float64 {
 	return d.Current
 }
 
-func (d *Device) setCurrent(current float64) {
+func (d *Device) SetCurrent(current float64) {
 	d.Current = current
 }
 

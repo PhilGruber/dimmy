@@ -62,7 +62,7 @@ func (t *Temperature) GetMessageHandler(channel chan core.SwitchRequest, tempera
 			log.Println("Received invalid temperature " + payload[:] + ": " + err.Error())
 			return
 		}
-		t.setCurrent(temperature)
+		t.SetCurrent(temperature)
 	}
 }
 

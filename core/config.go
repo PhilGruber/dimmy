@@ -37,6 +37,8 @@ func LoadConfig() (*ServerConfig, error) {
 		if err != nil {
 			log.Println("Could not load rules.conf.yaml: " + err.Error())
 		}
+	} else {
+		log.Println("Could not find rules file " + rulesFile)
 	}
 
 	if config.WebRoot == "" {

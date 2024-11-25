@@ -91,11 +91,11 @@ func (p *Plug) GetMessageHandler(channel chan core.SwitchRequest, plug DeviceInt
 			log.Println("Could parse status message from plug: " + err.Error())
 		}
 
-		log.Printf("Received state value %s from %s\n", message.Value, plug.GetMqttStateTopic())
+		log.Printf("Received state Value %s from %s\n", message.Value, plug.GetMqttStateTopic())
 		if message.Value == "ON" {
-			p.setCurrent(1)
+			p.SetCurrent(1)
 		} else {
-			p.setCurrent(0)
+			p.SetCurrent(0)
 		}
 	}
 }

@@ -9,6 +9,7 @@ server: jquery server.go devices/* core/* html/*
 clean:
 	rm dimmy dimmyd html/assets/jquery.js
 	rm -rf deb
+	rm dimmy_*.deb
 
 jquery:
 	wget https://code.jquery.com/jquery-3.4.1.min.js -O html/assets/jquery.js

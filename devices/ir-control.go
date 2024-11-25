@@ -26,7 +26,7 @@ func makeIrcontrol(config core.DeviceConfig) IRControl {
 	i.Type = "IRControl"
 	i.commands = *config.Options.Commands
 
-	log.Printf("IRControl device %s created with commands: %s\n", i.Name, i.GetCommands())
+	log.Printf("IRControl Device %s created with commands: %s\n", i.Name, i.GetCommands())
 
 	return i
 }
@@ -37,7 +37,7 @@ func NewIrControl(config core.DeviceConfig) *IRControl {
 }
 
 func (i *IRControl) ProcessRequest(request core.SwitchRequest) {
-	log.Printf("Processing request for device %s: %v\n", i.Name, request.Value)
+	log.Printf("Processing request for Device %s: %v\n", i.Name, request.Value)
 	command, ok := i.commands[request.Value]
 	if !ok {
 		log.Printf("Device %s does not support command %s. Please define this in config file.\n", i.Name, request.Value)

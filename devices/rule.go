@@ -7,21 +7,23 @@ import (
 )
 
 type Rule struct {
-	Triggers []struct {
-		device    DeviceInterface
-		key       string
-		condition struct {
-			Operator string
-			Value    any
-		}
-	}
+	Triggers  []Trigger
 	Receivers []Receiver
 }
 
+type Trigger struct {
+	Device    DeviceInterface
+	Key       string
+	Condition struct {
+		Operator string
+		Value    any
+	}
+}
+
 type Receiver struct {
-	device DeviceInterface
-	key    string
-	value  string
+	Device DeviceInterface
+	Key    string
+	Value  string
 }
 
 func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
@@ -29,17 +31,10 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 	log.Printf("Creating rule %v\n", config)
 	for _, triggerConfig := range config.Triggers {
 		log.Println("Creating trigger")
-		trigger := struct {
-			device    DeviceInterface
-			key       string
-			condition struct {
-				Operator string
-				Value    any
-			}
-		}{
-			device: devices[triggerConfig.DeviceName],
-			key:    triggerConfig.Key,
-			condition: struct {
+		trigger := Trigger{
+			Device: devices[triggerConfig.DeviceName],
+			Key:    triggerConfig.Key,
+			Condition: struct {
 				Operator string
 				Value    any
 			}{
@@ -52,14 +47,10 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 
 	for _, receiverConfig := range config.Receivers {
 		log.Println("Creating receiver")
-		receiver := struct {
-			device DeviceInterface
-			key    string
-			value  string
-		}{
-			device: devices[receiverConfig.DeviceName],
-			key:    receiverConfig.Key,
-			value:  receiverConfig.Value,
+		receiver := Receiver{
+			Device: devices[receiverConfig.DeviceName],
+			Key:    receiverConfig.Key,
+			Value:  receiverConfig.Value,
 		}
 		r.Receivers = append(r.Receivers, receiver)
 	}
@@ -72,23 +63,23 @@ func (r *Rule) Fire(channel chan core.SwitchRequest) []Receiver {
 	requests := make(map[string]core.SwitchRequest)
 	var firedReceivers []Receiver
 	for _, receiver := range r.Receivers {
-		request, ok := requests[receiver.device.GetName()]
+		request, ok := requests[receiver.Device.GetName()]
 		if !ok {
-			request = core.SwitchRequest{Device: receiver.device.GetName()}
+			request = core.SwitchRequest{Device: receiver.Device.GetName()}
 		}
-		request.Command = receiver.key
-		switch receiver.key {
+		request.Command = receiver.Key
+		switch receiver.Key {
 		case "brightness":
-			request.Value = receiver.value
+			request.Value = receiver.Value
 		case "duration":
-			duration, err := strconv.Atoi(receiver.value)
+			duration, err := strconv.Atoi(receiver.Value)
 			if err != nil {
-				log.Printf("Error parsing duration %s: %s\n", receiver.value, err)
+				log.Printf("Error parsing duration %s: %s\n", receiver.Value, err)
 				continue
 			}
 			request.Duration = duration
 		}
-		requests[receiver.device.GetName()] = request
+		requests[receiver.Device.GetName()] = request
 		firedReceivers = append(firedReceivers, receiver)
 	}
 
@@ -126,8 +117,8 @@ func (r *Rule) checkCondition(value any, condition string, target any) bool {
 
 func (r *Rule) CheckTrigger(device DeviceInterface, key string, value any) bool {
 	for _, trigger := range r.Triggers {
-		if trigger.device.GetName() == device.GetName() && trigger.key == key {
-			return r.checkCondition(value, trigger.condition.Operator, trigger.condition.Value)
+		if trigger.Device.GetName() == device.GetName() && trigger.Key == key {
+			return r.checkCondition(value, trigger.Condition.Operator, trigger.Condition.Value)
 		}
 	}
 	return false
@@ -136,7 +127,10 @@ func (r *Rule) CheckTrigger(device DeviceInterface, key string, value any) bool 
 func (r *Rule) CheckTriggers() bool {
 	matches := 0
 	for _, trigger := range r.Triggers {
-		if r.checkCondition(trigger.device.GetTriggerValue(trigger.key), trigger.condition.Operator, trigger.condition.Value) {
+		if r.checkCondition(
+			trigger.Device.GetTriggerValue(trigger.Key),
+			trigger.Condition.Operator,
+			trigger.Condition.Value) {
 			matches++
 		}
 	}
@@ -146,6 +140,6 @@ func (r *Rule) CheckTriggers() bool {
 
 func (r *Rule) ClearTriggers() {
 	for _, trigger := range r.Triggers {
-		trigger.device.ClearTrigger(trigger.key)
+		trigger.Device.ClearTrigger(trigger.Key)
 	}
 }

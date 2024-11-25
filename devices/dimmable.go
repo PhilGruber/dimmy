@@ -94,7 +94,7 @@ func (d *Dimmable) UpdateValue() (float64, bool) {
 	current := d.GetCurrent()
 	if current != d.Target {
 		if d.transition {
-			d.setCurrent(d.Target)
+			d.SetCurrent(d.Target)
 			return d.Target, true
 		}
 		if d.Step == 0 {
@@ -107,7 +107,7 @@ func (d *Dimmable) UpdateValue() (float64, bool) {
 			current += d.Step
 			current = math.Min(current, d.Target)
 		}
-		d.setCurrent(current)
+		d.SetCurrent(current)
 		return current, true
 	}
 	return 0, false

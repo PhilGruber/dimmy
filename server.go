@@ -7,7 +7,7 @@ import (
 	dimmyDevices "github.com/PhilGruber/dimmy/devices"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"html/template"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -127,7 +127,7 @@ func eventLoop(devices map[string]dimmyDevices.DeviceInterface, rules []dimmyDev
 			}
 		}
 
-		for name, _ := range devices {
+		for name := range devices {
 			if _, ok := devices[name].UpdateValue(); ok {
 				devices[name].PublishValue(client)
 			}
@@ -159,7 +159,7 @@ func ReceiveRequest(channel chan core.SwitchRequest) http.HandlerFunc {
 			return string(jsonData)
 		}
 
-		body, err := ioutil.ReadAll(httpRequest.Body)
+		body, err := io.ReadAll(httpRequest.Body)
 		if err != nil {
 			log.Println("Error: ", err)
 			_, _ = fmt.Fprintf(output, "Invalid JSON data")
