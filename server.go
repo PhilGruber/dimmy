@@ -93,6 +93,7 @@ func main() {
 	http.Handle("/api/switch", ReceiveRequest(channel))
 	http.Handle("/api/status", ShowStatus(&devices))
 	http.Handle("/", ShowDashboard(devices, panels, channel, config.WebRoot))
+	http.Handle("/rules", EditRules(rules, config.WebRoot))
 
 	log.Printf("Listening on port %d", config.Port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
@@ -217,6 +218,19 @@ func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, panels map[s
 			Devices map[string]dimmyDevices.DeviceInterface
 			Panels  map[string]dimmyDevices.Panel
 		}{devices, panels})
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	}
+}
+
+func EditRules(rules []dimmyDevices.Rule, webroot string) http.HandlerFunc {
+	return func(output http.ResponseWriter, httpRequest *http.Request) {
+		templ, _ := template.ParseFiles(webroot + "/rules.html")
+		err := templ.Execute(output, struct {
+			Rules []dimmyDevices.Rule
+		}{rules})
 		if err != nil {
 			log.Println(err)
 			return

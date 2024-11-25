@@ -1,0 +1,32 @@
+<html lang="en">
+    <head>
+        <title>
+            Dimmy Rules Editor
+        </title>
+        <link rel='stylesheet' type='text/css' href='/assets/dashboard.css' />
+        <script src='/assets/jquery.js'></script>
+    </head>
+    <body>
+
+        {{ range .Rules }}
+        <div class='rule'>
+            <div class='rule-content'>
+                <div class='rule-triggers'>
+                    {{ range .Triggers }}
+                    <div class='rule-trigger'>
+                        <span class='trigger-label'>{{ .Device.GetName }} </span>
+                        <span class='trigger-value'>{{ .Key }} {{ .Condition.Operator }} {{ .Condition.Value }} </span>
+                    </div>
+                    {{ end }}
+                    {{ range .Receivers }}
+                    <div class='rule-receiver'>
+                        <span class='receiver-label'>{{ .Device.GetName }} </span>
+                        <span class='receiver-value'>{{ .Key }}: {{ .Value }} </span>
+                    {{ end }}
+                </div>
+            </div>
+            <hr/>
+        {{ end }}
+
+    </body>
+</html>
