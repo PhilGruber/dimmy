@@ -1,6 +1,6 @@
 module github.com/PhilGruber/dimmy
 
-go 1.19.8
+go 1.19
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.5.0
