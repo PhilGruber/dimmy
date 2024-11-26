@@ -15,6 +15,7 @@ type DimmyTime struct {
 func MakeDimmyTime(config core.DeviceConfig) DimmyTime {
 	s := DimmyTime{}
 	s.setBaseConfig(config)
+	s.Hidden = true
 
 	s.Type = "time"
 	s.Triggers = []string{"day", "month", "year", "hour", "minute", "second", "weekday"}
