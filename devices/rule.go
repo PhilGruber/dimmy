@@ -31,6 +31,10 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 	log.Printf("Creating rule %v\n", config)
 	for _, triggerConfig := range config.Triggers {
 		log.Println("Creating trigger")
+		if _, ok := devices[triggerConfig.DeviceName]; !ok {
+			log.Printf("Device %s not found\n", triggerConfig.DeviceName)
+			continue
+		}
 		trigger := Trigger{
 			Device: devices[triggerConfig.DeviceName],
 			Key:    triggerConfig.Key,
@@ -46,7 +50,10 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 	}
 
 	for _, receiverConfig := range config.Receivers {
-		log.Println("Creating receiver")
+		if _, ok := devices[receiverConfig.DeviceName]; !ok {
+			log.Printf("Device %s not found\n", receiverConfig.DeviceName)
+			continue
+		}
 		receiver := Receiver{
 			Device: devices[receiverConfig.DeviceName],
 			Key:    receiverConfig.Key,
