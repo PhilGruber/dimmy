@@ -41,7 +41,7 @@ type Device struct {
 	Name        string
 	MqttTopic   string     `json:"-"`
 	MqttState   string     `json:"-"`
-	Current     float64    `json:"Value"`
+	Current     float64    `json:"value"`
 	LastChanged *time.Time `json:"-"`
 	Type        string
 	Hidden      bool
