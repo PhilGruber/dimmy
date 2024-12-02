@@ -60,7 +60,6 @@ func (d *Dimmable) setTarget(target float64) {
 }
 
 func (d *Dimmable) ProcessRequest(request core.SwitchRequest) {
-	log.Printf("Setting %s to %s within %d seconds\n", d.GetMqttTopic(), request.Value, request.Duration)
 	value, _ := strconv.ParseFloat(request.Value, 64)
 	value = math.Min(value, 100)
 	value = math.Max(value, 0)

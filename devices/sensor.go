@@ -17,13 +17,13 @@ type Sensor struct {
 func MakeSensor(config core.DeviceConfig) Sensor {
 	s := Sensor{}
 	s.setBaseConfig(config)
+	s.MqttState = config.Topic
 
 	s.Max = 100
 	s.Min = 0
 
 	s.Active = false
-	s.Current = 0
-	s.Target = 0
+
 	s.Type = "sensor"
 	return s
 }
@@ -46,18 +46,10 @@ type SensorMessageWrapper struct {
 func (s *Sensor) PublishValue(mqtt.Client) {
 }
 
-func (s *Sensor) GetStateMqttTopic() string {
-	return s.MqttState
-}
-
-func (s *Sensor) GetMessageHandler(channel chan core.SwitchRequest, _ DeviceInterface) mqtt.MessageHandler {
+func (s *Sensor) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 
 		payload := mqttMessage.Payload()
-
-		if s.GetCurrent() == 0 {
-			return
-		}
 
 		var data SensorMessageWrapper
 		err := json.Unmarshal(payload, &data)
@@ -69,11 +61,10 @@ func (s *Sensor) GetMessageHandler(channel chan core.SwitchRequest, _ DeviceInte
 		message := data.TuyaReceived
 
 		if message.Cmnd == 5 || message.Cmnd == 2 {
+			s.Active = true
+			now := time.Now()
+			s.LastChanged = &now
 			log.Printf("Motion detected (%d)", message.Cmnd)
-			request, ok := s.GenerateRequest(message.CmndData)
-			if ok {
-				channel <- request
-			}
 		}
 
 	}
@@ -81,7 +72,16 @@ func (s *Sensor) GetMessageHandler(channel chan core.SwitchRequest, _ DeviceInte
 
 func (s *Sensor) GetTriggerValue(key string) interface{} {
 	if key == "noMotion" {
-		return time.Now().Unix() - s.LastChanged.Unix()
+		if s.LastChanged != nil {
+			return time.Now().Unix() - s.LastChanged.Unix()
+		}
+		return 0
+	}
+	if key == "motion" {
+		if s.Active {
+			s.Active = false
+			return 1
+		}
 	}
 	return nil
 }

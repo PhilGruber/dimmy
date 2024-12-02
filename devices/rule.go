@@ -98,6 +98,7 @@ func (r *Rule) Fire(channel chan core.SwitchRequest) []Receiver {
 }
 
 func (r *Rule) checkCondition(value any, condition string, target any) bool {
+	//	log.Printf("Checking condition %v %s %v\n", value, condition, target)
 	switch condition {
 	case "==":
 		return value == target
@@ -106,7 +107,14 @@ func (r *Rule) checkCondition(value any, condition string, target any) bool {
 	case ">":
 		switch target.(type) {
 		case int:
-			return value.(int) > target.(int)
+			var val int
+			switch value.(type) {
+			case int:
+				val = value.(int)
+			case int64:
+				val = int(value.(int64))
+			}
+			return val > target.(int)
 		case float64:
 			return value.(float64) > target.(float64)
 		}
