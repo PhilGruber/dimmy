@@ -1,8 +1,10 @@
 package devices
 
 import (
+	"fmt"
 	"github.com/PhilGruber/dimmy/core"
 	"log"
+	"reflect"
 	"strconv"
 )
 
@@ -97,37 +99,78 @@ func (r *Rule) Fire(channel chan core.SwitchRequest) []Receiver {
 	return firedReceivers
 }
 
+func makeComparable(value any, target any) (any, any, error) {
+	if reflect.TypeOf(value) == reflect.TypeOf(target) {
+		return value, target, nil
+	}
+	if value == nil || target == nil {
+		return value, target, nil
+	}
+	switch value.(type) {
+	case int:
+		switch target.(type) {
+		case int:
+			return value, target, nil
+		case float64:
+			return float64(value.(int)), target, nil
+		}
+	case int64:
+		switch target.(type) {
+		case int:
+			return int(value.(int64)), target, nil
+		case float64:
+			return float64(value.(int64)), target, nil
+		}
+	case float64:
+		switch target.(type) {
+		case int:
+			return value, float64(target.(int)), nil
+		case float64:
+			return value, target, nil
+		}
+	}
+	return nil, nil, fmt.Errorf("can't compare %v and %v", value, target)
+}
+
 func (r *Rule) checkCondition(value any, condition string, target any) bool {
 	//	log.Printf("Checking condition %v %s %v\n", value, condition, target)
+	value, target, err := makeComparable(value, target)
+	if err != nil {
+		log.Println(err)
+		return false
+	}
 	switch condition {
 	case "==":
 		return value == target
 	case "!=":
 		return value != target
 	case ">":
-		switch target.(type) {
+		switch value.(type) {
 		case int:
-			var val int
-			switch value.(type) {
-			case int:
-				val = value.(int)
-			case int64:
-				val = int(value.(int64))
-			}
-			return val > target.(int)
+			return value.(int) > target.(int)
 		case float64:
 			return value.(float64) > target.(float64)
+		case int64:
+			return value.(int64) > target.(int64)
+		default:
+			log.Printf("Can't compare %v and %v\n", value, target)
+			return false
 		}
+
 	case "<":
 		switch value.(type) {
 		case int:
 			return value.(int) < target.(int)
 		case float64:
 			return value.(float64) < target.(float64)
+		case int64:
+			return value.(int64) < target.(int64)
+		default:
+			log.Printf("Can't compare %v and %v\n", value, target)
+			return false
 		}
 	}
 	return false
-
 }
 
 func (r *Rule) CheckTrigger(device DeviceInterface, key string, value any) bool {

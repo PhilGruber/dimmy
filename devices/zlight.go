@@ -109,7 +109,7 @@ func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 		}
 		moving := l.Current != l.Target
 		if moving {
-			log.Printf("Ignoring Value %d from %s because light is moving", value, l.MqttState)
+			//			log.Printf("Ignoring Value %d from %s because light is moving", value, l.MqttState)
 			return
 		}
 		log.Printf("Received Value %d from %s", value, l.MqttState)

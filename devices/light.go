@@ -103,7 +103,7 @@ func (l *Light) GetMessageHandler(channel chan core.SwitchRequest, light DeviceI
 		}
 		log.Printf("Received state Value %d from %s\n", value, light.GetMqttStateTopic())
 		if l.GetTarget() != math.Round(l.GetCurrent()) {
-			log.Printf("Ignoring Value %d from %s because light is moving", value, l.MqttState)
+			//			log.Printf("Ignoring Value %d from %s because light is moving", value, l.MqttState)
 			return
 		}
 		percentage := l.ValueToPercentage(value)
