@@ -2,6 +2,7 @@ package devices
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
@@ -46,7 +47,11 @@ func (t *ZTemperature) GetMessageHandler(channel chan core.SwitchRequest, temper
 			log.Printf("Received invalid json payload from %s: %v\n\tError: %s ", t.MqttTopic, payload, err.Error())
 			return
 		}
-		log.Printf("Received new temperature for %s: %.2f Humidity: %.2f", t.Name, data.Temperature, *data.Humidity)
+		str := fmt.Sprintf("Received new temperature for %s: %.2f", t.Name, data.Temperature)
+		if data.Humidity != nil {
+			str += fmt.Sprintf(" Humidity: %.2f", *data.Humidity)
+		}
+		log.Println(str)
 		t.SetCurrent(data.Temperature)
 		if data.Humidity != nil {
 			t.HasHumidity = true
