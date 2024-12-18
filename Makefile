@@ -29,7 +29,7 @@ deb: all
 	mkdir deb/dimmy/DEBIAN
 	cp deb.control deb/dimmy/DEBIAN/control
 	sed -i'' "s/__version__/$(VERSION)/" deb/dimmy/DEBIAN/control
-	sed -i'' "s/__arch__/$(GOARCH)/" deb/dimmy/DEBIAN/control
+	sed -i'' "s/__arch__/$(ARCH)/" deb/dimmy/DEBIAN/control
 	cat deb/dimmy/DEBIAN/control
 	cp dimmy deb/dimmy/usr/bin
 	cp dimmyd deb/dimmy/usr/bin

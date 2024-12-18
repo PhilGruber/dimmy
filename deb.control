@@ -2,4 +2,5 @@ Package: dimmy
 Version: __version__
 Maintainer: Phil Gruber <phil@gruber.au>
 Architecture: __arch__
-Description: dimmy is a small home automation system. It can control lights, blinds, and other devices via MQTT. It contains a daemon, a CLI client, a JSON API and a web interface.
+Description: A small home automation system.
+  It can control lights, blinds, and other devices via MQTT. It contains a daemon, a CLI client, a JSON API and a web interface.
