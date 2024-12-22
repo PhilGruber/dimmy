@@ -35,6 +35,11 @@ body {
     color: #FFDAC1;
 }
 
+.buttons a:focus {
+    outline: none;
+    background-color: #ff0000;
+}
+
 .textbutton {
     width: 100px;
 }
