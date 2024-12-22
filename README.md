@@ -3,8 +3,8 @@ Little Go Server to dim smart bulbs via MQTT
 
 ## Download .deb packages
 
-* [amd64](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.2.3_amd64.deb)
-* [arm64](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.2.3_arm64.deb)
-* [armhf](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.2.3_armhf.deb)
-* [i386](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.2.3_i386.deb)
+* [amd64](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.3.0_amd64.deb)
+* [arm64](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.3.0_arm64.deb)
+* [armhf](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.3.0_armhf.deb)
+* [i386](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.3.0_i386.deb)
 
