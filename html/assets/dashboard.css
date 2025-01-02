@@ -1,7 +1,7 @@
 
 body {
     font-family: Verdana, Sans-Serif;
-    font-size: 26pt;
+    font-size: 24pt;
 }
 
 .device {
@@ -24,15 +24,16 @@ body {
 }
 
 .buttons a {
-    width: 40px;
+    width: 34px;
     height: 36px;
     border-radius: 20px;
     background-color: #FAAFA5;
-    font-size: 22pt;
+    font-size: 18pt;
     padding: 2px 5px;
     display: inline-block;
     text-align: center;
     color: #FFDAC1;
+    font-weight: bold;
 }
 
 .buttons a:focus {
@@ -53,11 +54,11 @@ body {
 }
 
 .buttons .narrow {
-    width: 120px;
+    width: 110px;
 }
 
 .buttons .wide {
-    width: 180px;
+    width: 160px;
 }
 
 .right {
