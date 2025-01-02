@@ -68,10 +68,10 @@
                 {{ if eq .GetType "light" }}
                     <span class="left emoji">{{ .Emoji }}</span>
                     <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', 0);">off</a>
-                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', parseInt($('#value_{{.GetName}}').text()) - 10);">-</a>
+                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', parseInt($('#value_{{.GetName}}').text()) - 10);">➖</a>
                     <span class='value narrow' id='value_{{ .GetName }}'></span>
                     <a class='right' tabindex="-1" onClick="switchDevice('{{ .GetName }}', 100);">on</a>
-                    <a class='right' tabindex="-1" onClick="switchDevice('{{ .GetName }}', parseInt($('#value_{{.GetName}}').text()) + 10);">+</a>
+                    <a class='right' tabindex="-1" onClick="switchDevice('{{ .GetName }}', parseInt($('#value_{{.GetName}}').text()) + 10);">➕</a>
                     <br/>
                 {{ end }}
 
