@@ -28,6 +28,8 @@
                             } else {
                                 $("#value_" + name).removeClass('outdated');
                             }
+                        } else if (data[name].Type === 'door-sensor') {
+                            $("#value_" + name).text(data[name].value ? "open" : "closed");
                         } else {
                             $("#value_" + name).text(Math.round(data[name].value) + '%');
                         }
@@ -92,6 +94,12 @@
                         <a class='textbutton' tabindex="-1" onClick="switchDevice('{{ $name }}', '{{ $cmd }}');">{{ $cmd }}</a>
                     {{ end }}
                     <br/>
+                {{ end }}
+
+                {{ if eq .GetType "door-sensor" }}
+                    <span class="left emoji">{{ .Emoji }}</span>
+                    <span class="left value">{{ .GetState }}</span>
+                    <br />
                 {{ end }}
             </div>
             {{ end }}

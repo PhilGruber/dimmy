@@ -29,6 +29,7 @@ func MakeDoorSensor(config core.DeviceConfig) DoorSensor {
 	s.Triggers = []string{"sensor"}
 	s.state = ""
 	s.triggerState = ""
+	s.Emoji = "🚪"
 
 	return s
 }
@@ -49,8 +50,10 @@ func (s *DoorSensor) GetMessageHandler(channel chan core.SwitchRequest, sw Devic
 			return
 		}
 		if data.Contact {
+			s.SetCurrent(0)
 			s.state = "closed"
 		} else {
+			s.SetCurrent(1)
 			s.state = "open"
 		}
 		log.Printf("Door is %s\n", s.state)
@@ -75,6 +78,10 @@ func (s *DoorSensor) ClearTrigger(trigger string) {
 func (s *DoorSensor) UpdateValue() (float64, bool) {
 	return 0, false
 }
-func (s *DoorSensor) GetCurrent() float64 {
-	return 1
+
+func (s *DoorSensor) GetState() string {
+	if s.GetCurrent() == 0 {
+		return "closed"
+	}
+	return "open"
 }
