@@ -42,7 +42,7 @@ type Device struct {
 	MqttTopic   string     `json:"-"`
 	MqttState   string     `json:"-"`
 	Current     float64    `json:"value"`
-	LastChanged *time.Time `json:"-"`
+	LastChanged *time.Time `json:"lastUpdate"`
 	Type        string
 	Hidden      bool
 	Label       string
@@ -71,6 +71,9 @@ func (d *Device) setBaseConfig(config core.DeviceConfig) {
 		log.Println("No label found, setting label to Name: " + d.Name)
 		d.Label = d.Name
 	}
+
+	past := time.Unix(0, 0)
+	d.LastChanged = &past
 
 	d.Hidden = false
 	if config.Options != nil {

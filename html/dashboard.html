@@ -18,6 +18,16 @@
                             if (data[name].Humidity !== 0) {
                                 $("#humidity_" + name).text(Math.round(data[name].Humidity));
                             }
+                            // age of value in minutes
+                            let age = ((new Date() - (new Date(data[name].lastUpdate)))) / 1000 / 60;
+                            if (age > 180) {
+                                $("#value_" + name).text("--");
+                                $("#value_" + name).addClass('outdated');
+                            } else if (age > 60) {
+                                $("#value_" + name).addClass('outdated');
+                            } else {
+                                $("#value_" + name).removeClass('outdated');
+                            }
                         } else {
                             $("#value_" + name).text(Math.round(data[name].value) + '%');
                         }
