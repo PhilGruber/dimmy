@@ -184,6 +184,7 @@ func ReceiveRequest(channel chan core.SwitchRequest) http.HandlerFunc {
 
 func ShowStatus(devices *map[string]dimmyDevices.DeviceInterface) http.HandlerFunc {
 	return func(output http.ResponseWriter, request *http.Request) {
+		output.Header().Set("Content-Type", "application/json")
 		jsonDevices, _ := json.Marshal(devices)
 		_, _ = fmt.Fprintf(output, string(jsonDevices))
 	}
