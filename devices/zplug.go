@@ -12,6 +12,7 @@ type ZPlug struct {
 }
 
 type zplugStateMessage struct {
+	core.Zigbee2MqttMessage
 	State     string  `json:"state"`
 	ChildLock string  `json:"child_lock"`
 	Current   float64 `json:"current"`
@@ -56,6 +57,7 @@ func (p *ZPlug) GetMessageHandler(channel chan core.SwitchRequest, plug DeviceIn
 		} else {
 			p.SetCurrent(0)
 		}
+		p.setLinkQuality(message.LinkQuality)
 	}
 }
 

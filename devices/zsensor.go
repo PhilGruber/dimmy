@@ -61,6 +61,8 @@ func (s *ZSensor) GetMessageHandler(channel chan core.SwitchRequest, sensor Devi
 			}
 			s.SetCurrent(0)
 		}
+		s.setBatteryLevel(data.Battery)
+		s.setLinkQuality(data.LinkQuality)
 		log.Println(sensor.GetMqttTopic() + " is " + val)
 	}
 }

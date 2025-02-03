@@ -49,6 +49,9 @@ type Device struct {
 	Emoji       string
 	Triggers    []string
 	Receivers   []string
+
+	LinkQuality *int `json:"linkquality"`
+	Battery     *int `json:"battery"`
 }
 
 func (d *Device) setBaseConfig(config core.DeviceConfig) {
@@ -171,4 +174,18 @@ func (d *Device) GetMin() int {
 	return 0
 }
 func (d *Device) ProcessRequest(request core.SwitchRequest) {
+}
+
+func (d *Device) setBatteryLevel(battery *int) {
+	if battery == nil {
+		return
+	}
+	d.Battery = battery
+}
+
+func (d *Device) setLinkQuality(linkQuality *int) {
+	if linkQuality == nil {
+		return
+	}
+	d.LinkQuality = linkQuality
 }
