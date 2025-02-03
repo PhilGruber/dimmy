@@ -10,7 +10,6 @@ import (
 
 type ZTemperature struct {
 	Temperature
-	Humidity float64
 }
 
 func MakeZTemperature(config core.DeviceConfig) ZTemperature {
@@ -59,6 +58,8 @@ func (t *ZTemperature) GetMessageHandler(channel chan core.SwitchRequest, temper
 		} else {
 			t.HasHumidity = false
 		}
+		t.addDataLog(data.Temperature, data.Humidity)
+
 		t.setBatteryLevel(data.Battery)
 		t.setLinkQuality(data.LinkQuality)
 	}

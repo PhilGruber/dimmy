@@ -1,15 +1,24 @@
 package devices
 
 import (
-	core "github.com/PhilGruber/dimmy/core"
+	"github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"strconv"
+	"time"
 )
+
+type DataLog struct {
+	Time        time.Time
+	Temperature float64
+	Humidity    *float64
+}
 
 type Temperature struct {
 	Device
 	HasHumidity bool
+	Humidity    float64
+	DataLog     []DataLog `json:"history"`
 }
 
 func MakeTemperature(config core.DeviceConfig) Temperature {
@@ -39,10 +48,10 @@ func (t *Temperature) GetMax() int {
 	return 99
 }
 
-func (t *Temperature) PublishValue(mqtt mqtt.Client) {
+func (t *Temperature) PublishValue(mqtt.Client) {
 }
 
-func (t *Temperature) ProcessRequest(request core.SwitchRequest) {
+func (t *Temperature) ProcessRequest(core.SwitchRequest) {
 }
 
 func (t *Temperature) UpdateValue() (float64, bool) {
@@ -53,7 +62,7 @@ func (t *Temperature) GetMqttStateTopic() string {
 	return t.MqttTopic
 }
 
-func (t *Temperature) GetMessageHandler(channel chan core.SwitchRequest, temperature DeviceInterface) mqtt.MessageHandler {
+func (t *Temperature) GetMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := string(mqttMessage.Payload())
 		log.Printf("Received new temperature for %s: %s", t.Name, payload)
@@ -63,7 +72,12 @@ func (t *Temperature) GetMessageHandler(channel chan core.SwitchRequest, tempera
 			return
 		}
 		t.SetCurrent(temperature)
+		t.addDataLog(temperature, nil)
 	}
+}
+
+func (t *Temperature) addDataLog(temperature float64, humidity *float64) {
+	t.DataLog = append(t.DataLog, DataLog{Time: time.Now(), Temperature: temperature, Humidity: humidity})
 }
 
 func (t *Temperature) GetHumidity() float64 {

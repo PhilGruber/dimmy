@@ -28,6 +28,27 @@
                             } else {
                                 $("#value_" + name).removeClass('outdated');
                             }
+
+                            if (data[name].history != null) {
+                                let currentDate = new Date(data[name].history[data[name].history.length - 1].Time)
+                                let previousTime = new Date(currentDate - 10 * 60 * 1000);
+
+                                let trend = 0;
+                                for (let i = data[name].history.length - 1; i >= 0; i--) {
+                                    if (new Date(data[name].history[i].Time) < previousTime) {
+                                        trend = data[name].history[i].Temperature - data[name].value;
+                                        break;
+                                    }
+                                }
+
+                                if (trend < -0.5) {
+                                    $("#trend_" + name).text("🔺");
+                                } else if (trend > 0.5) {
+                                    $("#trend_" + name).text("🔻");
+                                } else {
+                                    $("#trend_" + name).text("➖");
+                                }
+                            }
                         } else if (data[name].Type === 'door-sensor') {
                             $("#value_" + name).text(data[name].value ? "open" : "closed");
                         } else {
@@ -60,7 +81,7 @@
 
                 {{ if eq .GetType "temperature" }}
                     <span class="left value wide">
-                        🌡<span id='value_{{ .Name }}'>{{ .GetCurrent }}</span> °C
+                        🌡<span id='value_{{ .Name }}'>{{ .GetCurrent }}</span> °C&nbsp;<span id="trend_{{ .Name }}"></span>
                     </span>
                     {{ if .HasHumidity }}
                         <span class="right value wide">

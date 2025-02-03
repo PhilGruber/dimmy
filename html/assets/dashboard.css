@@ -24,12 +24,11 @@ body {
 }
 
 .buttons a {
-    width: 34px;
     height: 36px;
     border-radius: 20px;
     background-color: #FAAFA5;
     font-size: 18pt;
-    padding: 2px 5px;
+    padding: 2px 10px;
     display: inline-block;
     text-align: center;
     color: #FFDAC1;
@@ -42,7 +41,6 @@ body {
 }
 
 .textbutton {
-    width: 100px;
 }
 
 .buttons .value {
@@ -62,7 +60,7 @@ body {
 }
 
 .buttons .wide {
-    width: 160px;
+    width: 185px;
 }
 
 .right {
