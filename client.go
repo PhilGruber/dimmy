@@ -16,10 +16,12 @@ import (
 )
 
 type listRequest struct {
-	Value  float64 `json:"Value"`
-	Type   string  `json:"Type"`
-	Hidden bool    `json:"Hidden"`
-	Target float64 `json:"Target"`
+	Value       float64 `json:"Value"`
+	Type        string  `json:"Type"`
+	Hidden      bool    `json:"Hidden"`
+	Target      float64 `json:"Target"`
+	LinkQuality *int    `json:"LinkQuality"`
+	Battery     *int    `json:"Battery"`
 }
 
 func loadClientConfig() (*string, *int) {
@@ -113,7 +115,16 @@ func main() {
 			log.Fatal("Error: " + err.Error())
 		}
 		for name, device := range devices {
-			fmt.Printf("[%-10s] %-30s %5.1f\n", device.Type, name, device.Value)
+			fmt.Printf("[%-12s] %-30s %5.1f", device.Type, name, device.Value)
+			if device.LinkQuality != nil {
+				fmt.Printf("\tSignal: %4d%%", *device.LinkQuality)
+			} else {
+				fmt.Printf("\t             ")
+			}
+			if device.Battery != nil {
+				fmt.Printf("\tBattery: %4d%%", *device.Battery)
+			}
+			fmt.Println()
 		}
 	}
 
