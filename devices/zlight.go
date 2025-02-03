@@ -106,6 +106,8 @@ func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 			}
 			value = data.Brightness
 			on = data.State == "ON"
+			l.setBatteryLevel(data.Battery)
+			l.setLinkQuality(data.LinkQuality)
 		}
 		moving := l.Current != l.Target
 		if moving {
@@ -119,5 +121,6 @@ func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 			l.Current = 0
 		}
 		l.Target = l.Current
+
 	}
 }

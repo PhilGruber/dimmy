@@ -59,5 +59,7 @@ func (t *ZTemperature) GetMessageHandler(channel chan core.SwitchRequest, temper
 		} else {
 			t.HasHumidity = false
 		}
+		t.setBatteryLevel(data.Battery)
+		t.setLinkQuality(data.LinkQuality)
 	}
 }
