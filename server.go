@@ -42,6 +42,8 @@ func main() {
 			devices[deviceConfig.Name] = dimmyDevices.NewZLight(deviceConfig)
 		case "plug":
 			devices[deviceConfig.Name] = dimmyDevices.NewPlug(deviceConfig)
+		case "zplug":
+			devices[deviceConfig.Name] = dimmyDevices.NewZPlug(deviceConfig)
 		case "temperature":
 			devices[deviceConfig.Name] = dimmyDevices.NewTemperature(deviceConfig)
 		case "ztemperature":

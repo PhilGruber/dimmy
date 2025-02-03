@@ -3,13 +3,11 @@ package devices
 import (
 	"encoding/json"
 	core "github.com/PhilGruber/dimmy/core"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"math"
 	"regexp"
 	"strconv"
-	"time"
-
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 type Plug struct {
@@ -31,8 +29,6 @@ func makePlug(config core.DeviceConfig) Plug {
 	var re = regexp.MustCompile("^cmnd/(.+)/POWER$")
 	p.MqttState = re.ReplaceAllString(p.MqttTopic, "tele/$1/STATE")
 
-	tt := time.Now()
-	p.LastChanged = &tt
 	p.Type = "plug"
 	p.needsSending = false
 	p.Min = 0
