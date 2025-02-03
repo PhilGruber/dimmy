@@ -1,7 +1,7 @@
 package core
 
 type Zigbee2MqttMessageUpdate struct {
-	state string
+	State string `json:"state"`
 }
 
 type Zigbee2MqttMessage struct {
