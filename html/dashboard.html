@@ -84,7 +84,7 @@
                         🌡<span id='value_{{ .Name }}'>{{ .GetCurrent }}</span> °C&nbsp;<span id="trend_{{ .Name }}"></span>
                     </span>
                     {{ if .HasHumidity }}
-                        <span class="right value wide">
+                        <span class="right value medium">
                             &nbsp; 💧 <span id="humidity_{{ .Name }}">{{ .GetHumidity }}</span>%
                         </span>
                     {{ end }}

@@ -59,8 +59,12 @@ body {
     width: 110px;
 }
 
+.buttons .medium {
+    width: 135px;
+}
+
 .buttons .wide {
-    width: 180px;
+    width: 190px;
 }
 
 .right {
