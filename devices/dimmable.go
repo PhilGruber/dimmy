@@ -1,7 +1,7 @@
 package devices
 
 import (
-	core "github.com/PhilGruber/dimmy/core"
+	"github.com/PhilGruber/dimmy/core"
 	"log"
 	"math"
 	"strconv"
@@ -60,7 +60,16 @@ func (d *Dimmable) setTarget(target float64) {
 }
 
 func (d *Dimmable) ProcessRequest(request core.SwitchRequest) {
+	relativeValue := false
+	if request.Value[0] == '+' || request.Value[0] == '-' {
+		relativeValue = true
+	}
 	value, _ := strconv.ParseFloat(request.Value, 64)
+
+	if relativeValue {
+		value += d.GetCurrent()
+	}
+
 	value = math.Min(value, 100)
 	value = math.Max(value, 0)
 

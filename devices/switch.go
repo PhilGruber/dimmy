@@ -2,7 +2,7 @@ package devices
 
 import (
 	"encoding/json"
-	core "github.com/PhilGruber/dimmy/core"
+	"github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 )
@@ -10,8 +10,10 @@ import (
 type Switch struct {
 	Device
 
-	onPressed  bool
-	offPressed bool
+	onPressed      bool
+	offPressed     bool
+	brightnessUp   bool
+	brightnessDown bool
 }
 
 func makeSwitch(config core.DeviceConfig) Switch {
@@ -66,10 +68,18 @@ func (s *Switch) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 
 		log.Printf("Button pressed (%s)", data.Action)
 
-		if data.Action == "on" {
+		switch data.Action {
+		case "on":
 			s.onPressed = true
-		} else {
+		case "off":
 			s.offPressed = true
+		case "brightness_move_up":
+			s.brightnessUp = true
+		case "brightness_move_down":
+			s.brightnessDown = true
+		case "brightness_stop":
+			s.brightnessUp = false
+			s.brightnessDown = false
 		}
 	}
 }
@@ -103,6 +113,14 @@ func (s *Switch) GetTriggerValue(key string) any {
 		}
 		if s.offPressed {
 			return "off"
+		}
+	}
+	if key == "brightness" {
+		if s.brightnessUp {
+			return "up"
+		}
+		if s.brightnessDown {
+			return "down"
 		}
 	}
 	return nil
