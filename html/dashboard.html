@@ -31,7 +31,7 @@
 
                             if (data[name].history != null) {
                                 let currentDate = new Date(data[name].history[data[name].history.length - 1].Time)
-                                let previousTime = new Date(currentDate - 10 * 60 * 1000);
+                                let previousTime = new Date(currentDate - 30 * 60 * 1000);
 
                                 let trend = 0;
                                 for (let i = data[name].history.length - 1; i >= 0; i--) {
@@ -46,7 +46,7 @@
                                 } else if (trend > 0.5) {
                                     $("#trend_" + name).text("🔻");
                                 } else {
-                                    $("#trend_" + name).text("➖");
+                                    $("#trend_" + name).text("");
                                 }
                             }
                         } else if (data[name].Type === 'door-sensor') {
