@@ -88,6 +88,7 @@ func main() {
 
 	channel := make(chan core.SwitchRequest, 10)
 
+	go processRequests(channel, devices)
 	go eventLoop(devices, rules, channel, config.MqttServer)
 
 	assets := http.FileServer(http.Dir(config.WebRoot + "/assets"))
@@ -115,19 +116,6 @@ func eventLoop(devices map[string]dimmyDevices.DeviceInterface, rules []dimmyDev
 	}
 
 	for {
-		time.Sleep(core.CycleLength * time.Millisecond)
-
-		for len(channel) > 0 {
-			request := <-channel
-			for _, device := range strings.Split(request.Device, ",") {
-				if _, ok := devices[device]; ok {
-					log.Println("Processing request for " + device)
-					devices[device].ProcessRequest(request)
-				} else {
-					log.Printf("Can't find device for request [%s (%s)]", device, request.Device)
-				}
-			}
-		}
 
 		for name := range devices {
 			if _, ok := devices[name].UpdateValue(); ok {
@@ -145,6 +133,22 @@ func eventLoop(devices map[string]dimmyDevices.DeviceInterface, rules []dimmyDev
 
 		for _, rule := range firedRules {
 			rule.ClearTriggers()
+		}
+
+		time.Sleep(core.CycleLength * time.Millisecond)
+	}
+}
+
+func processRequests(channel chan core.SwitchRequest, devices map[string]dimmyDevices.DeviceInterface) {
+	for {
+		request := <-channel
+		for _, device := range strings.Split(request.Device, ",") {
+			if _, ok := devices[device]; ok {
+				log.Println("Processing request for " + device)
+				devices[device].ProcessRequest(request)
+			} else {
+				log.Printf("Can't find device for request [%s (%s)]", device, request.Device)
+			}
 		}
 	}
 }
