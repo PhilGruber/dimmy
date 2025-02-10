@@ -81,7 +81,7 @@
 
                 {{ if eq .GetType "temperature" }}
                     <span class="left value wide">
-                        🌡<span id='value_{{ .Name }}'>{{ .GetCurrent }}</span> °C&nbsp;<span id="trend_{{ .Name }}"></span>
+                        🌡<span id='value_{{ .Name }}'>{{ .GetCurrent }}</span> °C&nbsp;<span id="trend_{{ .Name }}" class="tiny"></span>
                     </span>
                     {{ if .HasHumidity }}
                         <span class="right value medium">

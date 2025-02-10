@@ -28,7 +28,7 @@ body {
     border-radius: 20px;
     background-color: #FAAFA5;
     font-size: 18pt;
-    padding: 2px 10px;
+    padding: 2px 8px;
     display: inline-block;
     text-align: center;
     color: #FFDAC1;
@@ -65,6 +65,10 @@ body {
 
 .buttons .wide {
     width: 190px;
+}
+
+.tiny {
+    font-size: 12pt;
 }
 
 .right {
