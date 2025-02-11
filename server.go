@@ -86,7 +86,7 @@ func main() {
 		}
 	}
 
-	channel := make(chan core.SwitchRequest, 10)
+	channel := make(chan core.SwitchRequest, len(devices))
 
 	go processRequests(channel, devices)
 	go eventLoop(devices, rules, channel, config.MqttServer)
