@@ -51,7 +51,9 @@ func (t *ZTemperature) GetMessageHandler(channel chan core.SwitchRequest, temper
 			str += fmt.Sprintf(" Humidity: %.2f", *data.Humidity)
 		}
 		log.Println(str)
-		t.SetCurrent(data.Temperature)
+		if data.Temperature != 0 {
+			t.SetCurrent(data.Temperature)
+		}
 		if data.Humidity != nil {
 			t.HasHumidity = true
 			t.Humidity = *data.Humidity
