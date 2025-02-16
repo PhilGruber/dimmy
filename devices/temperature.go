@@ -77,6 +77,15 @@ func (t *Temperature) GetMessageHandler(chan core.SwitchRequest, DeviceInterface
 }
 
 func (t *Temperature) addDataLog(temperature float64, humidity *float64) {
+	if len(t.DataLog) > 0 && t.DataLog[len(t.DataLog)-1].Time.Sub(time.Now()) < 1*time.Minute {
+		if temperature != 0 {
+			t.DataLog[len(t.DataLog)-1].Temperature = temperature
+		}
+		if humidity != nil {
+			t.DataLog[len(t.DataLog)-1].Humidity = humidity
+		}
+		return
+	}
 	t.DataLog = append(t.DataLog, DataLog{Time: time.Now(), Temperature: temperature, Humidity: humidity})
 }
 
