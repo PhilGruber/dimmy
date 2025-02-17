@@ -16,9 +16,8 @@ type DataLog struct {
 
 type Temperature struct {
 	Device
-	HasHumidity bool
-	Humidity    float64
-	DataLog     []DataLog `json:"history"`
+	Humidity float64
+	DataLog  []DataLog `json:"history"`
 }
 
 func MakeTemperature(config core.DeviceConfig) Temperature {
@@ -28,7 +27,6 @@ func MakeTemperature(config core.DeviceConfig) Temperature {
 
 	t.Current = 0
 	t.Type = "temperature"
-	t.HasHumidity = false
 
 	t.Triggers = []string{"temperature", "humidity"}
 

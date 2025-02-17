@@ -19,7 +19,6 @@ func MakeZTemperature(config core.DeviceConfig) ZTemperature {
 
 	t.Current = 0
 	t.Humidity = 0
-	t.HasHumidity = false
 	t.Type = "temperature"
 
 	return t
@@ -55,14 +54,15 @@ func (t *ZTemperature) GetMessageHandler(channel chan core.SwitchRequest, temper
 			t.SetCurrent(data.Temperature)
 		}
 		if data.Humidity != nil {
-			t.HasHumidity = true
 			t.Humidity = *data.Humidity
-		} else {
-			t.HasHumidity = false
 		}
 		t.addDataLog(data.Temperature, data.Humidity)
 
 		t.setBatteryLevel(data.Battery)
 		t.setLinkQuality(data.LinkQuality)
 	}
+}
+
+func (t *ZTemperature) GetHumidity() float64 {
+	return t.Humidity
 }
