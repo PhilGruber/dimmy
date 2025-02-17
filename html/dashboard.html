@@ -3,7 +3,7 @@
         <title>
             Dimmy Dashboard
         </title>
-        <link rel='stylesheet' type='text/css' href='/assets/dashboard.css' />
+        <link rel='stylesheet' type='text/css' href='/assets/dashboard.css?3' />
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script src='/assets/jquery.js'></script>
         <script>
@@ -13,6 +13,10 @@
                      for (name in data) {
                         if (data[name].Type === 'plug') {
                             $("#value_" + name).text(data[name].value ? "on" : "off");
+                        } else if (data[name].Type === 'sensor') {
+                            for (let key in data[name].Values) {
+                                $("#" + key + "_" + name).text(data[name].Values[key]);
+                            }
                         } else if (data[name].Type === 'temperature') {
                             $("#value_" + name).text(Math.round(data[name].value*10)/10);
                             if (data[name].Humidity !== 0) {
@@ -80,14 +84,34 @@
             <div class="panel panel-{{ .GetType }} buttons">
 
                 {{ if eq .GetType "temperature" }}
-                    <span class="left value wide">
-                        🌡<span id='value_{{ .Name }}'>{{ .GetCurrent }}</span> °C&nbsp;<span id="trend_{{ .Name }}" class="tiny"></span>
+                <span class="left value wide">
+                        🌡<span id='value_{{ .Name }}'>--</span> °C&nbsp;<span id="trend_{{ .Name }}" class="tiny"></span>
                     </span>
-                    <span class="right value medium">
+                <span class="right value medium">
                         {{ if gt .Humidity 0.0 }}
-                            &nbsp; 💧 <span id="humidity_{{ .Name }}">{{ .Humidity }}</span>%
+                            &nbsp; 💧 <span id="humidity_{{ .Name }}">-- </span>%
                         {{ end }}
                     </span>
+                <br/>
+                {{ end }}
+
+                {{ if eq .GetType "sensor" }}
+                    {{ if .HasField "temperature" }}
+                        <span class="left value wide">
+                            🌡<span id='temperature_{{ .Name }}'>--</span> °C&nbsp;<span id="trend_{{ .Name }}" class="tiny"></span>
+                        </span>
+                        {{ if .HasField "humidity" }}
+                            <span class="right value medium">
+                                {{ if .HasField "humidity" }}
+                                    &nbsp; 💧 <span id="humidity_{{ .Name }}">-- </span>%
+                                {{ end }}
+                            </span>
+                        {{ end }}
+                    {{ else }}
+                        {{ if .HasField "illuminance" }}
+                            🕯️<span id='illuminance_{{ .Name }}'>--</span>
+                        {{ end }}
+                    {{ end }}
                     <br/>
                 {{ end }}
 
