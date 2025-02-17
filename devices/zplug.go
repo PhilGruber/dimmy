@@ -42,7 +42,6 @@ func MakeZPlug(config core.DeviceConfig) ZPlug {
 func (p *ZPlug) GetMessageHandler(channel chan core.SwitchRequest, plug DeviceInterface) mqtt.MessageHandler {
 	log.Println("Creating message handler for plug")
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
-		log.Println("Received message from plug")
 		payload := mqttMessage.Payload()
 
 		var message zplugStateMessage
@@ -50,14 +49,18 @@ func (p *ZPlug) GetMessageHandler(channel chan core.SwitchRequest, plug DeviceIn
 		if err != nil {
 			log.Println("Could parse status message from plug: " + err.Error())
 		}
-
-		log.Printf("Received state Value %s from %s\n", message.State, plug.GetMqttStateTopic())
-		if message.State == "ON" {
-			p.SetCurrent(1)
-		} else {
-			p.SetCurrent(0)
+		if message.LinkQuality != nil {
+			p.setLinkQuality(message.LinkQuality)
 		}
-		p.setLinkQuality(message.LinkQuality)
+
+		if message.State != "" {
+			log.Printf("Received state value %s from %s\n", message.State, plug.GetMqttStateTopic())
+			if message.State == "ON" {
+				p.SetCurrent(1)
+			} else {
+				p.SetCurrent(0)
+			}
+		}
 	}
 }
 
