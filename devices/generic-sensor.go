@@ -33,6 +33,7 @@ func MakeSensor(config core.DeviceConfig) Sensor {
 	if config.Options != nil {
 		if config.Options.Fields != nil {
 			s.fields = *config.Options.Fields
+			s.Triggers = s.fields
 		}
 
 		if config.Options.History != nil {
