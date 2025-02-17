@@ -189,3 +189,16 @@ func (d *Device) setLinkQuality(linkQuality *int) {
 	}
 	d.LinkQuality = linkQuality
 }
+
+func (d *Device) parseDefaultValues(data map[string]any) {
+	if battery, ok := data["battery"]; ok {
+		if batteryInt, ok := battery.(int); ok {
+			d.setBatteryLevel(&batteryInt)
+		}
+	}
+	if linkQuality, ok := data["linkquality"]; ok {
+		if linkQualityInt, ok := linkQuality.(int); ok {
+			d.setLinkQuality(&linkQualityInt)
+		}
+	}
+}

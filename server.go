@@ -28,6 +28,7 @@ func main() {
 
 	for _, deviceConfig := range config.Devices {
 		switch deviceConfig.Type {
+		case "motion-sensor":
 		case "sensor":
 			devices[deviceConfig.Name] = dimmyDevices.NewSensor(deviceConfig)
 		case "zsensor":

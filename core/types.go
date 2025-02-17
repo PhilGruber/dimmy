@@ -45,6 +45,7 @@ type configOptions struct {
 	Margin            *float64           `yaml:"margin"`
 	Transition        *bool              `yaml:"transition"`
 	Commands          *map[string]string `yaml:"commands,flow"`
+	Fields            *[]string          `yaml:"fields,flow"`
 }
 
 type ServerConfig struct {

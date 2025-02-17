@@ -8,14 +8,14 @@ import (
 	"time"
 )
 
-type Sensor struct {
+type MotionSensor struct {
 	Dimmable
 
 	Active bool
 }
 
-func MakeSensor(config core.DeviceConfig) Sensor {
-	s := Sensor{}
+func MakeMotionSensor(config core.DeviceConfig) MotionSensor {
+	s := MotionSensor{}
 	s.setBaseConfig(config)
 	s.MqttState = config.Topic
 
@@ -24,12 +24,12 @@ func MakeSensor(config core.DeviceConfig) Sensor {
 
 	s.Active = false
 
-	s.Type = "sensor"
+	s.Type = "motion-sensor"
 	return s
 }
 
-func NewSensor(config core.DeviceConfig) *Sensor {
-	s := MakeSensor(config)
+func NewMotionSensor(config core.DeviceConfig) *MotionSensor {
+	s := MakeMotionSensor(config)
 	return &s
 }
 
@@ -43,10 +43,10 @@ type SensorMessageWrapper struct {
 	TuyaReceived SensorMessage
 }
 
-func (s *Sensor) PublishValue(mqtt.Client) {
+func (s *MotionSensor) PublishValue(mqtt.Client) {
 }
 
-func (s *Sensor) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface) mqtt.MessageHandler {
+func (s *MotionSensor) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 
 		payload := mqttMessage.Payload()
@@ -70,7 +70,7 @@ func (s *Sensor) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface)
 	}
 }
 
-func (s *Sensor) GetTriggerValue(key string) interface{} {
+func (s *MotionSensor) GetTriggerValue(key string) interface{} {
 	if key == "noMotion" {
 		if s.LastChanged != nil {
 			return time.Now().Unix() - s.LastChanged.Unix()
