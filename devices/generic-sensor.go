@@ -21,7 +21,7 @@ func MakeSensor(config core.DeviceConfig) Sensor {
 
 	s.Type = "sensor"
 
-	if config.Options.Fields != nil {
+	if config.Options != nil && config.Options.Fields != nil {
 		s.fields = *config.Options.Fields
 	}
 
