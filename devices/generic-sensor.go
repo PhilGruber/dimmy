@@ -5,13 +5,21 @@ import (
 	"github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
+	"time"
 )
+
+type SensorValue struct {
+	Value       any               `json:"value"`
+	LastChanged time.Time         `json:"LastChanged"`
+	History     map[time.Time]any `json:"History"`
+}
 
 type Sensor struct {
 	Device
 
-	fields []string
-	Values map[string]any `json:"Values"`
+	fields     []string
+	Values     map[string]*SensorValue `json:"Values"`
+	hasHistory bool
 }
 
 func MakeSensor(config core.DeviceConfig) Sensor {
@@ -21,11 +29,21 @@ func MakeSensor(config core.DeviceConfig) Sensor {
 
 	s.Type = "sensor"
 
-	if config.Options != nil && config.Options.Fields != nil {
-		s.fields = *config.Options.Fields
+	s.hasHistory = false
+	if config.Options != nil {
+		if config.Options.Fields != nil {
+			s.fields = *config.Options.Fields
+		}
+
+		if config.Options.History != nil {
+			s.hasHistory = *config.Options.History
+		}
 	}
 
-	s.Values = make(map[string]any)
+	s.Values = make(map[string]*SensorValue)
+	for _, field := range s.fields {
+		s.Values[field] = &SensorValue{Value: 0, LastChanged: time.Unix(0, 0), History: make(map[time.Time]any)}
+	}
 
 	return s
 }
@@ -49,7 +67,11 @@ func (s Sensor) HasField(field string) bool {
 }
 
 func (s Sensor) SetValue(field string, value any) {
-	s.Values[field] = value
+	s.Values[field].Value = value
+	s.Values[field].LastChanged = time.Now()
+	if s.hasHistory {
+		s.addHistory(field, value)
+	}
 }
 
 func (s Sensor) GetValue(field string) any {
@@ -75,6 +97,10 @@ func (s Sensor) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface) 
 			}
 		}
 	}
+}
+
+func (s Sensor) addHistory(field string, value any) {
+	s.Values[field].History[time.Now()] = value
 }
 
 func (s Sensor) UpdateValue() (float64, bool) { return 0, false }

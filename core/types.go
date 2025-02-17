@@ -46,6 +46,7 @@ type configOptions struct {
 	Transition        *bool              `yaml:"transition"`
 	Commands          *map[string]string `yaml:"commands,flow"`
 	Fields            *[]string          `yaml:"fields,flow"`
+	History           *bool              `yaml:"history"`
 }
 
 type ServerConfig struct {
