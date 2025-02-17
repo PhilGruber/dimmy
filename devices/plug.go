@@ -2,7 +2,7 @@ package devices
 
 import (
 	"encoding/json"
-	core "github.com/PhilGruber/dimmy/core"
+	"github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"math"
@@ -78,7 +78,6 @@ func (p *Plug) ProcessRequest(request core.SwitchRequest) {
 func (p *Plug) GetMessageHandler(channel chan core.SwitchRequest, plug DeviceInterface) mqtt.MessageHandler {
 	log.Println("Creating message handler for plug")
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
-		log.Println("Received message from plug")
 		payload := mqttMessage.Payload()
 
 		var message plugStateMessage
