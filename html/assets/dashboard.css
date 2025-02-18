@@ -1,99 +1,99 @@
 
 body {
-    font-family: Verdana, Sans-Serif;
-    font-size: 24pt;
+  font-family: Verdana, Sans-Serif;
+  font-size: 24pt;
 }
 
 .device {
-    border: 3px solid #67D0DD;
-    padding: 2px;
-    max-width: 380px;
-    margin-bottom: 5px;
+  border: 3px solid #67D0DD;
+  padding: 2px;
+  max-width: 380px;
+  margin-bottom: 5px;
 }
 
 .title {
-    background-color: #67D0DD;
-    color: #F6E785;
-    padding: 6px;
-    text-align: center;
+  background-color: #67D0DD;
+  color: #F6E785;
+  padding: 6px;
+  text-align: center;
 }
 
 .buttons {
-    padding: 2px;
-    text-align: center;
+  padding: 2px;
+  text-align: center;
 }
 
 .buttons a {
-    height: 36px;
-    border-radius: 20px;
-    background-color: #FAAFA5;
-    font-size: 18pt;
-    padding: 2px 8px;
-    display: inline-block;
-    text-align: center;
-    color: #FFDAC1;
-    font-weight: bold;
+  height: 36px;
+  border-radius: 20px;
+  background-color: #FAAFA5;
+  font-size: 18pt;
+  padding: 2px 8px;
+  display: inline-block;
+  text-align: center;
+  color: #FFDAC1;
+  font-weight: bold;
 }
 
 .buttons a:focus {
-    outline: none;
-    background-color: #ff0000;
+  outline: none;
+  background-color: #ff0000;
 }
 
 .textbutton {
 }
 
 .buttons .value {
-    display: inline-block;
-    text-align: center;
-    word-wrap: no-wrap;
-    color: #666;
-    height: 38px;
+  display: inline-block;
+  text-align: center;
+  word-wrap: no-wrap;
+  color: #666;
+  height: 38px;
 }
 
 .outdated {
-    color: #BBB !important;
+  color: #BBB !important;
 }
 
 .buttons .narrow {
-    width: 100px;
+  width: 100px;
 }
 
 .buttons .medium {
-    width: 135px;
+  width: 135px;
 }
 
 .buttons .wide {
-    width: 190px;
+  width: 190px;
 }
 
 .tiny {
-    font-size: 12pt;
+  font-size: 12pt;
 }
 
 .right {
-    float: right;
+  float: right;
 }
 
 .left {
-    float: left;
+  float: left;
 }
 
 .hidden {
-    visibility: none;
+  visibility: none;
 }
 
 .emoji {
-    float: left;
-    text-align: left;
-    padding-right: 5px;
+  float: left;
+  text-align: left;
+  padding-right: 5px;
 }
 
 .panel {
-    clear: both;
-    text-align: left;
+  clear: both;
+  text-align: left;
 }
 
 .panel-sensor .left {
-    text-align: left;
+  text-align: left;
 }
