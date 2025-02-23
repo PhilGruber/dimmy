@@ -41,6 +41,8 @@ func MakeSensor(config core.DeviceConfig) Sensor {
 		}
 	}
 
+	s.Triggers = s.fields
+
 	s.Values = make(map[string]*SensorValue)
 	for _, field := range s.fields {
 		s.Values[field] = &SensorValue{Value: 0, LastChanged: time.Unix(0, 0), History: make(map[time.Time]any)}
@@ -76,7 +78,7 @@ func (s Sensor) SetValue(field string, value any) {
 }
 
 func (s Sensor) GetValue(field string) any {
-	return s.Values[field]
+	return s.Values[field].Value
 }
 
 func (s Sensor) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface) mqtt.MessageHandler {
@@ -105,3 +107,16 @@ func (s Sensor) addHistory(field string, value any) {
 }
 
 func (s Sensor) UpdateValue() (float64, bool) { return 0, false }
+
+func (s Sensor) GetTriggerValue(trigger string) interface{} {
+	if s.HasField(trigger) {
+		return s.GetValue(trigger)
+	}
+	return nil
+}
+
+func (s Sensor) ClearTrigger(trigger string) {
+	if s.HasField(trigger) {
+		s.SetValue(trigger, nil)
+	}
+}

@@ -15,7 +15,7 @@
                             $("#value_" + name).text(data[name].value ? "on" : "off");
                         } else if (data[name].Type === 'sensor') {
                             for (let key in data[name].Values) {
-                                $("#" + key + "_" + name).text(data[name].Values[key].value);
+                                $("#" + key + "_" + name).text(Math.round(data[name].Values[key].value));
                             }
                         } else if (data[name].Type === 'temperature') {
                             $("#value_" + name).text(Math.round(data[name].value*10)/10);

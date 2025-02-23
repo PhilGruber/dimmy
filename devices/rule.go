@@ -139,6 +139,10 @@ func (r *Rule) checkCondition(value any, condition string, target any) bool {
 		log.Println(err)
 		return false
 	}
+	if value == nil || target == nil {
+		return false
+	}
+
 	switch condition {
 	case "==":
 		return value == target
