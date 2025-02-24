@@ -48,7 +48,7 @@ func MakeSensor(config core.DeviceConfig) Sensor {
 
 	s.Values = make(map[string]*SensorValue)
 	for _, field := range s.fields {
-		s.Values[field] = &SensorValue{Value: 0, LastChanged: time.Unix(0, 0), History: make(map[time.Time]any)}
+		s.Values[field] = &SensorValue{Value: nil, LastChanged: time.Unix(0, 0), History: make(map[time.Time]any)}
 	}
 
 	return s

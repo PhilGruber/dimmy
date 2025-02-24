@@ -85,17 +85,3 @@ func (g *Group) ProcessRequest(request core.SwitchRequest) {
 	}
 	g.ProcessRequestChild(request)
 }
-
-/*
-func (g *Group) UpdateValue() (float64, bool) {
-	changed := false
-	for _, d := range g.devices {
-		_, thisChanged := d.UpdateValue()
-		if thisChanged {
-			changed = true
-		}
-	}
-	g.SetCurrent(g.GetCurrent())
-	return g.GetCurrent(), changed
-}
-*/
