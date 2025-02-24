@@ -4,6 +4,7 @@ import (
 	"github.com/PhilGruber/dimmy/core"
 	"github.com/google/uuid"
 	"log"
+	"sync"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -49,6 +50,7 @@ type Device struct {
 	Emoji       string
 	Triggers    []string
 	Receivers   []string
+	mutex       *sync.RWMutex
 
 	LinkQuality *int `json:"linkquality"`
 	Battery     *int `json:"battery"`
@@ -84,6 +86,8 @@ func (d *Device) setBaseConfig(config core.DeviceConfig) {
 			d.Hidden = *config.Options.Hidden
 		}
 	}
+
+	d.mutex = new(sync.RWMutex)
 }
 
 func (d *Device) GetCurrent() float64 {
@@ -93,7 +97,9 @@ func (d *Device) GetCurrent() float64 {
 func (d *Device) SetCurrent(current float64) {
 	now := time.Now()
 	d.LastChanged = &now
+	d.mutex.RLock()
 	d.Current = current
+	d.mutex.RUnlock()
 }
 
 func (d *Device) GetType() string {

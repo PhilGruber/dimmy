@@ -96,9 +96,11 @@ func (s *Switch) GetMin() int {
 	return 0
 }
 
+/*
 func (s *Switch) GetCurrent() float64 {
 	return 1
 }
+*/
 
 func (s *Switch) setCurrent(float64) {
 }
