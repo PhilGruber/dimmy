@@ -2,7 +2,7 @@ package devices
 
 import (
 	"encoding/json"
-	core "github.com/PhilGruber/dimmy/core"
+	"github.com/PhilGruber/dimmy/core"
 	"log"
 	"math"
 	"regexp"
@@ -101,7 +101,6 @@ func (l *Light) GetMessageHandler(channel chan core.SwitchRequest, light DeviceI
 		if !state {
 			value = 0
 		}
-		log.Printf("Received state Value %d from %s\n", value, light.GetMqttStateTopic())
 		if l.GetTarget() != math.Round(l.GetCurrent()) {
 			//			log.Printf("Ignoring Value %d from %s because light is moving", value, l.MqttState)
 			return

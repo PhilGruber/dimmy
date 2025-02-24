@@ -75,7 +75,7 @@ func (d *Dimmable) ProcessRequest(request core.SwitchRequest) {
 
 	d.setTarget(value)
 
-	log.Printf("Setting %s to %f within %d seconds\n", d.GetMqttTopic(), value, request.Duration)
+	log.Printf("[%32s] Dimming to %3.1f within %d seconds\n", d.GetName(), value, request.Duration)
 
 	if d.transition {
 		d.TransitionTime = request.Duration

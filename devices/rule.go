@@ -68,7 +68,7 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 }
 
 func (r *Rule) Fire(channel chan core.SwitchRequest) []Receiver {
-	log.Printf("Firing rule %v\n", r)
+	log.Printf("[%32s] Firing %v\n", "Rules", r)
 	requests := make(map[string]core.SwitchRequest)
 	var firedReceivers []Receiver
 	for _, receiver := range r.Receivers {
