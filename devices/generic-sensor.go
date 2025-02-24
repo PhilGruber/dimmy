@@ -94,7 +94,7 @@ func (s Sensor) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface) 
 		var data map[string]any
 		err := json.Unmarshal(payload, &data)
 		if err != nil {
-			log.Println("Error: " + err.Error())
+			log.Printf("[%32s] Error: %s\n", s.Name, err.Error())
 			return
 		}
 
@@ -102,7 +102,7 @@ func (s Sensor) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface) 
 
 		for _, field := range s.fields {
 			if value, ok := data[field]; ok {
-				log.Printf("[%s] Received new value for %s: %v\n", s.Name, field, value)
+				log.Printf("[%32s] Received new %s: %v\n", s.Name, field, value)
 				s.SetValue(field, value)
 			}
 		}
