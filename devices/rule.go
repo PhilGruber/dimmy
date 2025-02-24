@@ -133,7 +133,7 @@ func makeComparable(value any, target any) (any, any, error) {
 }
 
 func (r *Rule) checkCondition(value any, condition string, target any) bool {
-	//	log.Printf("Checking condition %v %s %v\n", value, condition, target)
+	// log.Printf("Checking condition %v %s %v\n", value, condition, target)
 	value, target, err := makeComparable(value, target)
 	if err != nil {
 		log.Println(err)
@@ -188,6 +188,7 @@ func (r *Rule) CheckTrigger(device DeviceInterface, key string, value any) bool 
 
 func (r *Rule) CheckTriggers() bool {
 	matches := 0
+	//	log.Printf("Checking rule %v with %d triggers\n", r, len(r.Triggers))
 	for _, trigger := range r.Triggers {
 		if r.checkCondition(
 			trigger.Device.GetTriggerValue(trigger.Key),

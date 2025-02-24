@@ -91,15 +91,17 @@ func (d *Device) setBaseConfig(config core.DeviceConfig) {
 }
 
 func (d *Device) GetCurrent() float64 {
+	d.mutex.RLock()
+	defer d.mutex.RUnlock()
 	return d.Current
 }
 
 func (d *Device) SetCurrent(current float64) {
 	now := time.Now()
 	d.LastChanged = &now
-	d.mutex.RLock()
+	d.mutex.Lock()
 	d.Current = current
-	d.mutex.RUnlock()
+	d.mutex.Unlock()
 }
 
 func (d *Device) GetType() string {

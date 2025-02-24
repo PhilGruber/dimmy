@@ -145,7 +145,6 @@ func processRequests(channel chan core.SwitchRequest, devices map[string]dimmyDe
 		request := <-channel
 		for _, device := range strings.Split(request.Device, ",") {
 			if _, ok := devices[device]; ok {
-				log.Println("Processing request for " + device)
 				devices[device].ProcessRequest(request)
 			} else {
 				log.Printf("Can't find device for request [%s (%s)]", device, request.Device)
