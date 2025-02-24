@@ -99,6 +99,8 @@ func (d *Dimmable) ProcessRequestChild(request core.SwitchRequest) {
 }
 
 func (d *Dimmable) UpdateValue() (float64, bool) {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
 	current := d.GetCurrent()
 	if current != d.Target {
 		if d.transition {

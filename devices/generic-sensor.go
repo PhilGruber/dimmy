@@ -5,6 +5,7 @@ import (
 	"github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
+	"sync"
 	"time"
 )
 
@@ -20,6 +21,7 @@ type Sensor struct {
 	fields     []string
 	Values     map[string]*SensorValue `json:"Values"`
 	hasHistory bool
+	valueMutex *sync.RWMutex
 }
 
 func MakeSensor(config core.DeviceConfig) Sensor {
@@ -40,6 +42,7 @@ func MakeSensor(config core.DeviceConfig) Sensor {
 			s.hasHistory = *config.Options.History
 		}
 	}
+	s.valueMutex = new(sync.RWMutex)
 
 	s.Triggers = s.fields
 
@@ -70,14 +73,18 @@ func (s Sensor) HasField(field string) bool {
 }
 
 func (s Sensor) SetValue(field string, value any) {
+	s.valueMutex.Lock()
 	s.Values[field].Value = value
 	s.Values[field].LastChanged = time.Now()
+	s.valueMutex.Unlock()
 	if s.hasHistory {
 		s.addHistory(field, value)
 	}
 }
 
 func (s Sensor) GetValue(field string) any {
+	s.valueMutex.RLock()
+	defer s.valueMutex.RUnlock()
 	return s.Values[field].Value
 }
 
