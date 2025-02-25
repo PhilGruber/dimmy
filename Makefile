@@ -1,10 +1,12 @@
+VERSION := $(if $(VERSION),$(VERSION),"0.0.0-dev")
+
 all: client server jquery
 
 client: client.go core/*
-	go build -o dimmy client.go
+	go build -ldflags "-X main.AppVersion=$(VERSION)" -o dimmy client.go
 
 server: jquery server.go devices/* core/* html/*
-	go build -o dimmyd server.go
+	go build -ldflags "-X main.AppVersion=$(VERSION)" -o dimmyd server.go
 
 clean:
 	rm dimmy dimmyd html/assets/jquery.js
@@ -17,7 +19,7 @@ jquery:
 install:
 	cp dimmy /usr/bin
 	cp dimmyd /usr/bin
-	test -f /etc/dimmy/dimmyd.conf.yaml || cp dimmyd.conf.yaml.example /etc/dimmy/dimmyd.conf.yaml
+	VERSION -f /etc/dimmy/dimmyd.conf.yaml || cp dimmyd.conf.yaml.example /etc/dimmy/dimmyd.conf.yaml
 	mkdir -p /usr/share/dimmy
 	cp -R html/* /usr/share/dimmy
 

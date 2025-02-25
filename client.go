@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	core "github.com/PhilGruber/dimmy/core"
+	"github.com/PhilGruber/dimmy/core"
 	"io"
 	"log"
 	"net/http"
@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"strings"
 )
+
+var AppVersion = "undefined"
 
 type listRequest struct {
 	Value       float64 `json:"Value"`
@@ -82,16 +84,14 @@ func main() {
 	device := flag.String("device", "", "Device to send command to")
 	duration := flag.Int("duration", 0, "Duration of the dimming curve (seconds)")
 	list := flag.Bool("list", false, "List devices and their status")
-
+	version := flag.Bool("version", false, "Print version")
 	flag.Parse()
 
-	request := core.SwitchRequest{
-		Device:   *device,
-		Value:    *value,
-		Duration: *duration,
+	if *version {
+		fmt.Printf("dimmy client version %s\n", AppVersion)
+		os.Exit(0)
 	}
 
-	jsonRequest, _ := json.Marshal(request)
 	url := fmt.Sprintf("http://%s:%d/api/", *host, *port)
 
 	if *list {
@@ -126,7 +126,15 @@ func main() {
 			}
 			fmt.Println()
 		}
+		os.Exit(0)
 	}
+
+	request := core.SwitchRequest{
+		Device:   *device,
+		Value:    *value,
+		Duration: *duration,
+	}
+	jsonRequest, _ := json.Marshal(request)
 
 	_, err := http.Post(url+"switch", "application/json", bytes.NewBuffer(jsonRequest))
 	if err != nil {
