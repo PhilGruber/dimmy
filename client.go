@@ -97,6 +97,10 @@ func main() {
 	if *list {
 		fmt.Println("Getting device list from " + url)
 		response, err := http.Get(url + "status")
+		if err != nil {
+			log.Println("Error: " + err.Error())
+			os.Exit(1)
+		}
 		defer func(Body io.ReadCloser) {
 			err := Body.Close()
 			if err != nil {
@@ -104,9 +108,6 @@ func main() {
 			}
 		}(response.Body)
 
-		if err != nil {
-			log.Println("Error: " + err.Error())
-		}
 		body, err := io.ReadAll(response.Body)
 
 		var devices map[string]listRequest

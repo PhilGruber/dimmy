@@ -125,10 +125,3 @@ func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 
 	}
 }
-
-func (l *ZLight) GetTriggerValue(trigger string) interface{} {
-	if trigger == "brightness" {
-		return l.Current
-	}
-	return nil
-}
