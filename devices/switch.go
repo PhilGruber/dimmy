@@ -18,8 +18,7 @@ type Switch struct {
 
 func makeSwitch(config core.DeviceConfig) Switch {
 	s := Switch{}
-	s.Name = config.Name
-	s.MqttTopic = config.Topic
+	s.setBaseConfig(config)
 	s.MqttState = config.Topic
 
 	s.Type = "switch"
