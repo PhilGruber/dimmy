@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/PhilGruber/dimmy/core"
 	dimmyDevices "github.com/PhilGruber/dimmy/devices"
@@ -15,7 +16,17 @@ import (
 	"time"
 )
 
+var AppVersion = "undefined"
+
 func main() {
+
+	version := flag.Bool("version", false, "Print version")
+	flag.Parse()
+
+	if *version {
+		fmt.Printf("dimmyd version %s\n", AppVersion)
+		os.Exit(0)
+	}
 
 	devices := make(map[string]dimmyDevices.DeviceInterface)
 	panels := make(map[string]dimmyDevices.Panel)
