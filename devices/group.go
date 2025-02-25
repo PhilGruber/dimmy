@@ -5,6 +5,7 @@ import (
 	"github.com/PhilGruber/dimmy/core"
 	"log"
 	"math"
+	"strconv"
 	"time"
 )
 
@@ -80,6 +81,12 @@ func (g *Group) GetMin() int {
 }
 
 func (g *Group) ProcessRequest(request core.SwitchRequest) {
+	if request.Value[0] == '+' || request.Value[0] == '-' {
+		value, err := strconv.ParseFloat(request.Value, 64)
+		if err == nil {
+			request.Value = fmt.Sprintf("%f", g.GetCurrent()+value)
+		}
+	}
 	for _, d := range g.devices {
 		d.ProcessRequest(request)
 	}
