@@ -53,7 +53,7 @@ func makeZLight(config core.DeviceConfig) ZLight {
 
 func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 	tt := time.Now()
-	newVal := l.PercentageToValue(l.Current)
+	newVal := l.PercentageToValue(l.GetCurrent())
 	var state string
 	if newVal != l.LastSent {
 		l.LastChanged = &tt
@@ -111,17 +111,14 @@ func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 			l.setBatteryLevel(data.Battery)
 			l.setLinkQuality(data.LinkQuality)
 		}
-		moving := l.Current != l.Target
-		if moving {
-			//			log.Printf("Ignoring Value %d from %s because light is moving", value, l.MqttState)
+		if l.GetCurrent() != l.GetTarget() {
 			return
 		}
 		if on {
-			l.Current = l.ValueToPercentage(value)
+			l.SetCurrent(l.ValueToPercentage(value))
 		} else {
-			l.Current = 0
+			l.SetCurrent(0)
 		}
-		l.Target = l.Current
-
+		l.setTarget(l.GetCurrent())
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"log"
 	"math"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -17,6 +18,8 @@ type Dimmable struct {
 	LastSent       int     `json:"-"`
 	transition     bool
 	TransitionTime int
+	targetLock     sync.RWMutex
+	stepLock       sync.RWMutex
 }
 
 func (d *Dimmable) GetMin() int {
@@ -28,11 +31,15 @@ func (d *Dimmable) GetMax() int {
 }
 
 func (d *Dimmable) GetStep() float64 {
+	d.stepLock.RLock()
+	defer d.stepLock.RUnlock()
 	return d.Step
 }
 
 func (d *Dimmable) setStep(step float64) {
+	d.stepLock.Lock()
 	d.Step = step
+	d.stepLock.Unlock()
 }
 
 func (d *Dimmable) GetLastSent() int {
@@ -52,11 +59,15 @@ func (d *Dimmable) setLastChanged(lastSent *time.Time) {
 }
 
 func (d *Dimmable) GetTarget() float64 {
+	d.targetLock.RLock()
+	defer d.targetLock.RUnlock()
 	return d.Target
 }
 
 func (d *Dimmable) setTarget(target float64) {
+	d.targetLock.Lock()
 	d.Target = target
+	d.targetLock.Unlock()
 }
 
 func (d *Dimmable) ProcessRequest(request core.SwitchRequest) {
@@ -100,19 +111,19 @@ func (d *Dimmable) ProcessRequestChild(request core.SwitchRequest) {
 
 func (d *Dimmable) UpdateValue() (float64, bool) {
 	current := d.GetCurrent()
-	if current != d.Target {
+	if current != d.GetTarget() {
 		if d.transition {
 			d.SetCurrent(d.Target)
 			return d.Target, true
 		}
-		if d.Step == 0 {
+		if d.GetStep() == 0 {
 			d.setStep(100)
 		}
-		if current > d.Target {
-			current -= d.Step
+		if current > d.GetTarget() {
+			current -= d.GetStep()
 			current = math.Max(current, d.Target)
 		} else {
-			current += d.Step
+			current += d.GetStep()
 			current = math.Min(current, d.Target)
 		}
 		d.SetCurrent(current)
