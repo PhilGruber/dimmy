@@ -9,7 +9,7 @@ import (
 )
 
 type MotionSensor struct {
-	Dimmable
+	Device
 
 	Active bool
 }
@@ -18,9 +18,6 @@ func MakeMotionSensor(config core.DeviceConfig) MotionSensor {
 	s := MotionSensor{}
 	s.setBaseConfig(config)
 	s.MqttState = config.Topic
-
-	s.Max = 100
-	s.Min = 0
 
 	s.Active = false
 

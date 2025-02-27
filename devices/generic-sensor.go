@@ -110,7 +110,9 @@ func (s Sensor) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface) 
 }
 
 func (s Sensor) addHistory(field string, value any) {
+	s.mutex.Lock()
 	s.Values[field].History[time.Now()] = value
+	s.mutex.Unlock()
 }
 
 func (s Sensor) UpdateValue() (float64, bool) { return 0, false }

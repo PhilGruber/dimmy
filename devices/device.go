@@ -100,8 +100,8 @@ func (d *Device) GetCurrent() float64 {
 
 func (d *Device) SetCurrent(current float64) {
 	now := time.Now()
-	d.LastChanged = &now
 	d.mutex.Lock()
+	d.LastChanged = &now
 	d.Current = current
 	d.mutex.Unlock()
 }

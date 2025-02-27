@@ -18,8 +18,13 @@ type Dimmable struct {
 	LastSent       int     `json:"-"`
 	transition     bool
 	TransitionTime int
-	targetLock     sync.RWMutex
-	stepLock       sync.RWMutex
+	targetLock     *sync.RWMutex
+	stepLock       *sync.RWMutex
+}
+
+func (d *Dimmable) init() {
+	d.targetLock = new(sync.RWMutex)
+	d.stepLock = new(sync.RWMutex)
 }
 
 func (d *Dimmable) GetMin() int {
