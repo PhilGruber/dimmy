@@ -58,6 +58,8 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 		}
 	}
 
+	g.init()
+
 	log.Println("Created group " + config.Name + " with " + fmt.Sprint(len(g.devices)) + " devices")
 
 	return &g

@@ -48,6 +48,7 @@ func makeZLight(config core.DeviceConfig) ZLight {
 
 	tt := time.Now()
 	d.LastChanged = &tt
+	d.init()
 	return d
 }
 

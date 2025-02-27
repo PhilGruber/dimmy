@@ -2,6 +2,7 @@ package devices
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/PhilGruber/dimmy/core"
 	"log"
 	"math"
@@ -21,7 +22,7 @@ type lightStateMessage struct {
 	State string `json:"POWER"`
 }
 
-func makeLight(config core.DeviceConfig) Light {
+func NewLight(config core.DeviceConfig) *Light {
 	d := Light{}
 	d.Emoji = "💡"
 	d.setBaseConfig(config)
@@ -49,11 +50,9 @@ func makeLight(config core.DeviceConfig) Light {
 	tt := time.Now()
 	d.LastChanged = &tt
 	d.Type = "light"
-	return d
-}
 
-func NewLight(config core.DeviceConfig) *Light {
-	d := makeLight(config)
+	d.init()
+
 	return &d
 }
 
@@ -79,7 +78,7 @@ func (l *Light) PublishValue(mqtt mqtt.Client) {
 	}
 }
 
-func (l *Light) GetMessageHandler(channel chan core.SwitchRequest, light DeviceInterface) mqtt.MessageHandler {
+func (l *Light) GetMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
 		value, err := strconv.Atoi(string(payload))
