@@ -33,6 +33,8 @@ type DeviceInterface interface {
 	SetReceiverValue(string, any)
 	GetTriggerValue(string) any
 	ClearTrigger(string)
+	Lock()
+	Unlock()
 
 	PublishValue(mqtt.Client)
 	PollValue(mqtt.Client)
@@ -125,6 +127,14 @@ func (d *Device) GetLabel() string {
 		return d.Label
 	}
 	return d.Name
+}
+
+func (d *Device) Lock() {
+	d.mutex.RLock()
+}
+
+func (d *Device) Unlock() {
+	d.mutex.RUnlock()
 }
 
 func (d *Device) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
