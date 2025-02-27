@@ -135,3 +135,15 @@ func (d *Dimmable) UpdateValue() (float64, bool) {
 func (d *Dimmable) UpdateValueChild() (float64, bool) {
 	return d.UpdateValue()
 }
+
+func (d *Dimmable) Lock() {
+	d.mutex.RLock()
+	d.targetLock.RLock()
+	d.stepLock.RLock()
+}
+
+func (d *Dimmable) Unlock() {
+	d.mutex.RUnlock()
+	d.targetLock.RUnlock()
+	d.stepLock.RUnlock()
+}
