@@ -206,3 +206,7 @@ func (r *Rule) ClearTriggers() {
 		trigger.Device.ClearTrigger(trigger.Key)
 	}
 }
+
+func (r *Rule) String() string {
+	return fmt.Sprintf("Rule with %d triggers and %d receivers", len(r.Triggers), len(r.Receivers))
+}
