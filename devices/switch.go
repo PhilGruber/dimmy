@@ -16,7 +16,7 @@ type Switch struct {
 	brightnessDown bool
 }
 
-func makeSwitch(config core.DeviceConfig) Switch {
+func NewSwitch(config core.DeviceConfig) *Switch {
 	s := Switch{}
 	s.setBaseConfig(config)
 	s.MqttState = config.Topic
@@ -27,12 +27,8 @@ func makeSwitch(config core.DeviceConfig) Switch {
 	s.offPressed = false
 
 	s.Hidden = true
-	return s
-}
 
-func NewSwitch(config core.DeviceConfig) *Switch {
-	p := makeSwitch(config)
-	return &p
+	return &s
 }
 
 /*
@@ -54,10 +50,6 @@ func (s *Switch) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
 
-		if sw.GetCurrent() == 0 {
-			return
-		}
-
 		var data SwitchMessage
 		err := json.Unmarshal(payload, &data)
 		if err != nil {
@@ -65,7 +57,7 @@ func (s *Switch) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 			return
 		}
 
-		log.Printf("Button pressed (%s)", data.Action)
+		log.Printf("[%32s] Button pressed (%s)\n", s.GetName(), data.Action)
 
 		switch data.Action {
 		case "on":
