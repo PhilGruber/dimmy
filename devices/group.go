@@ -45,6 +45,7 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 				if g.Type == "" {
 					g.Type = dev.GetType()
 					g.Emoji = dev.GetEmoji()
+					g.MqttState = dev.GetMqttStateTopic()
 				} else if g.Type != dev.GetType() {
 					log.Println("Can't add Device " + key + " to group, as it is of a different type than the other devices in the group")
 					fmt.Printf("%s != %s", g.Type, dev.GetType())
@@ -60,7 +61,7 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 
 	g.init()
 
-	log.Println("Created group " + config.Name + " with " + fmt.Sprint(len(g.devices)) + " devices")
+	log.Printf("[%32s] Created group with %d devices\n", config.Name, len(g.devices))
 
 	return &g
 }
@@ -71,6 +72,7 @@ func (g *Group) GetCurrent() float64 {
 	for _, d := range g.devices {
 		current = math.Max(d.GetCurrent(), current)
 	}
+	g.SetCurrent(current)
 	return current
 }
 

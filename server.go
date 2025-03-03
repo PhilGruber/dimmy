@@ -119,11 +119,9 @@ func eventLoop(devices map[string]dimmyDevices.DeviceInterface, rules []dimmyDev
 
 	for name := range devices {
 		if devices[name].GetMqttStateTopic() != "" {
-			log.Println("Subscribing to " + devices[name].GetMqttStateTopic())
+			log.Printf("[%32s] Subscribing to %s\n", name, devices[name].GetMqttStateTopic())
 			client.Subscribe(devices[name].GetMqttStateTopic(), 0, devices[name].GetMessageHandler(channel, devices[name]))
 			devices[name].PollValue(client)
-		} else {
-			log.Println("No state topic for " + name)
 		}
 	}
 

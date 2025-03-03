@@ -76,7 +76,6 @@ func (p *Plug) ProcessRequest(request core.SwitchRequest) {
 }
 
 func (p *Plug) GetMessageHandler(channel chan core.SwitchRequest, plug DeviceInterface) mqtt.MessageHandler {
-	log.Println("Creating message handler for plug")
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
 
@@ -86,7 +85,7 @@ func (p *Plug) GetMessageHandler(channel chan core.SwitchRequest, plug DeviceInt
 			log.Println("Could parse status message from plug: " + err.Error())
 		}
 
-		log.Printf("Received state Value %s from %s\n", message.Value, plug.GetMqttStateTopic())
+		log.Printf("[%32s] Received state Value %s\n", p.GetName(), message.Value)
 		if message.Value == "ON" {
 			p.SetCurrent(1)
 		} else {

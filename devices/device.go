@@ -72,10 +72,8 @@ func (d *Device) setBaseConfig(config core.DeviceConfig) {
 	}
 
 	if config.Label != "" {
-		log.Println("Setting label to " + config.Label)
 		d.Label = config.Label
 	} else {
-		log.Println("No label found, setting label to Name: " + d.Name)
 		d.Label = d.Name
 	}
 
@@ -155,7 +153,7 @@ func (d *Device) GetMessageHandler(channel chan core.SwitchRequest, sensor Devic
 
 func (d *Device) GetStateMessageHandler(channel chan core.SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
-		log.Println("Received state message from " + d.MqttState)
+		log.Printf("[%32s] Received state message from %s\n", d.GetName(), d.MqttState)
 	}
 }
 
