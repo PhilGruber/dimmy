@@ -86,7 +86,7 @@ func (l *ZLight) PollValue(mqtt mqtt.Client) {
 		Brightness: 0,
 	}
 	s, _ := json.Marshal(msg)
-	log.Println("Polling " + l.MqttState)
+	log.Printf("[%32s] Polling %s\n", l.GetName(), l.MqttState)
 	t := mqtt.Publish(l.MqttState+"/get", 0, false, s)
 	if t.Wait() && t.Error() != nil {
 		log.Println(t.Error())

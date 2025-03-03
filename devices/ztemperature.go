@@ -36,16 +36,15 @@ type ZTemperatureMessage struct {
 }
 
 func (t *ZTemperature) GetMessageHandler(channel chan core.SwitchRequest, temperature DeviceInterface) mqtt.MessageHandler {
-	log.Printf("Subscribing to temperature sensor on %s\n", t.MqttTopic)
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
 		var data ZTemperatureMessage
 		err := json.Unmarshal(payload, &data)
 		if err != nil {
-			log.Printf("Received invalid json payload from %s: %v\n\tError: %s ", t.MqttTopic, payload, err.Error())
+			log.Printf("[%32s] Received invalid json payload: %v\n\tError: %s ", t.GetName(), t.MqttTopic, payload, err.Error())
 			return
 		}
-		str := fmt.Sprintf("Received new temperature for %s: %.2f", t.Name, data.Temperature)
+		str := fmt.Sprintf("[%32s] Received new temperature %.2f", t.Name, data.Temperature)
 		if data.Humidity != nil {
 			str += fmt.Sprintf(" Humidity: %.2f", *data.Humidity)
 		}

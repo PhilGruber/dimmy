@@ -2,7 +2,7 @@ package devices
 
 import (
 	"encoding/json"
-	core "github.com/PhilGruber/dimmy/core"
+	"github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"time"
@@ -33,7 +33,6 @@ type ZSensorMessage struct {
 }
 
 func (s *ZSensor) GetMessageHandler(channel chan core.SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
-	log.Println("Subscribing to " + sensor.GetMqttTopic())
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 
 		payload := mqttMessage.Payload()

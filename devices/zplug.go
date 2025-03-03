@@ -40,7 +40,6 @@ func MakeZPlug(config core.DeviceConfig) ZPlug {
 }
 
 func (p *ZPlug) GetMessageHandler(channel chan core.SwitchRequest, plug DeviceInterface) mqtt.MessageHandler {
-	log.Println("Creating message handler for plug")
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
 
@@ -54,7 +53,7 @@ func (p *ZPlug) GetMessageHandler(channel chan core.SwitchRequest, plug DeviceIn
 		}
 
 		if message.State != "" {
-			log.Printf("Received state value %s from %s\n", message.State, plug.GetMqttStateTopic())
+			log.Printf("[%32s] Received state Value %s\n", p.GetName(), message.State)
 			if message.State == "ON" {
 				p.SetCurrent(1)
 			} else {
