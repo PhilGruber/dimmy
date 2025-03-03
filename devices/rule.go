@@ -28,11 +28,28 @@ type Receiver struct {
 	Value  string
 }
 
+func (t *Trigger) String() string {
+	return fmt.Sprintf("%s.%s %s %v", t.Device.GetName(), t.Key, t.Condition.Operator, t.Condition.Value)
+}
+
+func (r *Receiver) String() string {
+	return fmt.Sprintf("Receiver %s.%s = %s", r.Device.GetName(), r.Key, r.Value)
+}
+
+func (r *Rule) String() string {
+	s := fmt.Sprintf("Rule with %d triggers and %d receivers:\n", len(r.Triggers), len(r.Receivers))
+	for _, trigger := range r.Triggers {
+		s += fmt.Sprintf("\t%s \n", trigger.String())
+	}
+	for _, receiver := range r.Receivers {
+		s += fmt.Sprintf("\t=> %s\n", receiver.String())
+	}
+	return s
+}
+
 func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 	r := Rule{}
-	log.Printf("Creating rule %v\n", config)
 	for _, triggerConfig := range config.Triggers {
-		log.Println("Creating trigger")
 		if _, ok := devices[triggerConfig.DeviceName]; !ok {
 			log.Printf("Device %s not found\n", triggerConfig.DeviceName)
 			continue
@@ -64,6 +81,7 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 		r.Receivers = append(r.Receivers, receiver)
 	}
 
+	log.Printf("Created rule %s\n", r.String())
 	return &r
 }
 
@@ -205,8 +223,4 @@ func (r *Rule) ClearTriggers() {
 	for _, trigger := range r.Triggers {
 		trigger.Device.ClearTrigger(trigger.Key)
 	}
-}
-
-func (r *Rule) String() string {
-	return fmt.Sprintf("Rule with %d triggers and %d receivers", len(r.Triggers), len(r.Receivers))
 }
