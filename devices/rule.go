@@ -146,6 +146,15 @@ func makeComparable(value any, target any) (any, any, error) {
 		case float64:
 			return value, target, nil
 		}
+	case string:
+		switch target.(type) {
+		case string:
+			return value, target, nil
+		case int:
+			return value, fmt.Sprintf("%d", target), nil
+		case float64:
+			return value, fmt.Sprintf("%f", target), nil
+		}
 	}
 	return nil, nil, fmt.Errorf("can't compare %v and %v", value, target)
 }
@@ -178,6 +187,18 @@ func (r *Rule) checkCondition(value any, condition string, target any) bool {
 			log.Printf("Can't compare %v and %v\n", value, target)
 			return false
 		}
+	case ">=":
+		switch value.(type) {
+		case int:
+			return value.(int) >= target.(int)
+		case float64:
+			return value.(float64) >= target.(float64)
+		case int64:
+			return value.(int64) >= target.(int64)
+		default:
+			log.Printf("Can't compare %v and %v\n", value, target)
+			return false
+		}
 
 	case "<":
 		switch value.(type) {
@@ -187,6 +208,19 @@ func (r *Rule) checkCondition(value any, condition string, target any) bool {
 			return value.(float64) < target.(float64)
 		case int64:
 			return value.(int64) < target.(int64)
+		default:
+			log.Printf("Can't compare %v and %v\n", value, target)
+			return false
+		}
+
+	case "<=":
+		switch value.(type) {
+		case int:
+			return value.(int) <= target.(int)
+		case float64:
+			return value.(float64) <= target.(float64)
+		case int64:
+			return value.(int64) <= target.(int64)
 		default:
 			log.Printf("Can't compare %v and %v\n", value, target)
 			return false
