@@ -78,7 +78,9 @@ func (i *IRControl) GetCommands() []string {
 func (i *IRControl) SetReceiverValue(key string, value interface{}) {
 	switch key {
 	case "command":
-
+		command := i.commands[value.(string)]
+		req := IrControlMessage{IrCode: command}
+		i.nextRequest = &req
 	}
 }
 
