@@ -10,9 +10,14 @@ import (
 )
 
 type SensorValue struct {
-	Value       any               `json:"value"`
-	LastChanged time.Time         `json:"LastChanged"`
-	History     map[time.Time]any `json:"History"`
+	Value       any             `json:"value"`
+	LastChanged time.Time       `json:"LastChanged"`
+	History     []SensorHistory `json:"History"`
+}
+
+type SensorHistory struct {
+	Time  time.Time `json:"Time"`
+	Value any       `json:"Value"`
 }
 
 type Sensor struct {
@@ -48,7 +53,7 @@ func MakeSensor(config core.DeviceConfig) Sensor {
 
 	s.Values = make(map[string]*SensorValue)
 	for _, field := range s.fields {
-		s.Values[field] = &SensorValue{Value: nil, LastChanged: time.Unix(0, 0), History: make(map[time.Time]any)}
+		s.Values[field] = &SensorValue{Value: nil, LastChanged: time.Unix(0, 0), History: make([]SensorHistory, 0)}
 	}
 
 	return s
@@ -111,7 +116,7 @@ func (s Sensor) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface) 
 
 func (s Sensor) addHistory(field string, value any) {
 	s.mutex.Lock()
-	s.Values[field].History[time.Now()] = value
+	s.Values[field].History = append(s.Values[field].History, SensorHistory{Time: time.Now(), Value: value})
 	s.mutex.Unlock()
 }
 
