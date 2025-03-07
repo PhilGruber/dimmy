@@ -1,9 +1,10 @@
+<!DOCTYPE html>
 <html>
     <head>
         <title>
             Dimmy Dashboard
         </title>
-        <link rel='stylesheet' type='text/css' href='/assets/dashboard.css?3' />
+        <link rel='stylesheet' type='text/css' href='/assets/dashboard.css' />
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script src='/assets/jquery.js'></script>
         <script>
@@ -15,15 +16,17 @@
                             $("#value_" + name).text(data[name].value ? "on" : "off");
                         } else if (data[name].Type === 'sensor') {
                             for (let key in data[name].Values) {
-                                $("#" + key + "_" + name).text(Math.round(data[name].Values[key].value));
-                                if (data[name].Values[key].history != null) {
-                                    let currentDate = new Date(data[name].Values[key].history[data[name].Values[key].history.length - 1].Time)
-                                    let previousTime = new Date(currentDate - 30 * 60 * 1000);
+                                prec = (key === "temperature" ? 10 : 1);
+                                $("#" + key + "_" + name).text(Math.round(data[name].Values[key].value*prec)/prec);
+
+                                if (data[name].Values[key].History != null) {
+                                    let currentDate = new Date(data[name].Values[key].LastChanged)
+                                    let previousTime = new Date(currentDate.getTime() - 25 * 60 * 1000);
 
                                     let trend = 0;
-                                    for (let i = data[name].Values[key].history.length - 1; i >= 0; i--) {
-                                        if (new Date(data[name].Values[key].history[i].Time) < previousTime) {
-                                            trend = data[name].Values[key].history[i].Value - data[name].Values[key].value;
+                                    for (let i = data[name].Values[key].History.length - 1; i >= 0; i--) {
+                                        if (new Date(data[name].Values[key].History[i].Time) <= previousTime) {
+                                            trend = data[name].Values[key].History[i].Value - data[name].Values[key].value;
                                             break;
                                         }
                                     }
@@ -31,6 +34,7 @@
                                     if (trend < -0.5) {
                                         $("#trend_" + key + "_" + name).text("🔺");
                                     } else if (trend > 0.5) {
+                                        console.log("🔻");
                                         $("#trend_" + key + "_" + name).text("🔻");
                                     } else {
                                         $("#trend_" + key + "_" + name).text("");
@@ -105,7 +109,7 @@
 
                 {{ if eq .GetType "temperature" }}
                 <span class="left value wide">
-                        🌡<span id='value_{{ .Name }}'>--</span> °C&nbsp;<span id="trend_temperature_{{ .Name }}" class="tiny"></span>
+                        🌡<span id='value_{{ .Name }}'>--</span> °C&nbsp;<span id="trend_{{ .Name }}" class="tiny"></span>
                     </span>
                 <span class="right value medium">
                         {{ if gt .Humidity 0.0 }}
@@ -118,7 +122,7 @@
                 {{ if eq .GetType "sensor" }}
                     {{ if .HasField "temperature" }}
                         <span class="left value wide">
-                            🌡<span id='temperature_{{ .Name }}'>--</span> °C&nbsp;<span id="trend_{{ .Name }}" class="tiny"></span>
+                            🌡<span id='temperature_{{ .Name }}'>--</span> °C&nbsp;<span id="trend_temperature_{{ .Name }}" class="tiny"></span>
                         </span>
                         {{ if .HasField "humidity" }}
                             <span class="right value medium">
