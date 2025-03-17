@@ -77,7 +77,7 @@ func loadClientConfig() (*string, *int) {
 func main() {
 
 	host, port := loadClientConfig()
-	host = flag.String("host", "", "hostname to connect to")
+	host = flag.String("host", *host, "hostname to connect to")
 	port = flag.Int("port", *port, "port to connect to")
 
 	value := flag.String("value", "100", "Value to send to device")
