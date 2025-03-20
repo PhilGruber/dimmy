@@ -6,6 +6,7 @@ import (
 	"log"
 	"reflect"
 	"strconv"
+	"time"
 )
 
 type Rule struct {
@@ -16,10 +17,88 @@ type Rule struct {
 type Trigger struct {
 	Device    DeviceInterface
 	Key       string
-	Condition struct {
-		Operator string
-		Value    any
+	Condition condition
+}
+
+type condition struct {
+	Operator    string
+	Value       any
+	LastValue   any
+	LastChanged *time.Time
+}
+
+func (c *condition) Clear() {
+	c.LastValue = nil
+	c.LastChanged = nil
+}
+
+func (c *condition) check() bool {
+	value, target, err := makeComparable(c.LastValue, c.Value)
+	if err != nil {
+		log.Println(err)
+		return false
 	}
+	if value == nil || target == nil {
+		return false
+	}
+
+	switch c.Operator {
+	case "==":
+		return value == target
+	case "!=":
+		return value != target
+	case ">":
+		switch value.(type) {
+		case int:
+			return value.(int) > target.(int)
+		case float64:
+			return value.(float64) > target.(float64)
+		case int64:
+			return value.(int64) > target.(int64)
+		default:
+			log.Printf("Can't compare %v and %v\n", value, target)
+			return false
+		}
+	case ">=":
+		switch value.(type) {
+		case int:
+			return value.(int) >= target.(int)
+		case float64:
+			return value.(float64) >= target.(float64)
+		case int64:
+			return value.(int64) >= target.(int64)
+		default:
+			log.Printf("Can't compare %v and %v\n", value, target)
+			return false
+		}
+
+	case "<":
+		switch value.(type) {
+		case int:
+			return value.(int) < target.(int)
+		case float64:
+			return value.(float64) < target.(float64)
+		case int64:
+			return value.(int64) < target.(int64)
+		default:
+			log.Printf("Can't compare %v and %v\n", value, target)
+			return false
+		}
+
+	case "<=":
+		switch value.(type) {
+		case int:
+			return value.(int) <= target.(int)
+		case float64:
+			return value.(float64) <= target.(float64)
+		case int64:
+			return value.(int64) <= target.(int64)
+		default:
+			log.Printf("Can't compare %v and %v\n", value, target)
+			return false
+		}
+	}
+	return false
 }
 
 type Receiver struct {
@@ -57,15 +136,13 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 		trigger := Trigger{
 			Device: devices[triggerConfig.DeviceName],
 			Key:    triggerConfig.Key,
-			Condition: struct {
-				Operator string
-				Value    any
-			}{
+			Condition: condition{
 				Operator: triggerConfig.Condition.Operator,
 				Value:    triggerConfig.Condition.Value,
 			},
 		}
 		r.Triggers = append(r.Triggers, trigger)
+		devices[triggerConfig.DeviceName].AddRule(&r)
 	}
 
 	for _, receiverConfig := range config.Receivers {
@@ -159,93 +236,10 @@ func makeComparable(value any, target any) (any, any, error) {
 	return nil, nil, fmt.Errorf("can't compare %v and %v", value, target)
 }
 
-func (r *Rule) checkCondition(value any, condition string, target any) bool {
-	// log.Printf("Checking condition %v %s %v\n", value, condition, target)
-	value, target, err := makeComparable(value, target)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	if value == nil || target == nil {
-		return false
-	}
-
-	switch condition {
-	case "==":
-		return value == target
-	case "!=":
-		return value != target
-	case ">":
-		switch value.(type) {
-		case int:
-			return value.(int) > target.(int)
-		case float64:
-			return value.(float64) > target.(float64)
-		case int64:
-			return value.(int64) > target.(int64)
-		default:
-			log.Printf("Can't compare %v and %v\n", value, target)
-			return false
-		}
-	case ">=":
-		switch value.(type) {
-		case int:
-			return value.(int) >= target.(int)
-		case float64:
-			return value.(float64) >= target.(float64)
-		case int64:
-			return value.(int64) >= target.(int64)
-		default:
-			log.Printf("Can't compare %v and %v\n", value, target)
-			return false
-		}
-
-	case "<":
-		switch value.(type) {
-		case int:
-			return value.(int) < target.(int)
-		case float64:
-			return value.(float64) < target.(float64)
-		case int64:
-			return value.(int64) < target.(int64)
-		default:
-			log.Printf("Can't compare %v and %v\n", value, target)
-			return false
-		}
-
-	case "<=":
-		switch value.(type) {
-		case int:
-			return value.(int) <= target.(int)
-		case float64:
-			return value.(float64) <= target.(float64)
-		case int64:
-			return value.(int64) <= target.(int64)
-		default:
-			log.Printf("Can't compare %v and %v\n", value, target)
-			return false
-		}
-	}
-	return false
-}
-
-func (r *Rule) CheckTrigger(device DeviceInterface, key string, value any) bool {
-	for _, trigger := range r.Triggers {
-		if trigger.Device.GetName() == device.GetName() && trigger.Key == key {
-			return r.checkCondition(value, trigger.Condition.Operator, trigger.Condition.Value)
-		}
-	}
-	return false
-}
-
 func (r *Rule) CheckTriggers() bool {
 	matches := 0
-	//	log.Printf("Checking rule %v with %d triggers\n", r, len(r.Triggers))
 	for _, trigger := range r.Triggers {
-		if r.checkCondition(
-			trigger.Device.GetTriggerValue(trigger.Key),
-			trigger.Condition.Operator,
-			trigger.Condition.Value) {
+		if trigger.Condition.check() {
 			matches++
 		}
 	}
@@ -255,6 +249,6 @@ func (r *Rule) CheckTriggers() bool {
 
 func (r *Rule) ClearTriggers() {
 	for _, trigger := range r.Triggers {
-		trigger.Device.ClearTrigger(trigger.Key)
+		trigger.Condition.Clear()
 	}
 }

@@ -62,23 +62,8 @@ func (s *MotionSensor) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInte
 			now := time.Now()
 			s.LastChanged = &now
 			log.Printf("Motion detected (%d)", message.Cmnd)
+			s.UpdateRules("motion", 1)
 		}
 
 	}
-}
-
-func (s *MotionSensor) GetTriggerValue(key string) interface{} {
-	if key == "noMotion" {
-		if s.LastChanged != nil {
-			return time.Now().Unix() - s.LastChanged.Unix()
-		}
-		return 0
-	}
-	if key == "motion" {
-		if s.Active {
-			s.Active = false
-			return 1
-		}
-	}
-	return nil
 }

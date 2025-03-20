@@ -31,10 +31,11 @@ type DeviceInterface interface {
 	GetTriggers() []string
 	GetReceivers() []string
 	SetReceiverValue(string, any)
-	GetTriggerValue(string) any
 	ClearTrigger(string)
 	Lock()
 	Unlock()
+	AddRule(*Rule)
+	RemoveRule(*Rule)
 
 	PublishValue(mqtt.Client)
 	PollValue(mqtt.Client)
@@ -53,6 +54,7 @@ type Device struct {
 	Triggers    []string
 	Receivers   []string
 	mutex       *sync.RWMutex
+	rules       []*Rule
 
 	LinkQuality *int `json:"linkquality"`
 	Battery     *int `json:"battery"`
@@ -102,6 +104,7 @@ func (d *Device) SetCurrent(current float64) {
 	d.LastChanged = &now
 	d.Current = current
 	d.mutex.Unlock()
+	d.UpdateRules("value", current)
 }
 
 func (d *Device) GetType() string {
@@ -168,10 +171,6 @@ func (d *Device) GetReceivers() []string {
 func (d *Device) SetReceiverValue(key string, value any) {
 }
 
-func (d *Device) GetTriggerValue(key string) any {
-	return nil
-}
-
 func (d *Device) ClearTrigger(key string) {
 }
 
@@ -215,6 +214,30 @@ func (d *Device) parseDefaultValues(data map[string]any) {
 	if linkQuality, ok := data["linkquality"]; ok {
 		if linkQualityInt, ok := linkQuality.(int); ok {
 			d.setLinkQuality(&linkQualityInt)
+		}
+	}
+}
+
+func (d *Device) UpdateRules(field string, value any) {
+	now := time.Now()
+	for r, rule := range d.rules {
+		for t, trigger := range rule.Triggers {
+			if trigger.Device.GetName() == d.GetName() && trigger.Key == field {
+				d.rules[r].Triggers[t].Condition.LastValue = value
+				d.rules[r].Triggers[t].Condition.LastChanged = &now
+			}
+		}
+	}
+}
+
+func (d *Device) AddRule(rule *Rule) {
+	d.rules = append(d.rules, rule)
+}
+
+func (d *Device) RemoveRule(rule *Rule) {
+	for i, r := range d.rules {
+		if r == rule {
+			d.rules = append(d.rules[:i], d.rules[i+1:]...)
 		}
 	}
 }
