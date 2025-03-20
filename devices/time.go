@@ -34,25 +34,25 @@ func NewDimmyTime(config core.DeviceConfig) *DimmyTime {
 func (s *DimmyTime) UpdateValue() (float64, bool) {
 	now := time.Now()
 	if s.values["day"] != now.Day() {
-		s.triggerValues["day"] = now.Day()
+		s.UpdateRules("day", now.Day())
 	}
 	if s.values["month"] != int(now.Month()) {
-		s.triggerValues["month"] = int(now.Month())
+		s.UpdateRules("month", int(now.Month()))
 	}
 	if s.values["year"] != now.Year() {
-		s.triggerValues["year"] = now.Year()
+		s.UpdateRules("year", now.Year())
 	}
 	if s.values["hour"] != now.Hour() {
-		s.triggerValues["hour"] = now.Hour()
+		s.UpdateRules("hour", now.Hour())
 	}
 	if s.values["minute"] != now.Minute() {
-		s.triggerValues["minute"] = now.Minute()
+		s.UpdateRules("minute", now.Minute())
 	}
 	if s.values["second"] != now.Second() {
-		s.triggerValues["second"] = now.Second()
+		s.UpdateRules("second", now.Second())
 	}
 	if s.values["weekday"] != int(now.Weekday()) {
-		s.triggerValues["weekday"] = int(now.Weekday())
+		s.UpdateRules("weekday", int(now.Weekday()))
 	}
 	s.values["day"] = now.Day()
 	s.values["month"] = int(now.Month())
@@ -63,13 +63,6 @@ func (s *DimmyTime) UpdateValue() (float64, bool) {
 	s.values["weekday"] = int(now.Weekday())
 
 	return 0, false
-}
-
-func (s *DimmyTime) GetTriggerValue(trigger string) interface{} {
-	if value, ok := s.triggerValues[trigger]; ok {
-		return value
-	}
-	return nil
 }
 
 func (s *DimmyTime) ClearTrigger(trigger string) {

@@ -52,21 +52,16 @@ func (s *DoorSensor) GetMessageHandler(channel chan core.SwitchRequest, sw Devic
 		if data.Contact {
 			s.SetCurrent(0)
 			s.state = "closed"
+			s.UpdateRules("door", "closed")
 		} else {
 			s.SetCurrent(1)
 			s.state = "open"
+			s.UpdateRules("door", "open")
 		}
 		log.Printf("Door is %s\n", s.state)
 
 		s.triggerState = s.state
 	}
-}
-
-func (s *DoorSensor) GetTriggerValue(trigger string) interface{} {
-	if trigger == "sensor" {
-		return s.triggerState
-	}
-	return nil
 }
 
 func (s *DoorSensor) ClearTrigger(trigger string) {

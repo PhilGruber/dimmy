@@ -90,13 +90,3 @@ func (t *Temperature) addDataLog(temperature float64, humidity *float64) {
 func (t *Temperature) GetHumidity() float64 {
 	return -1
 }
-
-func (t *Temperature) GetTriggerValue(trigger string) interface{} {
-	if trigger == "temperature" {
-		return t.GetCurrent()
-	}
-	if trigger == "humidity" {
-		return t.GetHumidity()
-	}
-	return nil
-}

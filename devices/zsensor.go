@@ -66,13 +66,6 @@ func (s *ZSensor) GetMessageHandler(channel chan core.SwitchRequest, sensor Devi
 	}
 }
 
-func (s *ZSensor) GetTriggerValue(trigger string) interface{} {
-	if trigger == "sensor" {
-		return s.GetCurrent()
-	}
-	return nil
-}
-
 func (s *ZSensor) ClearTrigger(trigger string) {
 	if trigger == "sensor" {
 		s.SetCurrent(-1)

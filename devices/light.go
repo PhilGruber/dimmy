@@ -125,10 +125,3 @@ func (l *Light) ValueToPercentage(value int) float64 {
 	}
 	return 1 + float64(value-l.GetMin()-1)*99/float64(l.GetMax()-l.GetMin()-1)
 }
-
-func (l *Light) GetTriggerValue(trigger string) interface{} {
-	if trigger == "brightness" {
-		return l.GetCurrent()
-	}
-	return nil
-}

@@ -58,8 +58,6 @@ func main() {
 			devices[deviceConfig.Name] = dimmyDevices.NewZPlug(deviceConfig)
 		case "temperature":
 			devices[deviceConfig.Name] = dimmyDevices.NewTemperature(deviceConfig)
-		case "ztemperature":
-			devices[deviceConfig.Name] = dimmyDevices.NewZTemperature(deviceConfig)
 		case "ircontrol":
 			devices[deviceConfig.Name] = dimmyDevices.NewIrControl(deviceConfig)
 		case "group":
@@ -80,11 +78,11 @@ func main() {
 		}
 	}
 
-	var rules []dimmyDevices.Rule
+	var rules []*dimmyDevices.Rule
 	for _, ruleConfig := range config.Rules {
 		rule := dimmyDevices.NewRule(ruleConfig, devices)
 		if rule != nil {
-			rules = append(rules, *rule)
+			rules = append(rules, rule)
 		}
 	}
 
@@ -113,7 +111,7 @@ func main() {
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
 }
 
-func eventLoop(devices map[string]dimmyDevices.DeviceInterface, rules []dimmyDevices.Rule, channel chan core.SwitchRequest, mqttServer string) {
+func eventLoop(devices map[string]dimmyDevices.DeviceInterface, rules []*dimmyDevices.Rule, channel chan core.SwitchRequest, mqttServer string) {
 	hostname, _ := os.Hostname()
 	client := initMqtt(mqttServer, "goserver-"+hostname)
 
@@ -133,7 +131,7 @@ func eventLoop(devices map[string]dimmyDevices.DeviceInterface, rules []dimmyDev
 			}
 		}
 
-		var firedRules []dimmyDevices.Rule
+		var firedRules []*dimmyDevices.Rule
 		for _, rule := range rules {
 			if rule.CheckTriggers() {
 				rule.Fire(channel)

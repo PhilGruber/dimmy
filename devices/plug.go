@@ -108,10 +108,6 @@ func (p *Plug) ValueToPercentage(value int) float64 {
 	return 1
 }
 
-func (p *Plug) GetTriggerValue(key string) interface{} {
-	return nil
-}
-
 func (p *Plug) SetReceiverValue(key string, value interface{}) {
 	if key != "state" {
 		return

@@ -29,7 +29,7 @@ type Sensor struct {
 	valueMutex *sync.RWMutex
 }
 
-func MakeSensor(config core.DeviceConfig) Sensor {
+func NewSensor(config core.DeviceConfig) *Sensor {
 	s := Sensor{}
 	s.setBaseConfig(config)
 	s.MqttState = config.Topic
@@ -56,19 +56,14 @@ func MakeSensor(config core.DeviceConfig) Sensor {
 		s.Values[field] = &SensorValue{Value: nil, LastChanged: time.Unix(0, 0), History: make([]SensorHistory, 0)}
 	}
 
-	return s
-}
-
-func NewSensor(config core.DeviceConfig) *Sensor {
-	s := MakeSensor(config)
 	return &s
 }
 
-func (s Sensor) GetFields() []string {
+func (s *Sensor) GetFields() []string {
 	return s.fields
 }
 
-func (s Sensor) HasField(field string) bool {
+func (s *Sensor) HasField(field string) bool {
 	for _, f := range s.fields {
 		if f == field {
 			return true
@@ -77,7 +72,7 @@ func (s Sensor) HasField(field string) bool {
 	return false
 }
 
-func (s Sensor) SetValue(field string, value any) {
+func (s *Sensor) SetValue(field string, value any) {
 	s.valueMutex.Lock()
 	s.Values[field].Value = value
 	s.Values[field].LastChanged = time.Now()
@@ -85,15 +80,17 @@ func (s Sensor) SetValue(field string, value any) {
 	if s.hasHistory {
 		s.addHistory(field, value)
 	}
+
+	s.UpdateRules(field, value)
 }
 
-func (s Sensor) GetValue(field string) any {
+func (s *Sensor) GetValue(field string) any {
 	s.valueMutex.RLock()
 	defer s.valueMutex.RUnlock()
 	return s.Values[field].Value
 }
 
-func (s Sensor) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface) mqtt.MessageHandler {
+func (s *Sensor) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
 		var data map[string]any
@@ -114,22 +111,15 @@ func (s Sensor) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface) 
 	}
 }
 
-func (s Sensor) addHistory(field string, value any) {
+func (s *Sensor) addHistory(field string, value any) {
 	s.mutex.Lock()
 	s.Values[field].History = append(s.Values[field].History, SensorHistory{Time: time.Now(), Value: value})
 	s.mutex.Unlock()
 }
 
-func (s Sensor) UpdateValue() (float64, bool) { return 0, false }
+func (s *Sensor) UpdateValue() (float64, bool) { return 0, false }
 
-func (s Sensor) GetTriggerValue(trigger string) interface{} {
-	if s.HasField(trigger) {
-		return s.GetValue(trigger)
-	}
-	return nil
-}
-
-func (s Sensor) ClearTrigger(trigger string) {
+func (s *Sensor) ClearTrigger(trigger string) {
 	if s.HasField(trigger) {
 		s.SetValue(trigger, nil)
 	}

@@ -31,16 +31,6 @@ func NewSwitch(config core.DeviceConfig) *Switch {
 	return &s
 }
 
-/*
-func (s *Switch) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
-	var request core.SwitchRequest
-	request.Device = s.TargetDevice
-	request.Value = cmd
-	request.Duration = 1
-	return request, true
-}
-*/
-
 type SwitchMessage struct {
 	core.Zigbee2MqttMessage
 	Action string `json:"action"`
@@ -62,15 +52,20 @@ func (s *Switch) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 		switch data.Action {
 		case "on":
 			s.onPressed = true
+			s.UpdateRules("button", "on")
 		case "off":
 			s.offPressed = true
+			s.UpdateRules("button", "off")
 		case "brightness_move_up":
 			s.brightnessUp = true
+			s.UpdateRules("brightness", "up")
 		case "brightness_move_down":
 			s.brightnessDown = true
+			s.UpdateRules("brightness", "down")
 		case "brightness_stop":
 			s.brightnessUp = false
 			s.brightnessDown = false
+			s.UpdateRules("brightness", "stop")
 		}
 	}
 }
@@ -91,26 +86,6 @@ func (s *Switch) setCurrent(float64) {
 }
 
 func (s *Switch) ProcessRequest(request core.SwitchRequest) {
-}
-
-func (s *Switch) GetTriggerValue(key string) any {
-	if key == "button" {
-		if s.onPressed {
-			return "on"
-		}
-		if s.offPressed {
-			return "off"
-		}
-	}
-	if key == "brightness" {
-		if s.brightnessUp {
-			return "up"
-		}
-		if s.brightnessDown {
-			return "down"
-		}
-	}
-	return nil
 }
 
 func (s *Switch) ClearTrigger(key string) {

@@ -83,7 +83,3 @@ func (i *IRControl) SetReceiverValue(key string, value interface{}) {
 		i.nextRequest = &req
 	}
 }
-
-func (i *IRControl) GetTriggerValue(key string) interface{} {
-	return nil
-}
