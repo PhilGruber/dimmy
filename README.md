@@ -6,7 +6,7 @@ It contains a daemon, a CLI client, a JSON API and a web interface.
 
 
 ## Installation
-### Download .deb packages (Version 0.4.1210)
+### Download .deb packages (Version 0.4.12210)
 
 * [amd64](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.4.10_amd64.deb)
 * [arm64](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.4.10_arm64.deb)
