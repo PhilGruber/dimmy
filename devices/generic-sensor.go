@@ -2,6 +2,7 @@ package devices
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
@@ -114,6 +115,9 @@ func (s *Sensor) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface)
 func (s *Sensor) addHistory(field string, value any) {
 	s.mutex.Lock()
 	s.Values[field].History = append(s.Values[field].History, SensorHistory{Time: time.Now(), Value: value})
+	if len(s.Values[field].History) > 10 {
+		s.Values[field].History = s.Values[field].History[len(s.Values[field].History)-10:]
+	}
 	s.mutex.Unlock()
 }
 
