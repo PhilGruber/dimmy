@@ -2,7 +2,6 @@ package devices
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
