@@ -57,3 +57,7 @@ type ServerConfig struct {
 	Rules      []RuleConfig   `yaml:"rules"`
 	Panels     []PanelConfig  `yaml:"panels"`
 }
+
+func ToPtr[T any](v T) *T {
+	return &v
+}
