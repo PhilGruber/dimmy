@@ -28,7 +28,6 @@ type condition struct {
 }
 
 func (c *condition) Clear() {
-	fmt.Printf("Clearing condition %p\n", c)
 	c.LastValue = nil
 	c.LastChanged = nil
 }
