@@ -17,7 +17,7 @@ type Rule struct {
 type Trigger struct {
 	Device    DeviceInterface
 	Key       string
-	Condition condition
+	Condition *condition
 }
 
 type condition struct {
@@ -28,6 +28,7 @@ type condition struct {
 }
 
 func (c *condition) Clear() {
+	fmt.Printf("Clearing condition %p\n", c)
 	c.LastValue = nil
 	c.LastChanged = nil
 }
@@ -136,10 +137,10 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 		trigger := Trigger{
 			Device: devices[triggerConfig.DeviceName],
 			Key:    triggerConfig.Key,
-			Condition: condition{
+			Condition: core.ToPtr(condition{
 				Operator: triggerConfig.Condition.Operator,
 				Value:    triggerConfig.Condition.Value,
-			},
+			}),
 		}
 		r.Triggers = append(r.Triggers, trigger)
 		devices[triggerConfig.DeviceName].AddRule(&r)
