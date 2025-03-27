@@ -12,7 +12,7 @@ type DimmyTime struct {
 	triggerValues map[string]int
 }
 
-func MakeDimmyTime(config core.DeviceConfig) DimmyTime {
+func NewDimmyTime(config core.DeviceConfig) *DimmyTime {
 	s := DimmyTime{}
 	s.setBaseConfig(config)
 	s.Hidden = true
@@ -23,11 +23,8 @@ func MakeDimmyTime(config core.DeviceConfig) DimmyTime {
 	s.values = make(map[string]int)
 	s.triggerValues = make(map[string]int)
 
-	return s
-}
+	s.persistentFields = []string{"day", "month", "year", "hour", "weekday"}
 
-func NewDimmyTime(config core.DeviceConfig) *DimmyTime {
-	s := MakeDimmyTime(config)
 	return &s
 }
 
