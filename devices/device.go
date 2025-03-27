@@ -36,6 +36,7 @@ type DeviceInterface interface {
 	Unlock()
 	AddRule(*Rule)
 	RemoveRule(*Rule)
+	IsPersistent(string) bool
 
 	PublishValue(mqtt.Client)
 	PollValue(mqtt.Client)
@@ -55,6 +56,8 @@ type Device struct {
 	Receivers   []string
 	mutex       *sync.RWMutex
 	rules       []*Rule
+
+	persistentFields []string
 
 	LinkQuality *int `json:"linkquality"`
 	Battery     *int `json:"battery"`
@@ -88,6 +91,8 @@ func (d *Device) setBaseConfig(config core.DeviceConfig) {
 			d.Hidden = *config.Options.Hidden
 		}
 	}
+
+	d.persistentFields = []string{"battery"}
 
 	d.mutex = new(sync.RWMutex)
 }
@@ -240,4 +245,13 @@ func (d *Device) RemoveRule(rule *Rule) {
 			d.rules = append(d.rules[:i], d.rules[i+1:]...)
 		}
 	}
+}
+
+func (d *Device) IsPersistent(field string) bool {
+	for _, f := range d.persistentFields {
+		if f == field {
+			return true
+		}
+	}
+	return false
 }

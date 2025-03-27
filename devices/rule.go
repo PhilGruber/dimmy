@@ -39,6 +39,7 @@ func (c *condition) check() bool {
 		log.Println(err)
 		return false
 	}
+	//	fmt.Printf("Checking condition %p: %v %s %v\n", c, value, c.Operator, target)
 	if value == nil || target == nil {
 		return false
 	}
@@ -248,8 +249,14 @@ func (r *Rule) CheckTriggers() bool {
 	return matches > 0 && matches == len(r.Triggers)
 }
 
+func (t *Trigger) IsPersistent() bool {
+	return t.Device.IsPersistent(t.Key)
+}
+
 func (r *Rule) ClearTriggers() {
 	for _, trigger := range r.Triggers {
-		trigger.Condition.Clear()
+		if !trigger.IsPersistent() {
+			trigger.Condition.Clear()
+		}
 	}
 }
