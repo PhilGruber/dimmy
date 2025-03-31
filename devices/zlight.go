@@ -45,6 +45,7 @@ func makeZLight(config core.DeviceConfig) ZLight {
 	}
 
 	d.Triggers = []string{"brightness"}
+	d.persistentFields = []string{"brightness"}
 
 	tt := time.Now()
 	d.LastChanged = &tt

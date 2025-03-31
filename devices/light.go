@@ -26,10 +26,11 @@ func NewLight(config core.DeviceConfig) *Light {
 	d.Emoji = "💡"
 	d.setBaseConfig(config)
 
+	d.persistentFields = []string{"brightness"}
+
 	var re = regexp.MustCompile("^cmnd/(.+)/dimmer$")
 	d.MqttState = re.ReplaceAllString(d.MqttTopic, "tele/$1/STATE")
 
-	d.Current = 0
 	d.Target = 0
 
 	d.Min = 0
