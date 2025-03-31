@@ -38,7 +38,7 @@ func (c *condition) check() bool {
 		log.Println(err)
 		return false
 	}
-	//	fmt.Printf("Checking condition %p: %v %s %v\n", c, value, c.Operator, target)
+	//	fmt.Printf("\t --> Checking condition %p: %v %s %v\n", c, value, c.Operator, target)
 	if value == nil || target == nil {
 		return false
 	}

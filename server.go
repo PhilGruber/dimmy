@@ -133,7 +133,9 @@ func eventLoop(devices map[string]dimmyDevices.DeviceInterface, rules []*dimmyDe
 
 		var firedRules []*dimmyDevices.Rule
 		for _, rule := range rules {
+			//			fmt.Printf("Checking rule %s\n", rule.String())
 			if rule.CheckTriggers() {
+				//				fmt.Printf("\tFiring!\n", rule.String())
 				rule.Fire(channel)
 				firedRules = append(firedRules, rule)
 			}

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/PhilGruber/dimmy/core"
 	"log"
-	"strconv"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -68,8 +67,8 @@ func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 		}
 
 		msg := core.Zigbee2MqttLightMessage{
-			State:      state,
-			Brightness: newVal,
+			State:      &state,
+			Brightness: &newVal,
 		}
 
 		if l.transition {
@@ -82,10 +81,7 @@ func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 }
 
 func (l *ZLight) PollValue(mqtt mqtt.Client) {
-	msg := core.Zigbee2MqttLightMessage{
-		State:      "",
-		Brightness: 0,
-	}
+	msg := core.Zigbee2MqttLightMessage{}
 	s, _ := json.Marshal(msg)
 	log.Printf("[%32s] Polling %s\n", l.GetName(), l.MqttState)
 	t := mqtt.Publish(l.MqttState+"/get", 0, false, s)
@@ -97,30 +93,28 @@ func (l *ZLight) PollValue(mqtt mqtt.Client) {
 func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
-		value, err := strconv.Atoi(string(payload))
-		var on bool
-		if err == nil {
-			on = value > 0
-		} else {
-			var data core.Zigbee2MqttLightMessage
-			err := json.Unmarshal(payload, &data)
-			if err != nil {
-				log.Println("Error: " + err.Error())
-				return
-			}
-			value = data.Brightness
-			on = data.State == "ON"
-			l.setBatteryLevel(data.Battery)
-			l.setLinkQuality(data.LinkQuality)
-		}
-		if l.GetCurrent() != l.GetTarget() {
+		var data core.Zigbee2MqttLightMessage
+		err := json.Unmarshal(payload, &data)
+		if err != nil {
+			log.Println("Error: " + err.Error())
 			return
 		}
-		if on {
-			l.SetCurrent(l.ValueToPercentage(value))
-		} else {
-			l.SetCurrent(0)
+		if data.Brightness != nil {
+			l.SetCurrent(l.ValueToPercentage(*data.Brightness))
 		}
-		l.setTarget(l.GetCurrent())
+		if data.State != nil {
+			if *data.State == "OFF" {
+				l.SetCurrent(0)
+			}
+		}
+		if data.Battery != nil {
+			l.setBatteryLevel(data.Battery)
+		}
+		if data.LinkQuality != nil {
+			l.setLinkQuality(data.LinkQuality)
+		}
+		if l.transition {
+			l.setTarget(l.GetCurrent())
+		}
 	}
 }
