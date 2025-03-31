@@ -98,3 +98,15 @@ body {
 .panel-sensor .left {
   text-align: left;
 }
+
+.rule-trigger {
+  background-color: #67D0DD;
+  color: #F6E785;
+  padding: 6px;
+}
+
+.rule-receiver {
+  background-color: #F6E785;
+  color: #67D0DD;
+  padding: 6px;
+}

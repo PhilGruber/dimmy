@@ -134,6 +134,7 @@ func eventLoop(devices map[string]dimmyDevices.DeviceInterface, rules []*dimmyDe
 
 		var firedRules []*dimmyDevices.Rule
 		for _, rule := range rules {
+			//			fmt.Printf("Checking rule %s\n", rule.String())
 			if rule.CheckTriggers() {
 				rule.Fire(channel)
 				firedRules = append(firedRules, rule)
@@ -245,11 +246,11 @@ func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, panels map[s
 	}
 }
 
-func EditRules(rules []dimmyDevices.Rule, webroot string) http.HandlerFunc {
+func EditRules(rules []*dimmyDevices.Rule, webroot string) http.HandlerFunc {
 	return func(output http.ResponseWriter, httpRequest *http.Request) {
 		templ, _ := template.ParseFiles(webroot + "/rules.html")
 		err := templ.Execute(output, struct {
-			Rules []dimmyDevices.Rule
+			Rules []*dimmyDevices.Rule
 		}{rules})
 		if err != nil {
 			log.Println(err)
