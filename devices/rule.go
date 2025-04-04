@@ -174,8 +174,6 @@ func (r *Rule) Fire(channel chan core.SwitchRequest) []Receiver {
 		}
 		request.Command = receiver.Key
 		switch receiver.Key {
-		case "brightness":
-			request.Value = receiver.Value
 		case "duration":
 			duration, err := strconv.Atoi(receiver.Value)
 			if err != nil {
@@ -183,6 +181,8 @@ func (r *Rule) Fire(channel chan core.SwitchRequest) []Receiver {
 				continue
 			}
 			request.Duration = duration
+		default:
+			request.Value = receiver.Value
 		}
 		requests[receiver.Device.GetName()] = request
 		firedReceivers = append(firedReceivers, receiver)
