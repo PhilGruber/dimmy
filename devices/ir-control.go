@@ -18,7 +18,7 @@ type IrControlMessage struct {
 	IrCode string `json:"ir_code_to_send"`
 }
 
-func makeIrcontrol(config core.DeviceConfig) IRControl {
+func NewIrControl(config core.DeviceConfig) *IRControl {
 	i := IRControl{}
 	i.Emoji = "📡"
 	i.setBaseConfig(config)
@@ -27,12 +27,6 @@ func makeIrcontrol(config core.DeviceConfig) IRControl {
 	i.commands = *config.Options.Commands
 
 	log.Printf("IRControl Device %s created with commands: %s\n", i.Name, i.GetCommands())
-
-	return i
-}
-
-func NewIrControl(config core.DeviceConfig) *IRControl {
-	i := makeIrcontrol(config)
 	return &i
 }
 
@@ -69,7 +63,7 @@ func (i *IRControl) UpdateValue() (float64, bool) {
 
 func (i *IRControl) GetCommands() []string {
 	var commands []string
-	for k, _ := range i.commands {
+	for k := range i.commands {
 		commands = append(commands, k)
 	}
 	return commands
