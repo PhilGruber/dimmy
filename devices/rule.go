@@ -23,6 +23,7 @@ type Trigger struct {
 type condition struct {
 	Operator    string
 	Value       any
+	Delay       *int
 	LastValue   any
 	LastChanged *time.Time
 }
@@ -38,6 +39,16 @@ func (c *condition) check() bool {
 		log.Println(err)
 		return false
 	}
+
+	if c.Delay != nil {
+		if c.LastChanged == nil {
+			return false
+		}
+		if time.Since(*c.LastChanged) < time.Duration(*c.Delay)*time.Second {
+			return false
+		}
+	}
+
 	//	fmt.Printf("\t --> Checking condition %p: %v %s %v\n", c, value, c.Operator, target)
 	if value == nil || target == nil {
 		return false
@@ -140,6 +151,7 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 			Condition: core.ToPtr(condition{
 				Operator: triggerConfig.Condition.Operator,
 				Value:    triggerConfig.Condition.Value,
+				Delay:    triggerConfig.Condition.Delay,
 			}),
 		}
 		r.Triggers = append(r.Triggers, trigger)

@@ -19,6 +19,7 @@ type RuleConfig struct {
 		Condition  struct {
 			Operator string `yaml:"operator"`
 			Value    any    `yaml:"value"`
+			Delay    *int   `yaml:"delay"`
 		} `yaml:"condition"`
 	} `yaml:"triggers"`
 	Receivers []struct {
