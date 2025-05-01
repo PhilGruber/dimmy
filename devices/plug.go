@@ -29,6 +29,8 @@ func makePlug(config core.DeviceConfig) Plug {
 	var re = regexp.MustCompile("^cmnd/(.+)/POWER$")
 	p.MqttState = re.ReplaceAllString(p.MqttTopic, "tele/$1/STATE")
 
+	p.Receivers = []string{"state"}
+
 	p.Type = "plug"
 	p.needsSending = false
 	p.Min = 0

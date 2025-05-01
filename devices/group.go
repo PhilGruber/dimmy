@@ -46,6 +46,7 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 					g.Type = dev.GetType()
 					g.Emoji = dev.GetEmoji()
 					g.MqttState = dev.GetMqttStateTopic()
+					g.Receivers = dev.GetReceivers()
 				} else if g.Type != dev.GetType() {
 					log.Println("Can't add Device " + key + " to group, as it is of a different type than the other devices in the group")
 					fmt.Printf("%s != %s", g.Type, dev.GetType())

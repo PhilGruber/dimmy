@@ -37,6 +37,7 @@ type DeviceInterface interface {
 	AddRule(*Rule)
 	RemoveRule(*Rule)
 	IsPersistent(string) bool
+	HasReceivers() bool
 
 	PublishValue(mqtt.Client)
 	PollValue(mqtt.Client)
@@ -245,6 +246,10 @@ func (d *Device) RemoveRule(rule *Rule) {
 			d.rules = append(d.rules[:i], d.rules[i+1:]...)
 		}
 	}
+}
+
+func (d *Device) HasReceivers() bool {
+	return len(d.Receivers) > 0
 }
 
 func (d *Device) IsPersistent(field string) bool {

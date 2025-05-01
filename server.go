@@ -106,6 +106,7 @@ func main() {
 	http.Handle("/api/switch", ReceiveRequest(channel))
 	http.Handle("/api/status", ShowStatus(&devices))
 	http.Handle("/", ShowDashboard(devices, panels, channel, config.WebRoot))
+	http.Handle("/add-rule", AddRule(devices, config.WebRoot))
 
 	log.Printf("Listening on port %d", config.Port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
@@ -131,18 +132,25 @@ func eventLoop(devices map[string]dimmyDevices.DeviceInterface, rules []*dimmyDe
 			}
 		}
 
-		var firedRules []*dimmyDevices.Rule
-		for _, rule := range rules {
+		var firedRules []int
+		for idx, rule := range rules {
 			//			fmt.Printf("Checking rule %s\n", rule.String())
 			if rule.CheckTriggers() {
 				//				fmt.Printf("\tFiring!\n", rule.String())
 				rule.Fire(channel)
-				firedRules = append(firedRules, rule)
+				if rule.SingleUse {
+
+					continue
+				}
+				firedRules = append(firedRules, idx)
 			}
 		}
 
-		for _, rule := range firedRules {
-			rule.ClearTriggers()
+		for _, idx := range firedRules {
+			rules[idx].ClearTriggers()
+			if rules[idx].SingleUse {
+				rules = append(rules[:idx], rules[idx+1:]...)
+			}
 		}
 
 		time.Sleep(core.CycleLength * time.Millisecond)
@@ -208,6 +216,58 @@ func ShowStatus(devices *map[string]dimmyDevices.DeviceInterface) http.HandlerFu
 			device.Unlock()
 		}
 		_, _ = fmt.Fprintf(output, string(jsonDevices))
+	}
+}
+
+func AddRule(allDevices map[string]dimmyDevices.DeviceInterface, webroot string) http.HandlerFunc {
+	var devices []dimmyDevices.DeviceInterface
+	for _, device := range allDevices {
+		if device.HasReceivers() {
+			devices = append(devices, device)
+		}
+	}
+	return func(output http.ResponseWriter, request *http.Request) {
+		if request.Method == "POST" {
+			err := request.ParseForm()
+			if err != nil {
+				log.Println("Error: ", err)
+				return
+			}
+
+			var dimmyTime dimmyDevices.DeviceInterface
+			for _, device := range allDevices {
+				if device.GetType() == "time" {
+					dimmyTime = device
+				}
+			}
+			for _, device := range allDevices {
+				if device.GetName() == request.FormValue("device") {
+					rule := dimmyDevices.Rule{
+						SingleUse: true,
+					}
+					rule.Triggers = append(rule.Triggers, dimmyDevices.Trigger{
+						Device: dimmyTime,
+					})
+					rule.Receivers = append(rule.Receivers, dimmyDevices.Receiver{})
+					sr.Device = request.FormValue("device")
+					sr.Value = request.FormValue("value")
+					sr.Duration = 3 // TODO: Add to form
+				}
+			}
+
+			return
+		}
+		templ, err := template.ParseFiles(webroot + "/add-rule.html")
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		err = templ.Execute(output, struct {
+			Devices []dimmyDevices.DeviceInterface
+		}{devices})
+		if err != nil {
+			return
+		}
 	}
 }
 

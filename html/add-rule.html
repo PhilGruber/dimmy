@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add timer</title>
+    <script src='/assets/jquery.js'></script>
+    <link rel='stylesheet' type='text/css' href='/assets/types.css' />
+    <script>
+        $(document).ready(function() {
+            $("#unit").click(function() {
+                $("#unit-options").toggle();
+            });
+
+            $("#unit-options input").click(function() {
+                $("#unit").val($(this).val());
+                $("#unit-options").hide();
+            });
+
+            $("#command").click(function() {
+                $("#device-options").toggle();
+            });
+        });
+
+        function showDeviceOptions(select) {
+            var selectedValue = select.value;
+            var deviceOptions = document.querySelectorAll('[id^="device-options-"]');
+            deviceOptions.forEach(function(option) {
+                option.style.display = 'none';
+            });
+            var selectedOption = document.getElementById('device-options-' + selectedValue);
+            if (selectedOption) {
+                selectedOption.style.display = 'block';
+            }
+        }
+
+        function addTimer() {
+            const device = document.getElementById('device').value;
+            const value = document.getElementById('value-' + device).value;
+            const unit = document.getElementById('unit').value;
+            const inValue = document.getElementById('in').value;
+
+            let data;
+            if (device && value && unit && inValue) {
+                console.log("Device:", device, "Value:", value, "Unit:", unit, "In:", inValue);
+                data = {
+                    "device": device,
+                    "value": value,
+                    "unit": unit,
+                    "in": inValue
+                };
+                $.post('/add-rule', JSON.stringify(data), null, 'json');
+                alert("Timer added successfully!");
+            } else {
+                alert("Please fill in all fields.");
+            }
+        }
+
+    </script>
+</head>
+<body>
+    Device:
+    <select id="device" name="device" onchange="showDeviceOptions(this)">
+        {{ range .Devices }}
+            <option value="{{ .Name }}">{{ .Emoji }} {{ .Name }}</option>
+        {{ end }}
+    </select>
+    {{ range .Devices }}
+        <div id="device-options-{{ .Name }}" style="display: none;">
+            {{ if eq .GetType "IRControl" }}
+                <input type="command" id="value-{{ .Name }}" name="value-{{ .Name }}" value="click to select" />
+                <div id="device-options" style="display: none;">
+                    {{ range $cmd := .GetCommands }}
+                        <input
+                            type="button"
+                            id="command-{{ $cmd }}"
+                            name="command"
+                            value="{{ $cmd }}"
+                            onclick="document.getElementById('command').value = '{{ $cmd }}'; document.getElementById('device-options').style.display = 'none';"
+                            />
+                    {{ end }}
+                </div>
+            {{ end }}
+            {{ if eq .GetType "plug" }}
+                  <input type="checkbox" name="command-{{ .Name }}" id="value-{{ .Name }}" class="toggle" value="1" />
+            {{ end }}
+        </div>
+    {{ end }}
+    <br />
+
+    Run in: <input type="text" id="in" value="10" />
+    <input type="button" id="unit" name="unit" value="seconds">
+    <div id="unit-options" style="display: none;">
+        <input type="button" id="seconds" name="select-unit" value="seconds">
+        <input type="button" id="minutes" name="select-unit" value="minutes">
+        <input type="button" id="hours" name="select-unit" value="hours">
+    </div>
+    <button id="add-timer" name="add-timer" onclick="addTimer()">Save</button>
+<br />
+</body>
+</html>
