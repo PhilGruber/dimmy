@@ -234,26 +234,28 @@ func AddRule(allDevices map[string]dimmyDevices.DeviceInterface, webroot string)
 				return
 			}
 
-			var dimmyTime dimmyDevices.DeviceInterface
-			for _, device := range allDevices {
-				if device.GetType() == "time" {
-					dimmyTime = device
-				}
+			var dimmyTime *dimmyDevices.DimmyTime
+			dimmyTime = allDevices["time"].(*dimmyDevices.DimmyTime)
+
+			rule := dimmyDevices.Rule{
+				SingleUse: true,
 			}
-			for _, device := range allDevices {
-				if device.GetName() == request.FormValue("device") {
-					rule := dimmyDevices.Rule{
-						SingleUse: true,
-					}
-					rule.Triggers = append(rule.Triggers, dimmyDevices.Trigger{
-						Device: dimmyTime,
-					})
-					rule.Receivers = append(rule.Receivers, dimmyDevices.Receiver{})
-					sr.Device = request.FormValue("device")
-					sr.Value = request.FormValue("value")
-					sr.Duration = 3 // TODO: Add to form
-				}
+			var unit time.Duration
+			switch request.FormValue("unit") {
+			case "seconds":
+				unit = time.Second
+			case "minutes":
+				unit = time.Minute
+			case "hours":
+				unit = time.Hour
 			}
+			triggerTime := time.Now().Add(core.CycleLength * unit)
+			rule.Triggers = dimmyTime.CreateTriggerFromTime(triggerTime)
+			rule.Receivers = append(rule.Receivers, dimmyDevices.Receiver{
+				Device: allDevices[request.FormValue("device")],
+				Key:    "command", // TODO: Probably wrong
+				Value:  request.FormValue("value"),
+			})
 
 			return
 		}
