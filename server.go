@@ -106,7 +106,7 @@ func main() {
 	http.Handle("/api/switch", ReceiveRequest(channel))
 	http.Handle("/api/status", ShowStatus(&devices))
 	http.Handle("/", ShowDashboard(devices, panels, channel, config.WebRoot))
-	http.Handle("/add-rule", AddRule(devices, config.WebRoot))
+	http.Handle("/rules/add-single-use", AddRule(devices, rules, config.WebRoot))
 
 	log.Printf("Listening on port %d", config.Port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
@@ -219,7 +219,7 @@ func ShowStatus(devices *map[string]dimmyDevices.DeviceInterface) http.HandlerFu
 	}
 }
 
-func AddRule(allDevices map[string]dimmyDevices.DeviceInterface, webroot string) http.HandlerFunc {
+func AddRule(allDevices map[string]dimmyDevices.DeviceInterface, rules []*dimmyDevices.Rule, webroot string) http.HandlerFunc {
 	var devices []dimmyDevices.DeviceInterface
 	for _, device := range allDevices {
 		if device.HasReceivers() {
@@ -228,11 +228,19 @@ func AddRule(allDevices map[string]dimmyDevices.DeviceInterface, webroot string)
 	}
 	return func(output http.ResponseWriter, request *http.Request) {
 		if request.Method == "POST" {
-			err := request.ParseForm()
+			var form struct {
+				device string
+				value  string
+				unit   string
+				in     int
+			}
+			err := json.NewDecoder(request.Body).Decode(&form)
 			if err != nil {
 				log.Println("Error: ", err)
 				return
 			}
+
+			log.Printf("Form: %v\n", form)
 
 			var dimmyTime *dimmyDevices.DimmyTime
 			dimmyTime = allDevices["time"].(*dimmyDevices.DimmyTime)
@@ -241,7 +249,7 @@ func AddRule(allDevices map[string]dimmyDevices.DeviceInterface, webroot string)
 				SingleUse: true,
 			}
 			var unit time.Duration
-			switch request.FormValue("unit") {
+			switch form.unit {
 			case "seconds":
 				unit = time.Second
 			case "minutes":
@@ -252,10 +260,14 @@ func AddRule(allDevices map[string]dimmyDevices.DeviceInterface, webroot string)
 			triggerTime := time.Now().Add(core.CycleLength * unit)
 			rule.Triggers = dimmyTime.CreateTriggerFromTime(triggerTime)
 			rule.Receivers = append(rule.Receivers, dimmyDevices.Receiver{
-				Device: allDevices[request.FormValue("device")],
+				Device: allDevices[form.device],
 				Key:    "command", // TODO: Probably wrong
-				Value:  request.FormValue("value"),
+				Value:  form.value,
 			})
+
+			log.Printf("Rec: %v\n", rule.Receivers[0])
+
+			rules = append(rules, &rule)
 
 			return
 		}

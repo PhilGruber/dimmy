@@ -7,24 +7,37 @@
     <link rel='stylesheet' type='text/css' href='/assets/types.css' />
     <script>
         $(document).ready(function() {
-            $("#unit").click(function() {
+            $("#unit").click(function () {
                 $("#unit-options").toggle();
             });
 
-            $("#unit-options input").click(function() {
+            $("#unit-options input").click(function () {
                 $("#unit").val($(this).val());
                 $("#unit-options").hide();
             });
 
-            $("#command").click(function() {
+            $("#command").click(function () {
                 $("#device-options").toggle();
             });
+
+            $("#minus").click(function () {
+                let value = Math.max(0, parseInt($('#in').val()) - 5);
+                if (value < 0) {
+                    value = 0;
+                }
+                $("#in").val(value);
+            });
+
+            $("#plus").click(function () {
+                $("#in").val(Math.max(0, parseInt($('#in').val()) + 5));
+            });
+
         });
 
         function showDeviceOptions(select) {
             var selectedValue = select.value;
             var deviceOptions = document.querySelectorAll('[id^="device-options-"]');
-            deviceOptions.forEach(function(option) {
+            deviceOptions.forEach(function (option) {
                 option.style.display = 'none';
             });
             var selectedOption = document.getElementById('device-options-' + selectedValue);
@@ -48,7 +61,7 @@
                     "unit": unit,
                     "in": inValue
                 };
-                $.post('/add-rule', JSON.stringify(data), null, 'json');
+                $.post('/rules/add-single-use', JSON.stringify(data), null, 'json');
                 alert("Timer added successfully!");
             } else {
                 alert("Please fill in all fields.");
@@ -58,10 +71,10 @@
     </script>
 </head>
 <body>
-    Device:
-    <select id="device" name="device" onchange="showDeviceOptions(this)">
-        {{ range .Devices }}
-            <option value="{{ .Name }}">{{ .Emoji }} {{ .Name }}</option>
+Device:
+<select id="device" name="device" onchange="showDeviceOptions(this)">
+    {{ range .Devices }}
+    <option value="{{ .Name }}">{{ .Emoji }} {{ .Name }}</option>
         {{ end }}
     </select>
     {{ range .Devices }}
@@ -83,17 +96,26 @@
             {{ if eq .GetType "plug" }}
                   <input type="checkbox" name="command-{{ .Name }}" id="value-{{ .Name }}" class="toggle" value="1" />
             {{ end }}
+            {{ if eq .GetType "light" }}
+                <div class="slidecontainer">
+                    <input type="range" min="1" max="100" value="50" class="slider" id="value-{{ .Name }}">
+                </div>
+            {{ end }}
         </div>
     {{ end }}
     <br />
 
-    Run in: <input type="text" id="in" value="10" />
+    Run in:
+    <input type="button" value="➖" id="minus" />
+    <input type="text" id="in" value="10" width="32px" />
+    <input type="button" value="➕" id="plus" />
     <input type="button" id="unit" name="unit" value="seconds">
     <div id="unit-options" style="display: none;">
         <input type="button" id="seconds" name="select-unit" value="seconds">
         <input type="button" id="minutes" name="select-unit" value="minutes">
         <input type="button" id="hours" name="select-unit" value="hours">
     </div>
+<br />
     <button id="add-timer" name="add-timer" onclick="addTimer()">Save</button>
 <br />
 </body>
