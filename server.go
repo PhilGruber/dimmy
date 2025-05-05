@@ -133,24 +133,24 @@ func eventLoop(devices map[string]dimmyDevices.DeviceInterface, rules []*dimmyDe
 		}
 
 		var firedRules []int
+		log.Printf("We currently have %d rules\n", len(rules))
 		for idx, rule := range rules {
 			//			fmt.Printf("Checking rule %s\n", rule.String())
 			if rule.CheckTriggers() {
 				//				fmt.Printf("\tFiring!\n", rule.String())
 				rule.Fire(channel)
-				if rule.SingleUse {
-
-					continue
-				}
 				firedRules = append(firedRules, idx)
 			}
 		}
 
 		for _, idx := range firedRules {
-			rules[idx].ClearTriggers()
 			if rules[idx].SingleUse {
+				// TODO: Make sure to remove the rule from all devices
+				// TODO: Make sure this is legal
 				rules = append(rules[:idx], rules[idx+1:]...)
+				continue
 			}
+			rules[idx].ClearTriggers()
 		}
 
 		time.Sleep(core.CycleLength * time.Millisecond)
@@ -228,12 +228,7 @@ func AddRule(allDevices map[string]dimmyDevices.DeviceInterface, rules []*dimmyD
 	}
 	return func(output http.ResponseWriter, request *http.Request) {
 		if request.Method == "POST" {
-			var form struct {
-				device string
-				value  string
-				unit   string
-				in     int
-			}
+			var form map[string]string
 			err := json.NewDecoder(request.Body).Decode(&form)
 			if err != nil {
 				log.Println("Error: ", err)
@@ -249,7 +244,7 @@ func AddRule(allDevices map[string]dimmyDevices.DeviceInterface, rules []*dimmyD
 				SingleUse: true,
 			}
 			var unit time.Duration
-			switch form.unit {
+			switch form["unit"] {
 			case "seconds":
 				unit = time.Second
 			case "minutes":
@@ -260,9 +255,9 @@ func AddRule(allDevices map[string]dimmyDevices.DeviceInterface, rules []*dimmyD
 			triggerTime := time.Now().Add(core.CycleLength * unit)
 			rule.Triggers = dimmyTime.CreateTriggerFromTime(triggerTime)
 			rule.Receivers = append(rule.Receivers, dimmyDevices.Receiver{
-				Device: allDevices[form.device],
+				Device: allDevices[form["device"]],
 				Key:    "command", // TODO: Probably wrong
-				Value:  form.value,
+				Value:  form["value"],
 			})
 
 			log.Printf("Rec: %v\n", rule.Receivers[0])
