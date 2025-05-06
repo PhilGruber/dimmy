@@ -51,6 +51,7 @@
             const value = document.getElementById('value-' + device).value;
             const unit = document.getElementById('unit').value;
             const inValue = document.getElementById('in').value;
+            const key = document.getElementById('key-' + device).value
 
             let data;
             if (device && value && unit && inValue) {
@@ -59,7 +60,8 @@
                     "device": device,
                     "value": value,
                     "unit": unit,
-                    "in": inValue
+                    "in": inValue,
+                    "key": key,
                 };
                 $.post('/rules/add-single-use', JSON.stringify(data), null, 'json');
                 alert("Timer added successfully!");
@@ -81,6 +83,7 @@ Device:
         <div id="device-options-{{ .Name }}" style="display: none;">
             {{ if eq .GetType "IRControl" }}
                 <input type="command" id="value-{{ .Name }}" name="value-{{ .Name }}" value="click to select" />
+                <input type="hidden" id="key-{{ .Name }}" name="key-{{ .Name }}" value="command" />
                 <div id="device-options" style="display: none;">
                     {{ range $cmd := .GetCommands }}
                         <input
@@ -94,11 +97,13 @@ Device:
                 </div>
             {{ end }}
             {{ if eq .GetType "plug" }}
-                  <input type="checkbox" name="command-{{ .Name }}" id="value-{{ .Name }}" class="toggle" value="1" />
+                <input type="checkbox" name="command-{{ .Name }}" id="value-{{ .Name }}" class="toggle" value="1" />
+                <input type="hidden" id="key-{{ .Name }}" name="key-{{ .Name }}" value="state" />
             {{ end }}
             {{ if eq .GetType "light" }}
                 <div class="slidecontainer">
                     <input type="range" min="1" max="100" value="50" class="slider" id="value-{{ .Name }}">
+                    <input type="hidden" id="key-{{ .Name }}" name="key-{{ .Name }}" value="brightness" />
                 </div>
             {{ end }}
         </div>

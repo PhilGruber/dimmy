@@ -161,8 +161,9 @@ func (s *Server) eventLoop(mqttServer string) {
 
 		for _, idx := range firedRules {
 			if s.rules[idx].SingleUse {
-				// TODO: Make sure to remove the rule from all devices
-				// TODO: Make sure this is legal
+				for _, trigger := range s.rules[idx].Triggers {
+					trigger.Device.RemoveRule(&s.rules[idx])
+				}
 				s.rules = append(s.rules[:idx], s.rules[idx+1:]...)
 				continue
 			}
@@ -276,7 +277,7 @@ func (s *Server) AddSingleUseRule(webroot string) http.HandlerFunc {
 				Receivers: []core.ReceiverConfig{
 					{
 						DeviceName: form["device"],
-						Key:        "command",
+						Key:        form["key"],
 						Value:      form["value"],
 					},
 				},
