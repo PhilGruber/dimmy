@@ -18,8 +18,13 @@ import (
 
 var AppVersion = "undefined"
 
-func main() {
+type Server struct {
+	devices map[string]dimmyDevices.DeviceInterface
+	panels  map[string]dimmyDevices.Panel
+	rules   []dimmyDevices.Rule
+}
 
+func main() {
 	version := flag.Bool("version", false, "Print version")
 	flag.Parse()
 
@@ -28,8 +33,14 @@ func main() {
 		os.Exit(0)
 	}
 
-	devices := make(map[string]dimmyDevices.DeviceInterface)
-	panels := make(map[string]dimmyDevices.Panel)
+	server := &Server{}
+	server.initialize()
+}
+
+func (s *Server) initialize() {
+
+	s.devices = make(map[string]dimmyDevices.DeviceInterface)
+	s.panels = make(map[string]dimmyDevices.Panel)
 
 	config, err := core.LoadConfig()
 	if err != nil {
@@ -41,100 +52,99 @@ func main() {
 		switch deviceConfig.Type {
 		case "motion-sensor":
 		case "sensor":
-			devices[deviceConfig.Name] = dimmyDevices.NewSensor(deviceConfig)
+			s.devices[deviceConfig.Name] = dimmyDevices.NewSensor(deviceConfig)
 		case "zsensor":
-			devices[deviceConfig.Name] = dimmyDevices.NewZSensor(deviceConfig)
+			s.devices[deviceConfig.Name] = dimmyDevices.NewZSensor(deviceConfig)
 		case "switch":
-			devices[deviceConfig.Name] = dimmyDevices.NewSwitch(deviceConfig)
+			s.devices[deviceConfig.Name] = dimmyDevices.NewSwitch(deviceConfig)
 		case "door-sensor":
-			devices[deviceConfig.Name] = dimmyDevices.NewDoorSensor(deviceConfig)
+			s.devices[deviceConfig.Name] = dimmyDevices.NewDoorSensor(deviceConfig)
 		case "light":
-			devices[deviceConfig.Name] = dimmyDevices.NewLight(deviceConfig)
+			s.devices[deviceConfig.Name] = dimmyDevices.NewLight(deviceConfig)
 		case "zlight":
-			devices[deviceConfig.Name] = dimmyDevices.NewZLight(deviceConfig)
+			s.devices[deviceConfig.Name] = dimmyDevices.NewZLight(deviceConfig)
 		case "plug":
-			devices[deviceConfig.Name] = dimmyDevices.NewPlug(deviceConfig)
+			s.devices[deviceConfig.Name] = dimmyDevices.NewPlug(deviceConfig)
 		case "zplug":
-			devices[deviceConfig.Name] = dimmyDevices.NewZPlug(deviceConfig)
+			s.devices[deviceConfig.Name] = dimmyDevices.NewZPlug(deviceConfig)
 		case "temperature":
-			devices[deviceConfig.Name] = dimmyDevices.NewTemperature(deviceConfig)
+			s.devices[deviceConfig.Name] = dimmyDevices.NewTemperature(deviceConfig)
 		case "ircontrol":
-			devices[deviceConfig.Name] = dimmyDevices.NewIrControl(deviceConfig)
+			s.devices[deviceConfig.Name] = dimmyDevices.NewIrControl(deviceConfig)
 		case "group":
 		default:
 			log.Println("Skipping deviceConfig of unknown type '" + deviceConfig.Type + "'")
 		}
 	}
 
-	devices["time"] = dimmyDevices.NewDimmyTime(core.DeviceConfig{Name: "time", Type: "time"})
+	s.devices["time"] = dimmyDevices.NewDimmyTime(core.DeviceConfig{Name: "time", Type: "time"})
 
 	// Parse Groups separately at the end, to make sure all referencing Devices exist at that point
 	for _, device := range config.Devices {
 		if device.Type == "group" {
-			group := dimmyDevices.NewGroup(device, devices)
+			group := dimmyDevices.NewGroup(device, s.devices)
 			if group != nil {
-				devices[device.Name] = group
+				s.devices[device.Name] = group
 			}
 		}
 	}
 
-	var rules []*dimmyDevices.Rule
 	for _, ruleConfig := range config.Rules {
-		rule := dimmyDevices.NewRule(ruleConfig, devices)
+		rule := dimmyDevices.NewRule(ruleConfig, s.devices)
 		if rule != nil {
-			rules = append(rules, rule)
+			s.rules = append(s.rules, *rule)
 		}
 	}
 
 	for _, panel := range config.Panels {
-		panels[panel.Label] = dimmyDevices.NewPanel(panel, &devices)
+		s.panels[panel.Label] = dimmyDevices.NewPanel(panel, &s.devices)
 	}
 
-	for _, device := range devices {
+	for _, device := range s.devices {
 		if !device.GetHidden() {
-			panels[device.GetLabel()] = dimmyDevices.NewPanelFromDevice(device)
+			s.panels[device.GetLabel()] = dimmyDevices.NewPanelFromDevice(device)
 		}
 	}
 
-	channel := make(chan core.SwitchRequest, len(devices))
+	channel := make(chan core.SwitchRequest, len(s.devices))
 
-	go processRequests(channel, devices)
-	go eventLoop(devices, rules, channel, config.MqttServer)
+	go s.processRequests(channel)
+	go s.eventLoop(channel, config.MqttServer)
 
 	assets := http.FileServer(http.Dir(config.WebRoot + "/assets"))
 	http.Handle("/assets/", http.StripPrefix("/assets/", assets))
 	http.Handle("/api/switch", ReceiveRequest(channel))
-	http.Handle("/api/status", ShowStatus(&devices))
-	http.Handle("/", ShowDashboard(devices, panels, channel, config.WebRoot))
-	http.Handle("/rules/add-single-use", AddRule(devices, rules, config.WebRoot))
+	http.Handle("/api/status", ShowStatus(&s.devices))
+	http.Handle("/", ShowDashboard(s.devices, s.panels, channel, config.WebRoot))
+	http.Handle("/rules/add-single-use", s.AddRule(config.WebRoot))
 
 	log.Printf("Listening on port %d", config.Port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
 }
 
-func eventLoop(devices map[string]dimmyDevices.DeviceInterface, rules []*dimmyDevices.Rule, channel chan core.SwitchRequest, mqttServer string) {
+func (s *Server) eventLoop(channel chan core.SwitchRequest, mqttServer string) {
 	hostname, _ := os.Hostname()
 	client := initMqtt(mqttServer, "goserver-"+hostname)
 
-	for name := range devices {
-		if devices[name].GetMqttStateTopic() != "" {
-			log.Printf("[%32s] Subscribing to %s\n", name, devices[name].GetMqttStateTopic())
-			client.Subscribe(devices[name].GetMqttStateTopic(), 0, devices[name].GetMessageHandler(channel, devices[name]))
-			devices[name].PollValue(client)
+	for name := range s.devices {
+		if s.devices[name].GetMqttStateTopic() != "" {
+			log.Printf("[%32s] Subscribing to %s\n", name, s.devices[name].GetMqttStateTopic())
+			client.Subscribe(s.devices[name].GetMqttStateTopic(), 0, s.devices[name].GetMessageHandler(channel, s.devices[name]))
+			s.devices[name].PollValue(client)
 		}
 	}
 
 	for {
 
-		for name := range devices {
-			if _, ok := devices[name].UpdateValue(); ok {
-				devices[name].PublishValue(client)
+		for name := range s.devices {
+			if _, ok := s.devices[name].UpdateValue(); ok {
+				s.devices[name].PublishValue(client)
 			}
 		}
 
 		var firedRules []int
-		log.Printf("We currently have %d rules\n", len(rules))
-		for idx, rule := range rules {
+		log.Printf("We currently have %d rules\n", len(s.rules))
+		for idx, rule := range s.rules {
 			//			fmt.Printf("Checking rule %s\n", rule.String())
 			if rule.CheckTriggers() {
 				//				fmt.Printf("\tFiring!\n", rule.String())
@@ -144,25 +154,25 @@ func eventLoop(devices map[string]dimmyDevices.DeviceInterface, rules []*dimmyDe
 		}
 
 		for _, idx := range firedRules {
-			if rules[idx].SingleUse {
+			if s.rules[idx].SingleUse {
 				// TODO: Make sure to remove the rule from all devices
 				// TODO: Make sure this is legal
-				rules = append(rules[:idx], rules[idx+1:]...)
+				s.rules = append(s.rules[:idx], s.rules[idx+1:]...)
 				continue
 			}
-			rules[idx].ClearTriggers()
+			s.rules[idx].ClearTriggers()
 		}
 
 		time.Sleep(core.CycleLength * time.Millisecond)
 	}
 }
 
-func processRequests(channel chan core.SwitchRequest, devices map[string]dimmyDevices.DeviceInterface) {
+func (s *Server) processRequests(channel chan core.SwitchRequest) {
 	for {
 		request := <-channel
 		for _, device := range strings.Split(request.Device, ",") {
-			if _, ok := devices[device]; ok {
-				devices[device].ProcessRequest(request)
+			if _, ok := s.devices[device]; ok {
+				s.devices[device].ProcessRequest(request)
 			} else {
 				log.Printf("Can't find device for request [%s (%s)]", device, request.Device)
 			}
@@ -219,9 +229,9 @@ func ShowStatus(devices *map[string]dimmyDevices.DeviceInterface) http.HandlerFu
 	}
 }
 
-func AddRule(allDevices map[string]dimmyDevices.DeviceInterface, rules []*dimmyDevices.Rule, webroot string) http.HandlerFunc {
+func (s *Server) AddRule(webroot string) http.HandlerFunc {
 	var devices []dimmyDevices.DeviceInterface
-	for _, device := range allDevices {
+	for _, device := range s.devices {
 		if device.HasReceivers() {
 			devices = append(devices, device)
 		}
@@ -238,11 +248,8 @@ func AddRule(allDevices map[string]dimmyDevices.DeviceInterface, rules []*dimmyD
 			log.Printf("Form: %v\n", form)
 
 			var dimmyTime *dimmyDevices.DimmyTime
-			dimmyTime = allDevices["time"].(*dimmyDevices.DimmyTime)
+			dimmyTime = s.devices["time"].(*dimmyDevices.DimmyTime)
 
-			rule := dimmyDevices.Rule{
-				SingleUse: true,
-			}
 			var unit time.Duration
 			switch form["unit"] {
 			case "seconds":
@@ -253,16 +260,24 @@ func AddRule(allDevices map[string]dimmyDevices.DeviceInterface, rules []*dimmyD
 				unit = time.Hour
 			}
 			triggerTime := time.Now().Add(core.CycleLength * unit)
-			rule.Triggers = dimmyTime.CreateTriggerFromTime(triggerTime)
-			rule.Receivers = append(rule.Receivers, dimmyDevices.Receiver{
-				Device: allDevices[form["device"]],
-				Key:    "command", // TODO: Probably wrong
-				Value:  form["value"],
-			})
 
-			log.Printf("Rec: %v\n", rule.Receivers[0])
+			ruleConfig := core.RuleConfig{
+				Receivers: []core.ReceiverConfig{
+					{
+						DeviceName: form["device"],
+						Key:        "command",
+						Value:      form["value"],
+					},
+				},
+				Triggers: dimmyTime.CreateTriggersFromTime(triggerTime),
+			}
 
-			rules = append(rules, &rule)
+			log.Printf("Rec: %v\n", ruleConfig.Receivers[0])
+
+			rule := dimmyDevices.NewRule(ruleConfig, s.devices)
+			rule.SingleUse = true
+
+			s.rules = append(s.rules, *rule)
 
 			return
 		}

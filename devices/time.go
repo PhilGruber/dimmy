@@ -68,19 +68,26 @@ func (s *DimmyTime) ClearTrigger(trigger string) {
 	}
 }
 
-func (s *DimmyTime) CreateTrigger(trigger string, value int) Trigger {
-	c := condition{Operator: "==", Value: value}
-	return Trigger{Device: s, Key: trigger, Condition: &c}
+func (s *DimmyTime) CreateTriggerConfig(trigger string, value int) core.TriggerConfig {
+	return core.TriggerConfig{
+		DeviceName: "time",
+		Key:        trigger,
+		Active:     true,
+		Condition: core.ReceiverConditionConfig{
+			Operator: "==",
+			Value:    value,
+		},
+	}
 }
 
-func (s *DimmyTime) CreateTriggerFromTime(value time.Time) []Trigger {
-	triggers := make([]Trigger, 6)
-	triggers[0] = s.CreateTrigger("day", value.Day())
-	triggers[1] = s.CreateTrigger("month", int(value.Month()))
-	triggers[2] = s.CreateTrigger("year", value.Year())
-	triggers[3] = s.CreateTrigger("hour", value.Hour())
-	triggers[4] = s.CreateTrigger("minute", value.Minute())
-	triggers[5] = s.CreateTrigger("second", value.Second())
+func (s *DimmyTime) CreateTriggersFromTime(value time.Time) []core.TriggerConfig {
+	triggers := make([]core.TriggerConfig, 6)
+	triggers[0] = s.CreateTriggerConfig("day", value.Day())
+	triggers[1] = s.CreateTriggerConfig("month", int(value.Month()))
+	triggers[2] = s.CreateTriggerConfig("year", value.Year())
+	triggers[3] = s.CreateTriggerConfig("hour", value.Hour())
+	triggers[4] = s.CreateTriggerConfig("minute", value.Minute())
+	triggers[5] = s.CreateTriggerConfig("second", value.Second())
 
 	return triggers
 }
