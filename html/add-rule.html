@@ -1,10 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Add timer</title>
-    <script src='/assets/jquery.js'></script>
-    <link rel='stylesheet' type='text/css' href='/assets/types.css' />
     <script>
         $(document).ready(function() {
             $("#unit").click(function () {
@@ -63,8 +56,8 @@
                     "in": inValue,
                     "key": key,
                 };
-                $.post('/rules/add-single-use', JSON.stringify(data), null, 'json');
-                alert("Timer added successfully!");
+                $.post('/rules/add-single-use', JSON.stringify(data), function () {}, 'json');
+                $("#popup").hide();
             } else {
                 alert("Please fill in all fields.");
             }
@@ -123,5 +116,3 @@ Device:
 <br />
     <button id="add-timer" name="add-timer" onclick="addTimer()">Save</button>
 <br />
-</body>
-</html>
