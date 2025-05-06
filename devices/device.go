@@ -224,15 +224,19 @@ func (d *Device) parseDefaultValues(data map[string]any) {
 	}
 }
 
-func (d *Device) UpdateRules(field string, value any) {
+func (d *Device) UpdateRule(rule *Rule, field string, value any) {
 	now := time.Now()
-	for r, rule := range d.rules {
-		for t, trigger := range rule.Triggers {
-			if trigger.Device.GetName() == d.GetName() && trigger.Key == field {
-				d.rules[r].Triggers[t].Condition.LastValue = value
-				d.rules[r].Triggers[t].Condition.LastChanged = &now
-			}
+	for t, trigger := range rule.Triggers {
+		if trigger.Device.GetName() == d.GetName() && trigger.Key == field {
+			rule.Triggers[t].Condition.LastValue = value
+			rule.Triggers[t].Condition.LastChanged = &now
 		}
+	}
+}
+
+func (d *Device) UpdateRules(field string, value any) {
+	for r := range d.rules {
+		d.UpdateRule(d.rules[r], field, value)
 	}
 }
 

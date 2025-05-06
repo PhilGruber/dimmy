@@ -1,6 +1,7 @@
 package devices
 
 import (
+	"fmt"
 	"github.com/PhilGruber/dimmy/core"
 	"time"
 )
@@ -26,6 +27,22 @@ func NewDimmyTime(config core.DeviceConfig) *DimmyTime {
 	s.persistentFields = []string{"day", "month", "year", "hour", "weekday"}
 
 	return &s
+}
+
+func (s *DimmyTime) InitRule(rule *Rule) {
+	now := time.Now()
+	s.UpdateRule(rule, "day", now.Day())
+	s.UpdateRule(rule, "month", int(now.Month()))
+	s.UpdateRule(rule, "year", now.Year())
+	s.UpdateRule(rule, "hour", now.Hour())
+	s.UpdateRule(rule, "minute", now.Minute())
+	s.UpdateRule(rule, "second", now.Second())
+	fmt.Println("Initialized new rule")
+}
+
+func (s *DimmyTime) AddRule(rule *Rule) {
+	s.InitRule(rule)
+	s.rules = append(s.rules, rule)
 }
 
 func (s *DimmyTime) UpdateValue() (float64, bool) {

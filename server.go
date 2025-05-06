@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -22,6 +23,7 @@ type Server struct {
 	devices map[string]dimmyDevices.DeviceInterface
 	panels  map[string]dimmyDevices.Panel
 	rules   []dimmyDevices.Rule
+	channel chan core.SwitchRequest
 }
 
 func main() {
@@ -33,20 +35,21 @@ func main() {
 		os.Exit(0)
 	}
 
-	server := &Server{}
-	server.initialize()
-}
-
-func (s *Server) initialize() {
-
-	s.devices = make(map[string]dimmyDevices.DeviceInterface)
-	s.panels = make(map[string]dimmyDevices.Panel)
-
 	config, err := core.LoadConfig()
 	if err != nil {
 		log.Println(err.Error())
 		return
 	}
+
+	server := &Server{}
+	server.initialize(config)
+	server.Start(config)
+}
+
+func (s *Server) initialize(config *core.ServerConfig) {
+
+	s.devices = make(map[string]dimmyDevices.DeviceInterface)
+	s.panels = make(map[string]dimmyDevices.Panel)
 
 	for _, deviceConfig := range config.Devices {
 		switch deviceConfig.Type {
@@ -106,30 +109,33 @@ func (s *Server) initialize() {
 		}
 	}
 
-	channel := make(chan core.SwitchRequest, len(s.devices))
+	s.channel = make(chan core.SwitchRequest, len(s.devices))
+}
 
-	go s.processRequests(channel)
-	go s.eventLoop(channel, config.MqttServer)
+func (s *Server) Start(config *core.ServerConfig) {
+
+	go s.processRequests()
+	go s.eventLoop(config.MqttServer)
 
 	assets := http.FileServer(http.Dir(config.WebRoot + "/assets"))
 	http.Handle("/assets/", http.StripPrefix("/assets/", assets))
-	http.Handle("/api/switch", ReceiveRequest(channel))
-	http.Handle("/api/status", ShowStatus(&s.devices))
-	http.Handle("/", ShowDashboard(s.devices, s.panels, channel, config.WebRoot))
-	http.Handle("/rules/add-single-use", s.AddRule(config.WebRoot))
+	http.Handle("/api/switch", s.ReceiveRequest())
+	http.Handle("/api/status", s.ShowStatus(&s.devices))
+	http.Handle("/", s.ShowDashboard(config.WebRoot))
+	http.Handle("/rules/add-single-use", s.AddSingleUseRule(config.WebRoot))
 
 	log.Printf("Listening on port %d", config.Port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
 }
 
-func (s *Server) eventLoop(channel chan core.SwitchRequest, mqttServer string) {
+func (s *Server) eventLoop(mqttServer string) {
 	hostname, _ := os.Hostname()
-	client := initMqtt(mqttServer, "goserver-"+hostname)
+	client := s.initMqtt(mqttServer, "goserver-"+hostname)
 
 	for name := range s.devices {
 		if s.devices[name].GetMqttStateTopic() != "" {
 			log.Printf("[%32s] Subscribing to %s\n", name, s.devices[name].GetMqttStateTopic())
-			client.Subscribe(s.devices[name].GetMqttStateTopic(), 0, s.devices[name].GetMessageHandler(channel, s.devices[name]))
+			client.Subscribe(s.devices[name].GetMqttStateTopic(), 0, s.devices[name].GetMessageHandler(s.channel, s.devices[name]))
 			s.devices[name].PollValue(client)
 		}
 	}
@@ -148,7 +154,7 @@ func (s *Server) eventLoop(channel chan core.SwitchRequest, mqttServer string) {
 			//			fmt.Printf("Checking rule %s\n", rule.String())
 			if rule.CheckTriggers() {
 				//				fmt.Printf("\tFiring!\n", rule.String())
-				rule.Fire(channel)
+				rule.Fire(s.channel)
 				firedRules = append(firedRules, idx)
 			}
 		}
@@ -167,9 +173,9 @@ func (s *Server) eventLoop(channel chan core.SwitchRequest, mqttServer string) {
 	}
 }
 
-func (s *Server) processRequests(channel chan core.SwitchRequest) {
+func (s *Server) processRequests() {
 	for {
-		request := <-channel
+		request := <-s.channel
 		for _, device := range strings.Split(request.Device, ",") {
 			if _, ok := s.devices[device]; ok {
 				s.devices[device].ProcessRequest(request)
@@ -180,7 +186,7 @@ func (s *Server) processRequests(channel chan core.SwitchRequest) {
 	}
 }
 
-func ReceiveRequest(channel chan core.SwitchRequest) http.HandlerFunc {
+func (s *Server) ReceiveRequest() http.HandlerFunc {
 	return func(output http.ResponseWriter, httpRequest *http.Request) {
 
 		jsonResponse := func(result bool, request interface{}, message string) string {
@@ -210,12 +216,12 @@ func ReceiveRequest(channel chan core.SwitchRequest) http.HandlerFunc {
 			_, _ = fmt.Fprintf(output, "Invalid JSON data")
 			return
 		}
-		channel <- request
+		s.channel <- request
 		_, _ = fmt.Fprintf(output, jsonResponse(true, request, fmt.Sprintf("Sent %s command to %s", request.Command, request.Device)))
 	}
 }
 
-func ShowStatus(devices *map[string]dimmyDevices.DeviceInterface) http.HandlerFunc {
+func (s *Server) ShowStatus(devices *map[string]dimmyDevices.DeviceInterface) http.HandlerFunc {
 	return func(output http.ResponseWriter, request *http.Request) {
 		output.Header().Set("Content-Type", "application/json")
 		for _, device := range *devices {
@@ -229,7 +235,7 @@ func ShowStatus(devices *map[string]dimmyDevices.DeviceInterface) http.HandlerFu
 	}
 }
 
-func (s *Server) AddRule(webroot string) http.HandlerFunc {
+func (s *Server) AddSingleUseRule(webroot string) http.HandlerFunc {
 	var devices []dimmyDevices.DeviceInterface
 	for _, device := range s.devices {
 		if device.HasReceivers() {
@@ -259,7 +265,12 @@ func (s *Server) AddRule(webroot string) http.HandlerFunc {
 			case "hours":
 				unit = time.Hour
 			}
-			triggerTime := time.Now().Add(core.CycleLength * unit)
+			in, err := strconv.Atoi(form["in"])
+			if err != nil {
+				log.Println("Error: ", err)
+				return
+			}
+			triggerTime := time.Now().Add(unit * time.Duration(in))
 
 			ruleConfig := core.RuleConfig{
 				Receivers: []core.ReceiverConfig{
@@ -295,7 +306,7 @@ func (s *Server) AddRule(webroot string) http.HandlerFunc {
 	}
 }
 
-func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, panels map[string]dimmyDevices.Panel, channel chan core.SwitchRequest, webroot string) http.HandlerFunc {
+func (s *Server) ShowDashboard(webroot string) http.HandlerFunc {
 	return func(output http.ResponseWriter, request *http.Request) {
 		if request.Method == "POST" {
 			err := request.ParseForm()
@@ -310,11 +321,11 @@ func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, panels map[s
 				case "off":
 					sr.Value = "0"
 				case "+":
-					sr.Value = fmt.Sprintf("%.3f", devices[sr.Device].GetCurrent()+10)
+					sr.Value = fmt.Sprintf("%.3f", s.devices[sr.Device].GetCurrent()+10)
 				case "-":
-					sr.Value = fmt.Sprintf("%.3f", devices[sr.Device].GetCurrent()-10)
+					sr.Value = fmt.Sprintf("%.3f", s.devices[sr.Device].GetCurrent()-10)
 				}
-				channel <- sr
+				s.channel <- sr
 			}
 		}
 
@@ -322,7 +333,7 @@ func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, panels map[s
 		err := templ.Execute(output, struct {
 			Devices map[string]dimmyDevices.DeviceInterface
 			Panels  map[string]dimmyDevices.Panel
-		}{devices, panels})
+		}{s.devices, s.panels})
 		if err != nil {
 			log.Println(err)
 			return
@@ -330,7 +341,7 @@ func ShowDashboard(devices map[string]dimmyDevices.DeviceInterface, panels map[s
 	}
 }
 
-func initMqtt(hostname string, clientId string) mqtt.Client {
+func (s *Server) initMqtt(hostname string, clientId string) mqtt.Client {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s:1883", hostname))
 	opts.SetClientID(clientId)
