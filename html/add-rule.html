@@ -67,27 +67,29 @@
 </head>
 <body>
 Device:
-<select id="device" name="device" onchange="showDeviceOptions(this)">
-    {{ range .Devices }}
-    <option value="{{ .Name }}">{{ .Emoji }} {{ .Name }}</option>
+    <select id="device" name="device" onchange="showDeviceOptions(this)">
+        <option value="">Select a device</option>
+        {{ range .Devices }}
+            <option value="{{ .Name }}">{{ .Emoji }} {{ .Name }}</option>
         {{ end }}
     </select>
-    {{ range .Devices }}
+    {{ range $device := .Devices }}
         <div id="device-options-{{ .Name }}" style="display: none;">
             {{ if eq .GetType "IRControl" }}
-                <input type="command" id="value-{{ .Name }}" name="value-{{ .Name }}" value="click to select" />
+                <input type="text" id="value-{{ .Name }}" name="value-{{ .Name }}" value="click to select" style="width: 64px;"
+                       onclick="$(this).hide(); $('#options-{{ .Name }}').show();" />
                 <input type="hidden" id="key-{{ .Name }}" name="key-{{ .Name }}" value="command" />
-                <div id="device-options" style="display: none;">
-                    {{ range $cmd := .GetCommands }}
-                        <input
-                            type="button"
-                            id="command-{{ $cmd }}"
-                            name="command"
-                            value="{{ $cmd }}"
-                            onclick="document.getElementById('command').value = '{{ $cmd }}'; document.getElementById('device-options').style.display = 'none';"
-                            />
-                    {{ end }}
-                </div>
+                <span id="options-{{ .Name }}" class="device-option" style="display: none;">
+                {{ range $cmd := .GetCommands }}
+                    <input
+                        type="button"
+                        id="command-{{ $cmd }}"
+                        name="command"
+                        value="{{ $cmd }}"
+                        onclick="$('#value-{{ $device.Name }}').val('{{ $cmd }}'); $('#value-{{ $device.Name }}').show(); $('#options-{{ $device.Name }}').hide();"
+                        />
+                {{ end }}
+                </span>
             {{ end }}
             {{ if eq .GetType "plug" }}
                 <input type="checkbox" name="command-{{ .Name }}" id="value-{{ .Name }}" class="toggle" value="1" />
@@ -105,7 +107,7 @@ Device:
 
     Run in:
     <input type="button" value="➖" id="minus" />
-    <input type="text" id="in" value="10" width="32px" />
+    <input type="text" id="in" value="10" style="width: 32px" />
     <input type="button" value="➕" id="plus" />
     <input type="button" id="unit" name="unit" value="seconds">
     <div id="unit-options" style="display: none;">
@@ -115,5 +117,5 @@ Device:
     </div>
 <br />
     <button id="add-timer" name="add-timer" onclick="addTimer()">Save</button>
-    <button id="add-timer" name="add-timer" onclick="$('#popup').hide()">Cancel</button>
+    <button onclick="$('#popup').hide()">Cancel</button>
 <br />
