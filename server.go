@@ -149,7 +149,6 @@ func (s *Server) eventLoop(mqttServer string) {
 		}
 
 		var firedRules []int
-		log.Printf("We currently have %d rules\n", len(s.rules))
 		for idx, rule := range s.rules {
 			//			fmt.Printf("Checking rule %s\n", rule.String())
 			if rule.CheckTriggers() {
