@@ -1,7 +1,9 @@
 # dimmy
 Dimmy is a little home automation system.
 
-It can control lights, blinds, and other devices via MQTT.
+It can control lights and ir senders and supports many kinds of sensors and other devices via MQTT.
+Tasmota and zigbee2mqtt devices are supported.
+
 It contains a daemon, a CLI client, a JSON API and a web interface.
 
 
