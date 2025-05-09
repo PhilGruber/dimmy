@@ -114,5 +114,5 @@ func (p *Plug) SetReceiverValue(key string, value interface{}) {
 	if key != "state" {
 		return
 	}
-	p.ProcessRequest(core.SwitchRequest{Device: "", Value: value.(string)})
+	p.ProcessRequest(core.SwitchRequest{Device: p.Name, Value: value.(string)})
 }

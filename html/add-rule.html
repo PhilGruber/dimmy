@@ -41,7 +41,12 @@
 
         function addTimer() {
             const device = document.getElementById('device').value;
-            const value = document.getElementById('value-' + device).value;
+            let value
+            if ($("#value-" + device).attr("type") === "checkbox") {
+                value = document.getElementById('value-' + device).checked ? "1" : "0";
+            } else {
+                value = document.getElementById('value-' + device).value;
+            }
             const unit = document.getElementById('unit').value;
             const inValue = document.getElementById('in').value;
             const key = document.getElementById('key-' + device).value
@@ -92,7 +97,7 @@ Device:
                 </span>
             {{ end }}
             {{ if eq .GetType "plug" }}
-                <input type="checkbox" name="command-{{ .Name }}" id="value-{{ .Name }}" class="toggle" value="1" />
+                <input type="checkbox" name="command-{{ .Name }}" id="value-{{ .Name }}" class="toggle" value="on" />
                 <input type="hidden" id="key-{{ .Name }}" name="key-{{ .Name }}" value="state" />
             {{ end }}
             {{ if eq .GetType "light" }}

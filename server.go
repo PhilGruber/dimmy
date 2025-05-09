@@ -282,6 +282,13 @@ func (s *Server) AddSingleUseRule(webroot string) http.HandlerFunc {
 				},
 				Triggers: dimmyTime.CreateTriggersFromTime(triggerTime),
 			}
+			if s.devices[form["device"]].GetType() == "light" {
+				ruleConfig.Receivers = append(ruleConfig.Receivers, core.ReceiverConfig{
+					DeviceName: form["device"],
+					Key:        "duration",
+					Value:      "1",
+				})
+			}
 
 			log.Printf("Rec: %v\n", ruleConfig.Receivers[0])
 
