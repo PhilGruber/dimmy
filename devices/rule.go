@@ -12,6 +12,7 @@ import (
 type Rule struct {
 	Triggers  []Trigger
 	Receivers []Receiver
+	SingleUse bool
 }
 
 type Trigger struct {
@@ -140,6 +141,7 @@ func (r *Rule) String() string {
 
 func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 	r := Rule{}
+	r.SingleUse = false
 	for _, triggerConfig := range config.Triggers {
 		if _, ok := devices[triggerConfig.DeviceName]; !ok {
 			log.Printf("Device %s not found\n", triggerConfig.DeviceName)

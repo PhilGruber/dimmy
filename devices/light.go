@@ -103,7 +103,6 @@ func (l *Light) GetMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt
 		percentage := l.ValueToPercentage(value)
 		l.setTarget(percentage)
 		l.SetCurrent(percentage)
-
 	}
 }
 

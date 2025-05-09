@@ -1,6 +1,7 @@
 package devices
 
 import (
+	"fmt"
 	"github.com/PhilGruber/dimmy/core"
 	"time"
 )
@@ -26,6 +27,22 @@ func NewDimmyTime(config core.DeviceConfig) *DimmyTime {
 	s.persistentFields = []string{"day", "month", "year", "hour", "weekday"}
 
 	return &s
+}
+
+func (s *DimmyTime) InitRule(rule *Rule) {
+	now := time.Now()
+	s.UpdateRule(rule, "day", now.Day())
+	s.UpdateRule(rule, "month", int(now.Month()))
+	s.UpdateRule(rule, "year", now.Year())
+	s.UpdateRule(rule, "hour", now.Hour())
+	s.UpdateRule(rule, "minute", now.Minute())
+	s.UpdateRule(rule, "second", now.Second())
+	fmt.Println("Initialized new rule")
+}
+
+func (s *DimmyTime) AddRule(rule *Rule) {
+	s.InitRule(rule)
+	s.rules = append(s.rules, rule)
 }
 
 func (s *DimmyTime) UpdateValue() (float64, bool) {
@@ -66,4 +83,28 @@ func (s *DimmyTime) ClearTrigger(trigger string) {
 	if trigger == "minute" || trigger == "second" {
 		s.triggerValues[trigger] = -1
 	}
+}
+
+func (s *DimmyTime) CreateTriggerConfig(trigger string, value int) core.TriggerConfig {
+	return core.TriggerConfig{
+		DeviceName: "time",
+		Key:        trigger,
+		Active:     true,
+		Condition: core.ReceiverConditionConfig{
+			Operator: "==",
+			Value:    value,
+		},
+	}
+}
+
+func (s *DimmyTime) CreateTriggersFromTime(value time.Time) []core.TriggerConfig {
+	triggers := make([]core.TriggerConfig, 6)
+	triggers[0] = s.CreateTriggerConfig("day", value.Day())
+	triggers[1] = s.CreateTriggerConfig("month", int(value.Month()))
+	triggers[2] = s.CreateTriggerConfig("year", value.Year())
+	triggers[3] = s.CreateTriggerConfig("hour", value.Hour())
+	triggers[4] = s.CreateTriggerConfig("minute", value.Minute())
+	triggers[5] = s.CreateTriggerConfig("second", value.Second())
+
+	return triggers
 }

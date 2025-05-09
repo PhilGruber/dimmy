@@ -26,6 +26,8 @@ func NewIrControl(config core.DeviceConfig) *IRControl {
 	i.Type = "IRControl"
 	i.commands = *config.Options.Commands
 
+	i.Receivers = []string{"command"}
+
 	log.Printf("IRControl Device %s created with commands: %s\n", i.Name, i.GetCommands())
 	return &i
 }

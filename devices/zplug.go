@@ -31,6 +31,7 @@ func MakeZPlug(config core.DeviceConfig) ZPlug {
 
 	p.MqttState = config.Topic
 	p.Type = "plug"
+	p.Receivers = []string{"state"}
 
 	p.needsSending = false
 	p.Min = 0

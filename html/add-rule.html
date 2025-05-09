@@ -1,0 +1,126 @@
+    <script>
+        $(document).ready(function() {
+            $("#unit").click(function () {
+                $("#unit-options").toggle();
+            });
+
+            $("#unit-options input").click(function () {
+                $("#unit").val($(this).val());
+                $("#unit-options").hide();
+            });
+
+            $("#command").click(function () {
+                $("#device-options").toggle();
+            });
+
+            $("#minus").click(function () {
+                let value = Math.max(0, parseInt($('#in').val()) - 5);
+                if (value < 0) {
+                    value = 0;
+                }
+                $("#in").val(value);
+            });
+
+            $("#plus").click(function () {
+                $("#in").val(Math.max(0, parseInt($('#in').val()) + 5));
+            });
+
+        });
+
+        function showDeviceOptions(select) {
+            var selectedValue = select.value;
+            var deviceOptions = document.querySelectorAll('[id^="device-options-"]');
+            deviceOptions.forEach(function (option) {
+                option.style.display = 'none';
+            });
+            var selectedOption = document.getElementById('device-options-' + selectedValue);
+            if (selectedOption) {
+                selectedOption.style.display = 'block';
+            }
+        }
+
+        function addTimer() {
+            const device = document.getElementById('device').value;
+            let value
+            if ($("#value-" + device).attr("type") === "checkbox") {
+                value = document.getElementById('value-' + device).checked ? "1" : "0";
+            } else {
+                value = document.getElementById('value-' + device).value;
+            }
+            const unit = document.getElementById('unit').value;
+            const inValue = document.getElementById('in').value;
+            const key = document.getElementById('key-' + device).value
+
+            let data;
+            if (device && value && unit && inValue) {
+                console.log("Device:", device, "Value:", value, "Unit:", unit, "In:", inValue);
+                data = {
+                    "device": device,
+                    "value": value,
+                    "unit": unit,
+                    "in": inValue,
+                    "key": key,
+                };
+                $.post('/rules/add-single-use', JSON.stringify(data), function () {}, 'json');
+                $("#popup").hide();
+            } else {
+                alert("Please fill in all fields.");
+            }
+        }
+
+    </script>
+</head>
+<body>
+Device:
+    <select id="device" name="device" onchange="showDeviceOptions(this)">
+        <option value="">Select a device</option>
+        {{ range .Devices }}
+            <option value="{{ .Name }}">{{ .Emoji }} {{ .Name }}</option>
+        {{ end }}
+    </select>
+    {{ range $device := .Devices }}
+        <div id="device-options-{{ .Name }}" style="display: none;">
+            {{ if eq .GetType "IRControl" }}
+                <input type="text" id="value-{{ .Name }}" name="value-{{ .Name }}" value="click to select" style="width: 64px;"
+                       onclick="$(this).hide(); $('#options-{{ .Name }}').show();" />
+                <input type="hidden" id="key-{{ .Name }}" name="key-{{ .Name }}" value="command" />
+                <span id="options-{{ .Name }}" class="device-option" style="display: none;">
+                {{ range $cmd := .GetCommands }}
+                    <input
+                        type="button"
+                        id="command-{{ $cmd }}"
+                        name="command"
+                        value="{{ $cmd }}"
+                        onclick="$('#value-{{ $device.Name }}').val('{{ $cmd }}'); $('#value-{{ $device.Name }}').show(); $('#options-{{ $device.Name }}').hide();"
+                        />
+                {{ end }}
+                </span>
+            {{ end }}
+            {{ if eq .GetType "plug" }}
+                <input type="checkbox" name="command-{{ .Name }}" id="value-{{ .Name }}" class="toggle" value="on" />
+                <input type="hidden" id="key-{{ .Name }}" name="key-{{ .Name }}" value="state" />
+            {{ end }}
+            {{ if eq .GetType "light" }}
+                <div class="slidecontainer">
+                    <input type="range" min="1" max="100" value="50" class="slider" id="value-{{ .Name }}">
+                    <input type="hidden" id="key-{{ .Name }}" name="key-{{ .Name }}" value="brightness" />
+                </div>
+            {{ end }}
+        </div>
+    {{ end }}
+    <br />
+
+    Run in:
+    <input type="button" value="➖" id="minus" />
+    <input type="text" id="in" value="10" style="width: 32px" />
+    <input type="button" value="➕" id="plus" />
+    <input type="button" id="unit" name="unit" value="seconds">
+    <div id="unit-options" style="display: none;">
+        <input type="button" id="seconds" name="select-unit" value="seconds">
+        <input type="button" id="minutes" name="select-unit" value="minutes">
+        <input type="button" id="hours" name="select-unit" value="hours">
+    </div>
+<br />
+    <button id="add-timer" name="add-timer" onclick="addTimer()">Save</button>
+    <button onclick="$('#popup').hide()">Cancel</button>
+<br />

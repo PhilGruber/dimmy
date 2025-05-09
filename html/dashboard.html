@@ -5,6 +5,7 @@
             Dimmy Dashboard
         </title>
         <link rel='stylesheet' type='text/css' href='/assets/dashboard.css' />
+        <link rel='stylesheet' type='text/css' href='/assets/types.css' />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script src='/assets/jquery.js'></script>
@@ -85,6 +86,9 @@
                     }
                 }, "json");
             }, 1000);
+            $("#add-rule-button").click(function () {
+                addRule();
+            });
         });
 
         function switchDevice(device, value) {
@@ -94,6 +98,13 @@
                 duration: 1,
             };
             $.post('/api/switch', JSON.stringify(data), null, 'json');
+        }
+
+        function addRule() {
+            $.get('/rules/add-single-use', function (data) {
+                $("#popup-content").html(data);
+                $("#popup").show();
+            }, "html");
         }
 
         </script>
@@ -174,5 +185,10 @@
             {{ end }}
         </div>
         {{ end }}
+        <input type="button" id="add-rule-button" value="🕓➕">
+        <div id="popup" class="popup">
+            <div id="popup-content" class="popup-content">
+            </div>
+        </div>
     </body>
 </html>
