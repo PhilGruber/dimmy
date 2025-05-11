@@ -58,6 +58,8 @@ func (c *condition) check() bool {
 	switch c.Operator {
 	case "==":
 		return value == target
+	case "=":
+		return value == target
 	case "!=":
 		return value != target
 	case ">":
