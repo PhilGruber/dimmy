@@ -250,15 +250,16 @@ func makeComparable(value any, target any) (any, any, error) {
 			return value, fmt.Sprintf("%f", target), nil
 		}
 	}
-	return nil, nil, fmt.Errorf("can't compare %v and %v", value, target)
+	return nil, nil, fmt.Errorf("can't compare %v [%s] and %v [%s]", value, reflect.TypeOf(value), target, reflect.TypeOf(target))
 }
 
 func (r *Rule) CheckTriggers() bool {
 	matches := 0
 	for _, trigger := range r.Triggers {
-		if trigger.Condition.check() {
-			matches++
+		if !trigger.Condition.check() {
+			return false
 		}
+		matches++
 	}
 
 	return matches > 0 && matches == len(r.Triggers)
