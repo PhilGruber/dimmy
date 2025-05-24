@@ -13,13 +13,21 @@
         $(document).ready(function() {
             setInterval(function () {
                 $.get('/api/status', null, function(data, status, jqXHR) {
+                    const now = new Date()
                      for (name in data) {
                         if (data[name].Type === 'plug') {
                             $("#value_" + name).text(data[name].value ? "on" : "off");
                         } else if (data[name].Type === 'sensor') {
                             for (let key in data[name].Values) {
-                                prec = (key === "temperature" ? 10 : 1);
-                                $("#" + key + "_" + name).text(Math.round(data[name].Values[key].value*prec)/prec);
+                                const prec = (key === "temperature" ? 10 : 1);
+                                const lastChange = new Date(data[name].Values[key].LastChanged);
+                                const age = (now - lastChange) / 1000 / 60; // age in minutes
+                                $(`#${key}_${name}`).text(Math.round(data[name].Values[key].value*prec)/prec);
+                                if (age > 60) {
+                                    $("#" + key + "_" + name).addClass('outdated');
+                                } else {
+                                    $("#" + key + "_" + name).removeClass('outdated');
+                                }
 
                                 if (data[name].Values[key].History != null) {
                                     let currentDate = new Date(data[name].Values[key].LastChanged)
@@ -43,6 +51,7 @@
                                 }
                             }
                         } else if (data[name].Type === 'temperature') {
+                            /* deprecated */
                             $("#value_" + name).text(Math.round(data[name].value*10)/10);
                             if (data[name].Humidity !== 0) {
                                 $("#humidity_" + name).text(Math.round(data[name].Humidity));
