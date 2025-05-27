@@ -12,6 +12,7 @@ import (
 type Rule struct {
 	Triggers  []Trigger
 	Receivers []Receiver
+	SingleUse bool
 }
 
 type Trigger struct {
@@ -23,6 +24,7 @@ type Trigger struct {
 type condition struct {
 	Operator    string
 	Value       any
+	Delay       *int
 	LastValue   any
 	LastChanged *time.Time
 }
@@ -38,13 +40,25 @@ func (c *condition) check() bool {
 		log.Println(err)
 		return false
 	}
-	//	fmt.Printf("Checking condition %p: %v %s %v\n", c, value, c.Operator, target)
+
+	if c.Delay != nil {
+		if c.LastChanged == nil {
+			return false
+		}
+		if time.Since(*c.LastChanged) < time.Duration(*c.Delay)*time.Second {
+			return false
+		}
+	}
+
+	//	fmt.Printf("\t --> Checking condition %p: %v %s %v\n", c, value, c.Operator, target)
 	if value == nil || target == nil {
 		return false
 	}
 
 	switch c.Operator {
 	case "==":
+		return value == target
+	case "=":
 		return value == target
 	case "!=":
 		return value != target
@@ -129,6 +143,7 @@ func (r *Rule) String() string {
 
 func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 	r := Rule{}
+	r.SingleUse = false
 	for _, triggerConfig := range config.Triggers {
 		if _, ok := devices[triggerConfig.DeviceName]; !ok {
 			log.Printf("Device %s not found\n", triggerConfig.DeviceName)
@@ -140,6 +155,7 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 			Condition: core.ToPtr(condition{
 				Operator: triggerConfig.Condition.Operator,
 				Value:    triggerConfig.Condition.Value,
+				Delay:    triggerConfig.Condition.Delay,
 			}),
 		}
 		r.Triggers = append(r.Triggers, trigger)
@@ -174,8 +190,6 @@ func (r *Rule) Fire(channel chan core.SwitchRequest) []Receiver {
 		}
 		request.Command = receiver.Key
 		switch receiver.Key {
-		case "brightness":
-			request.Value = receiver.Value
 		case "duration":
 			duration, err := strconv.Atoi(receiver.Value)
 			if err != nil {
@@ -183,6 +197,8 @@ func (r *Rule) Fire(channel chan core.SwitchRequest) []Receiver {
 				continue
 			}
 			request.Duration = duration
+		default:
+			request.Value = receiver.Value
 		}
 		requests[receiver.Device.GetName()] = request
 		firedReceivers = append(firedReceivers, receiver)
@@ -234,15 +250,16 @@ func makeComparable(value any, target any) (any, any, error) {
 			return value, fmt.Sprintf("%f", target), nil
 		}
 	}
-	return nil, nil, fmt.Errorf("can't compare %v and %v", value, target)
+	return nil, nil, fmt.Errorf("can't compare %v [%s] and %v [%s]", value, reflect.TypeOf(value), target, reflect.TypeOf(target))
 }
 
 func (r *Rule) CheckTriggers() bool {
 	matches := 0
 	for _, trigger := range r.Triggers {
-		if trigger.Condition.check() {
-			matches++
+		if !trigger.Condition.check() {
+			return false
 		}
+		matches++
 	}
 
 	return matches > 0 && matches == len(r.Triggers)

@@ -29,6 +29,8 @@ func makePlug(config core.DeviceConfig) Plug {
 	var re = regexp.MustCompile("^cmnd/(.+)/POWER$")
 	p.MqttState = re.ReplaceAllString(p.MqttTopic, "tele/$1/STATE")
 
+	p.Receivers = []string{"state"}
+
 	p.Type = "plug"
 	p.needsSending = false
 	p.Min = 0
@@ -112,5 +114,5 @@ func (p *Plug) SetReceiverValue(key string, value interface{}) {
 	if key != "state" {
 		return
 	}
-	p.ProcessRequest(core.SwitchRequest{Device: "", Value: value.(string)})
+	p.ProcessRequest(core.SwitchRequest{Device: p.Name, Value: value.(string)})
 }

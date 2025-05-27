@@ -12,20 +12,27 @@ type DeviceConfig struct {
 }
 
 type RuleConfig struct {
-	Triggers []struct {
-		DeviceName string `yaml:"device"`
-		Key        string `yaml:"key"`
-		Active     bool   `yaml:"active"`
-		Condition  struct {
-			Operator string `yaml:"operator"`
-			Value    any    `yaml:"value"`
-		} `yaml:"condition"`
-	} `yaml:"triggers"`
-	Receivers []struct {
-		DeviceName string `yaml:"device"`
-		Key        string `yaml:"key"`
-		Value      string `yaml:"value"`
-	} `yaml:"receivers"`
+	Triggers  []TriggerConfig  `yaml:"triggers"`
+	Receivers []ReceiverConfig `yaml:"receivers"`
+}
+
+type TriggerConfig struct {
+	DeviceName string                  `yaml:"device"`
+	Key        string                  `yaml:"key"`
+	Active     bool                    `yaml:"active"`
+	Condition  ReceiverConditionConfig `yaml:"condition"`
+}
+
+type ReceiverConditionConfig struct {
+	Operator string `yaml:"operator"`
+	Value    any    `yaml:"value"`
+	Delay    *int   `yaml:"delay"`
+}
+
+type ReceiverConfig struct {
+	DeviceName string `yaml:"device"`
+	Key        string `yaml:"key"`
+	Value      string `yaml:"value"`
 }
 
 type PanelConfig struct {

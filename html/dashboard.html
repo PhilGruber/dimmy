@@ -5,19 +5,29 @@
             Dimmy Dashboard
         </title>
         <link rel='stylesheet' type='text/css' href='/assets/dashboard.css' />
+        <link rel='stylesheet' type='text/css' href='/assets/types.css' />
+        <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script src='/assets/jquery.js'></script>
         <script>
         $(document).ready(function() {
             setInterval(function () {
                 $.get('/api/status', null, function(data, status, jqXHR) {
+                    const now = new Date()
                      for (name in data) {
                         if (data[name].Type === 'plug') {
                             $("#value_" + name).text(data[name].value ? "on" : "off");
                         } else if (data[name].Type === 'sensor') {
                             for (let key in data[name].Values) {
-                                prec = (key === "temperature" ? 10 : 1);
-                                $("#" + key + "_" + name).text(Math.round(data[name].Values[key].value*prec)/prec);
+                                const prec = (key === "temperature" ? 10 : 1);
+                                const lastChange = new Date(data[name].Values[key].LastChanged);
+                                const age = (now - lastChange) / 1000 / 60; // age in minutes
+                                $(`#${key}_${name}`).text(Math.round(data[name].Values[key].value*prec)/prec);
+                                if (age > 60) {
+                                    $("#" + key + "_" + name).addClass('outdated');
+                                } else {
+                                    $("#" + key + "_" + name).removeClass('outdated');
+                                }
 
                                 if (data[name].Values[key].History != null) {
                                     let currentDate = new Date(data[name].Values[key].LastChanged)
@@ -41,6 +51,7 @@
                                 }
                             }
                         } else if (data[name].Type === 'temperature') {
+                            /* deprecated */
                             $("#value_" + name).text(Math.round(data[name].value*10)/10);
                             if (data[name].Humidity !== 0) {
                                 $("#humidity_" + name).text(Math.round(data[name].Humidity));
@@ -84,6 +95,9 @@
                     }
                 }, "json");
             }, 1000);
+            $("#add-rule-button").click(function () {
+                addRule();
+            });
         });
 
         function switchDevice(device, value) {
@@ -93,6 +107,13 @@
                 duration: 1,
             };
             $.post('/api/switch', JSON.stringify(data), null, 'json');
+        }
+
+        function addRule() {
+            $.get('/rules/add-single-use', function (data) {
+                $("#popup-content").html(data);
+                $("#popup").show();
+            }, "html");
         }
 
         </script>
@@ -173,5 +194,10 @@
             {{ end }}
         </div>
         {{ end }}
+        <input type="button" id="add-rule-button" value="🕓➕">
+        <div id="popup" class="popup">
+            <div id="popup-content" class="popup-content">
+            </div>
+        </div>
     </body>
 </html>
