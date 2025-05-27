@@ -1,0 +1,31 @@
+
+.rule-triggers {
+    background-color: #F6E785;
+    width: 50%;
+    float: left;
+}
+
+.rule-trigger {
+}
+
+.trigger-emoji {
+    float: left;
+    text-align: left;
+    padding-right: 5px;
+}
+
+.rule-receivers {
+    background-color: #67D0DD;
+    float: left;
+    padding-right: 30px;
+}
+
+.receiver-label, .trigger-label {
+    padding-left: 10px;
+    font-size: 14pt;
+}
+
+.receiver-value, .trigger-value {
+    padding-left: 70px;
+    font-size: 10pt;
+}

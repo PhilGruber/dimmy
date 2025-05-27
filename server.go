@@ -123,7 +123,7 @@ func (s *Server) Start(config *core.ServerConfig) {
 	http.Handle("/api/status", s.ShowStatus(&s.devices))
 	http.Handle("/", s.ShowDashboard(config.WebRoot))
 	http.Handle("/rules/add-single-use", s.AddSingleUseRule(config.WebRoot))
-	http.Handle("/rules/edit", EditRules(config.WebRoot))
+	http.Handle("/rules/edit", s.EditRules(config.WebRoot))
 
 	log.Printf("Listening on port %d", config.Port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))

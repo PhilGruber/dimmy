@@ -4,6 +4,7 @@
             Dimmy Rules Editor
         </title>
         <link rel='stylesheet' type='text/css' href='/assets/dashboard.css' />
+        <link rel='stylesheet' type='text/css' href='/assets/rules.css' />
         <script src='/assets/jquery.js'></script>
     </head>
     <body>
@@ -12,23 +13,34 @@
         <div class='rule'>
             <div class='rule-content'>
                 <div class='rule-triggers'>
+                    {{ $last := "" }}
                     {{ range .Triggers }}
                     <div class='rule-trigger'>
-                        <span class='trigger-label'>{{ .Device.GetName }} </span>
-                        <span class='trigger-value'>{{ .Key }} {{ .Condition.Operator }} {{ .Condition.Value }} </span>
+                        {{ if ne .Device.GetName $last }}
+                            {{ $last = .Device.GetName }}
+                            <span class="trigger-emoji">{{ .Device.GetEmoji }}</span>
+                            <span class='trigger-label'>{{ .Device.GetName }} </span>
+                        {{ end }}
+                        <div class='trigger-value'>{{ .Key }} {{ .Condition.Operator }} {{ .Condition.Value }} </div>
                     </div>
                     {{ end }}
+                </div>
+                <div class='rule-receivers'>
+                    {{ $last := "" }}
                     {{ range .Receivers }}
                     <div class='rule-receiver'>
-                        <span class='receiver-label'>{{ .Device.GetName }} </span>
+                        {{ if ne .Device.GetName $last }}
+                            {{ $last = .Device.GetName }}
+                            <div class='receiver-label'>{{ .Device.GetEmoji }} {{ .Device.GetName }} </div>
+                        {{ end }}
                         <span class='receiver-value'>{{ .Key }}: {{ .Value }} </span>
                     </div>
                     {{ end }}
                 </div>
             </div>
-            <hr/>
         </div>
-        {{ end }}
+        <hr style="clear: both"/>
+    {{ end }}
 
     </body>
 </html>
