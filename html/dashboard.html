@@ -22,7 +22,14 @@
                                 const prec = (key === "temperature" ? 10 : 1);
                                 const lastChange = new Date(data[name].Values[key].LastChanged);
                                 const age = (now - lastChange) / 1000 / 60; // age in minutes
-                                $(`#${key}_${name}`).text(Math.round(data[name].Values[key].value*prec)/prec);
+
+                                if (data[name].Values[key].value === null) {
+                                    $(`#${key}_${name}`).text("--")
+                                } else if (typeof data[name].Values[key].value === 'number') {
+                                    $(`#${key}_${name}`).text(Math.round(data[name].Values[key].value * prec) / prec);
+                                } else {
+                                    $(`#${key}_${name}`).text(data[name].Values[key].value);
+                                }
                                 if (age > 60) {
                                     $("#" + key + "_" + name).addClass('outdated');
                                 } else {
@@ -154,10 +161,12 @@
                                 {{ end }}
                             </span>
                         {{ end }}
-                    {{ else }}
-                        {{ if .HasField "illuminance" }}
-                            🕯️<span id='illuminance_{{ .Name }}'>--</span> lx
-                        {{ end }}
+                    {{ end }}
+                    {{ if .HasField "illuminance" }}
+                    🕯️<span id='illuminance_{{ .Name }}'>--</span> lx
+                    {{ end }}
+                    {{ if .HasField "presence" }}
+                        🧍‍♂️<span id='presence_{{ .Name }}'>--</span>
                     {{ end }}
                     <br/>
                 {{ end }}
