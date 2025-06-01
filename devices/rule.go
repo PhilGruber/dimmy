@@ -225,6 +225,12 @@ func makeComparable(value any, target any) (any, any, error) {
 			return value, target, nil
 		case float64:
 			return float64(value.(int)), target, nil
+		case string:
+			targetInt, err := strconv.Atoi(target.(string))
+			if err != nil {
+				return fmt.Sprintf("%d", value), target, nil
+			}
+			return value, targetInt, nil
 		}
 	case int64:
 		switch target.(type) {
@@ -232,6 +238,12 @@ func makeComparable(value any, target any) (any, any, error) {
 			return int(value.(int64)), target, nil
 		case float64:
 			return float64(value.(int64)), target, nil
+		case string:
+			targetInt, err := strconv.Atoi(target.(string))
+			if err != nil {
+				return fmt.Sprintf("%d", value), target, nil
+			}
+			return value, int64(targetInt), nil
 		}
 	case float64:
 		switch target.(type) {
@@ -239,6 +251,12 @@ func makeComparable(value any, target any) (any, any, error) {
 			return value, float64(target.(int)), nil
 		case float64:
 			return value, target, nil
+		case string:
+			targetFloat, err := strconv.ParseFloat(target.(string), 64)
+			if err != nil {
+				return fmt.Sprintf("%d", value), target, nil
+			}
+			return value, float64(targetFloat), nil
 		}
 	case string:
 		switch target.(type) {
