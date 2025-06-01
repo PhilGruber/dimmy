@@ -30,6 +30,7 @@ func makeZLight(config core.DeviceConfig) ZLight {
 	d.Max = 254
 	d.transition = false
 	d.Type = "light"
+	d.Receivers = []string{"brightness", "duration"}
 
 	if config.Options != nil {
 		if config.Options.Min != nil {
