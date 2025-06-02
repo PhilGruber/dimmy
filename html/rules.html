@@ -13,7 +13,7 @@
         {{ range .Rules }}
         <div class='rule row'>
             <div class='rule-content'>
-                <div class='rule-triggers column'>
+                <div class='rule-triggers cell'>
                     {{ $last := "" }}
                     {{ range .Triggers }}
                     <div class='rule-trigger'>
@@ -26,7 +26,7 @@
                     </div>
                     {{ end }}
                 </div>
-                <div class='rule-receivers column'>
+                <div class='rule-receivers cell'>
                     {{ $last := "" }}
                     {{ range .Receivers }}
                     <div class='rule-receiver'>

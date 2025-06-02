@@ -1,7 +1,6 @@
 
 .rule-triggers {
     background-color: #F6E785;
-    float: left;
 }
 
 .rule-trigger {
@@ -15,7 +14,6 @@
 
 .rule-receivers {
     background-color: #67D0DD;
-    float: left;
     padding-right: 30px;
 }
 
@@ -37,8 +35,9 @@
     display: table-row;
 }
 
-.column {
+.cell {
     width: 300px;
     display: table-cell;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
+    border-bottom: 6px solid #FFF;
 }
