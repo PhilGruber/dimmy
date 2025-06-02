@@ -32,9 +32,10 @@
                     <div class='rule-receiver'>
                         {{ if ne .Device.GetName $last }}
                             {{ $last = .Device.GetName }}
-                            <div class='receiver-label'>{{ .Device.GetEmoji }} {{ .Device.GetName }} </div>
+                            <span class="receiver-emoji">{{ .Device.GetEmoji }}</span>
+                            <span class='receiver-label'>{{ .Device.GetName }} </span>
                         {{ end }}
-                        <span class='receiver-value'>{{ .Key }}: {{ .Value }} </span>
+                        <div class='receiver-value'>{{ .Key }}: {{ .Value }} </div>
                     </div>
                     {{ end }}
                 </div>

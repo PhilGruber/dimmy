@@ -6,7 +6,7 @@
 .rule-trigger {
 }
 
-.trigger-emoji {
+.trigger-emoji, .receiver-emoji {
     float: left;
     text-align: left;
     padding-right: 5px;
