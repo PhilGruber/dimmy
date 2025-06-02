@@ -6,6 +6,7 @@ import (
 	"log"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -266,6 +267,18 @@ func makeComparable(value any, target any) (any, any, error) {
 			return value, fmt.Sprintf("%d", target), nil
 		case float64:
 			return value, fmt.Sprintf("%f", target), nil
+		}
+	case bool:
+		switch target.(type) {
+		case bool:
+			return value, target, nil
+		case string:
+			if strings.ToLower(target.(string)) == "true" {
+				return value, true, nil
+			}
+			if strings.ToLower(target.(string)) == "false" {
+				return value, false, nil
+			}
 		}
 	}
 	return nil, nil, fmt.Errorf("can't compare %v [%s] and %v [%s]", value, reflect.TypeOf(value), target, reflect.TypeOf(target))
