@@ -81,6 +81,7 @@ func (s *Server) initialize(config *core.ServerConfig) {
 	}
 
 	s.devices["time"] = dimmyDevices.NewDimmyTime(core.DeviceConfig{Name: "time", Type: "time"})
+	s.devices["shell"] = dimmyDevices.NewShell(core.DeviceConfig{Name: "shell", Type: "shell"})
 
 	// Parse Groups separately at the end, to make sure all referencing Devices exist at that point
 	for _, device := range config.Devices {
