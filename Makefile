@@ -37,4 +37,4 @@ deb: all
 	cp dimmyd deb/dimmy/usr/bin
 	cp *.conf.yaml.example deb/dimmy/etc/dimmy/
 	cp -R html/* deb/dimmy/usr/share/dimmy
-	dpkg-deb -Zgzip --build deb/dimmy
+	dpkg-deb -Zgzip --root-owner-group --build deb/dimmy
