@@ -1,7 +1,6 @@
 
 .rule-triggers {
     background-color: #F6E785;
-    width: 50%;
     float: left;
 }
 
@@ -28,4 +27,18 @@
 .receiver-value, .trigger-value {
     padding-left: 70px;
     font-size: 10pt;
+}
+
+.table {
+    display: table;
+}
+
+.row {
+    display: table-row;
+}
+
+.column {
+    width: 300px;
+    display: table-cell;
+    margin-bottom: 10px;
 }

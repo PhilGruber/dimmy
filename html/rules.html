@@ -9,10 +9,11 @@
     </head>
     <body>
 
+    <div class="table">
         {{ range .Rules }}
-        <div class='rule'>
+        <div class='rule row'>
             <div class='rule-content'>
-                <div class='rule-triggers'>
+                <div class='rule-triggers column'>
                     {{ $last := "" }}
                     {{ range .Triggers }}
                     <div class='rule-trigger'>
@@ -25,7 +26,7 @@
                     </div>
                     {{ end }}
                 </div>
-                <div class='rule-receivers'>
+                <div class='rule-receivers column'>
                     {{ $last := "" }}
                     {{ range .Receivers }}
                     <div class='rule-receiver'>
@@ -39,8 +40,8 @@
                 </div>
             </div>
         </div>
-        <hr style="clear: both"/>
     {{ end }}
+    </div>
 
     </body>
 </html>
