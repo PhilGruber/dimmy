@@ -67,6 +67,12 @@ func NewSensor(config core.DeviceConfig) *Sensor {
 			if field == "action" {
 				s.Emoji = "⚙️"
 			}
+			if field == "presence" {
+				s.Emoji = "👤"
+			}
+			if field == "vibration" {
+				s.Emoji = "📳"
+			}
 		}
 	}
 

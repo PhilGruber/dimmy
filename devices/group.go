@@ -16,6 +16,7 @@ type Group struct {
 
 func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *Group {
 	g := Group{}
+	g.Emoji = "🏠"
 	g.setBaseConfig(config)
 
 	g.Type = ""
@@ -35,7 +36,6 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 
 	g.devices = make([]DeviceInterface, len(*config.Options.Devices))
 
-	g.Emoji = "🏠"
 	i := 0
 	for _, key := range *config.Options.Devices {
 		_, ok := allDevices[key]
