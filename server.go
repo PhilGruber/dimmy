@@ -124,6 +124,7 @@ func (s *Server) Start(config *core.ServerConfig) {
 	http.Handle("/api/status", s.ShowStatus(&s.devices))
 	http.Handle("/", s.ShowDashboard(config.WebRoot))
 	http.Handle("/rules/add-single-use", s.AddSingleUseRule(config.WebRoot))
+	http.Handle("/rules/edit", s.EditRules(config.WebRoot))
 
 	log.Printf("Listening on port %d", config.Port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
@@ -342,6 +343,19 @@ func (s *Server) ShowDashboard(webroot string) http.HandlerFunc {
 			Devices map[string]dimmyDevices.DeviceInterface
 			Panels  map[string]dimmyDevices.Panel
 		}{s.devices, s.panels})
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	}
+}
+
+func (s *Server) EditRules(webroot string) http.HandlerFunc {
+	return func(output http.ResponseWriter, httpRequest *http.Request) {
+		templ, _ := template.ParseFiles(webroot + "/rules.html")
+		err := templ.Execute(output, struct {
+			Rules []dimmyDevices.Rule
+		}{s.rules})
 		if err != nil {
 			log.Println(err)
 			return

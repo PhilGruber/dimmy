@@ -1,0 +1,47 @@
+<html lang="en">
+    <head>
+        <title>
+            Dimmy Rules Editor
+        </title>
+        <link rel='stylesheet' type='text/css' href='/assets/dashboard.css' />
+        <link rel='stylesheet' type='text/css' href='/assets/rules.css' />
+        <script src='/assets/jquery.js'></script>
+    </head>
+    <body>
+
+    <div class="table">
+        {{ range .Rules }}
+        <div class='rule row'>
+            <div class='rule-content'>
+                <div class='rule-triggers cell'>
+                    {{ $last := "" }}
+                    {{ range .Triggers }}
+                    <div class='rule-trigger'>
+                        {{ if ne .Device.GetName $last }}
+                            {{ $last = .Device.GetName }}
+                            <span class="trigger-emoji">{{ .Device.GetEmoji }}</span>
+                            <span class='trigger-label'>{{ .Device.GetName }} </span>
+                        {{ end }}
+                        <div class='trigger-value'>{{ .Key }} {{ .Condition.Operator }} {{ .Condition.Value }} </div>
+                    </div>
+                    {{ end }}
+                </div>
+                <div class='rule-receivers cell'>
+                    {{ $last := "" }}
+                    {{ range .Receivers }}
+                    <div class='rule-receiver'>
+                        {{ if ne .Device.GetName $last }}
+                            {{ $last = .Device.GetName }}
+                            <div class='receiver-label'>{{ .Device.GetEmoji }} {{ .Device.GetName }} </div>
+                        {{ end }}
+                        <span class='receiver-value'>{{ .Key }}: {{ .Value }} </span>
+                    </div>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+    {{ end }}
+    </div>
+
+    </body>
+</html>

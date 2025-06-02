@@ -47,6 +47,29 @@ func NewSensor(config core.DeviceConfig) *Sensor {
 			s.hasHistory = *config.Options.History
 		}
 	}
+
+	if s.Emoji == "" {
+		for _, field := range s.fields {
+			if field == "humidity" {
+				s.Emoji = "💧"
+				break
+			}
+			if field == "temperature" {
+				s.Emoji = "🌡️"
+				break
+			}
+			if field == "illuminance" {
+				s.Emoji = "🔆"
+			}
+			if field == "button" {
+				s.Emoji = "🔘"
+			}
+			if field == "action" {
+				s.Emoji = "⚙️"
+			}
+		}
+	}
+
 	s.valueMutex = new(sync.RWMutex)
 
 	s.Triggers = s.fields
