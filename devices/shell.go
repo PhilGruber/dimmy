@@ -15,7 +15,7 @@ func NewShell(config core.DeviceConfig) *Shell {
 	s.setBaseConfig(config)
 	s.Hidden = true
 
-	s.Emoji = "#"
+	s.Emoji = "#️"
 	s.Receivers = []string{"command"}
 
 	return &s
