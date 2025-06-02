@@ -52,8 +52,17 @@ type configOptions struct {
 	Margin            *float64           `yaml:"margin"`
 	Transition        *bool              `yaml:"transition"`
 	Commands          *map[string]string `yaml:"commands,flow"`
-	Fields            *[]string          `yaml:"fields,flow"`
+	Sensors           *[]Sensor          `yaml:"sensors,flow"`
 	History           *bool              `yaml:"history"`
+
+	/* deprecated */
+	Fields *[]string `yaml:"fields,flow"`
+}
+
+type Sensor struct {
+	Name   string   `json:"name"`
+	Emoji  *string  `json:"emoji"`
+	Values []string `json:"values"`
 }
 
 type ServerConfig struct {

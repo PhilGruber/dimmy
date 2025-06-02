@@ -1,7 +1,6 @@
 package devices
 
 import (
-	"fmt"
 	"github.com/PhilGruber/dimmy/core"
 	"time"
 )
@@ -38,7 +37,6 @@ func (s *DimmyTime) InitRule(rule *Rule) {
 	s.UpdateRule(rule, "hour", now.Hour())
 	s.UpdateRule(rule, "minute", now.Minute())
 	s.UpdateRule(rule, "second", now.Second())
-	fmt.Println("Initialized new rule")
 }
 
 func (s *DimmyTime) AddRule(rule *Rule) {

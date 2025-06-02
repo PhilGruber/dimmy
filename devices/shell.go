@@ -28,7 +28,6 @@ func (s *Shell) ProcessRequest(request core.SwitchRequest) {
 }
 
 func (s *Shell) execCommand(command string) {
-	fmt.Println("Executing command: " + command)
 	cmd := exec.Command("sh", "-c", command)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
