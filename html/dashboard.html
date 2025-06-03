@@ -24,11 +24,11 @@
                                 const age = (now - lastChange) / 1000 / 60; // age in minutes
 
                                 if (data[name].Values[key].value === null) {
-                                    $(`#${key}_${name}`).text("--")
+                                    $(`#${name}_${key}`).text("--")
                                 } else if (typeof data[name].Values[key].value === 'number') {
-                                    $(`#${key}_${name}`).text(Math.round(data[name].Values[key].value * prec) / prec);
+                                    $(`#${name}_${key}`).text(Math.round(data[name].Values[key].value * prec) / prec);
                                 } else {
-                                    $(`#${key}_${name}`).text(data[name].Values[key].value);
+                                    $(`#${name}_${key}`).text(data[name].Values[key].value);
                                 }
                                 if (age > 60) {
                                     $("#" + key + "_" + name).addClass('outdated');
@@ -141,34 +141,45 @@
                 <span class="left value wide">
                         🌡<span id='value_{{ .Name }}'>--</span> °C&nbsp;<span id="trend_{{ .Name }}" class="tiny"></span>
                     </span>
-                <span class="right value medium">
+                    <span class="right value medium">
                         {{ if gt .Humidity 0.0 }}
                             &nbsp; 💧 <span id="humidity_{{ .Name }}">-- </span>%
                         {{ end }}
                     </span>
-                <br/>
+                    <br/>
                 {{ end }}
 
                 {{ if eq .GetType "sensor" }}
-                    {{ if .HasField "temperature" }}
-                        <span class="left value wide">
-                            🌡<span id='temperature_{{ .Name }}'>--</span> °C&nbsp;<span id="trend_temperature_{{ .Name }}" class="tiny"></span>
-                        </span>
-                        {{ if .HasField "humidity" }}
-                            <span class="right value medium">
-                                {{ if .HasField "humidity" }}
-                                    &nbsp; 💧 <span id="humidity_{{ .Name }}">-- </span>%
-                                {{ end }}
+
+                    {{ $deviceName := .GetName }}
+
+                    {{ range .GetSensors }}
+
+                        {{ if eq .Name "temperature" }}
+                            <span class="left value wide">
+                                {{ .Emoji }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span> °C&nbsp;<span id="trend_{{ $deviceName }}_{{ .Name }}" class="tiny"></span>
                             </span>
                         {{ end }}
+                        {{ if eq .Name "humidity" }}
+                            <span class="left value medium">
+                                {{ .Emoji }} <span id="{{ $deviceName }}_{{ .Name }}">-- </span>%
+                            </span>
+                        {{ end }}
+                        {{ if eq .Name "illuminance" }}
+                            <span class="left value medium">
+                                {{ .Emoji }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span> lx
+                            </span>
+                        {{ end }}
+                        {{ if eq .Name "presence" }}
+                            <span class="left value medium">
+                                {{ .Emoji }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span>
+                            </span>
+                        {{ end }}
+
                     {{ end }}
-                    {{ if .HasField "illuminance" }}
-                    🕯️<span id='illuminance_{{ .Name }}'>--</span> lx
-                    {{ end }}
-                    {{ if .HasField "presence" }}
-                        🧍‍♂️<span id='presence_{{ .Name }}'>--</span>
-                    {{ end }}
-                    <br/>
+
+                <br/>
+
                 {{ end }}
 
                 {{ if eq .GetType "plug" }}

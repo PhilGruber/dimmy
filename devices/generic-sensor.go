@@ -23,7 +23,7 @@ type SensorHistory struct {
 type Sensor struct {
 	Device
 
-	fields     []string
+	sensors    []core.Sensor
 	Values     map[string]*SensorValue `json:"Values"`
 	hasHistory bool
 	valueMutex *sync.RWMutex
@@ -38,9 +38,19 @@ func NewSensor(config core.DeviceConfig) *Sensor {
 
 	s.hasHistory = false
 	if config.Options != nil {
-		if config.Options.Fields != nil {
-			s.fields = *config.Options.Fields
-			s.Triggers = s.fields
+		if config.Options.Sensors != nil && len(*config.Options.Sensors) > 0 {
+			s.sensors = make([]core.Sensor, len(*config.Options.Sensors))
+			for i, sensorConfig := range *config.Options.Sensors {
+				s.sensors[i] = sensorConfig
+				s.Triggers = append(s.Triggers, sensorConfig.Name)
+			}
+		} else {
+			if config.Options.Fields != nil {
+				for _, field := range *config.Options.Fields {
+					s.sensors = append(s.sensors, core.Sensor{Name: field, Hidden: false})
+					s.Triggers = append(s.Triggers, field)
+				}
+			}
 		}
 
 		if config.Options.History != nil {
@@ -48,53 +58,58 @@ func NewSensor(config core.DeviceConfig) *Sensor {
 		}
 	}
 
-	if s.Emoji == "" {
-		for _, field := range s.fields {
-			if field == "humidity" {
-				s.Emoji = "💧"
-				break
-			}
-			if field == "temperature" {
-				s.Emoji = "🌡️"
-				break
-			}
-			if field == "illuminance" {
-				s.Emoji = "🔆"
-			}
-			if field == "button" {
-				s.Emoji = "🔘"
-			}
-			if field == "action" {
-				s.Emoji = "⚙️"
-			}
-			if field == "presence" {
-				s.Emoji = "👤"
-			}
-			if field == "vibration" {
-				s.Emoji = "📳"
-			}
+	for i := range s.sensors {
+		if s.sensors[i].Emoji != "" {
+			continue // Emoji is already set, skip default assignment
+		}
+		if s.sensors[i].Name == "humidity" {
+			s.sensors[i].Emoji = "💧"
+		}
+		if s.sensors[i].Name == "temperature" {
+			s.sensors[i].Emoji = "🌡️"
+		}
+		if s.sensors[i].Name == "illuminance" {
+			s.sensors[i].Emoji = "🔆"
+		}
+		if s.sensors[i].Name == "button" {
+			s.sensors[i].Emoji = "🔘"
+		}
+		if s.sensors[i].Name == "action" {
+			s.sensors[i].Emoji = "⚙️"
+		}
+		if s.sensors[i].Name == "presence" {
+			s.sensors[i].Emoji = "🧍"
+		}
+		if s.sensors[i].Name == "vibration" {
+			s.sensors[i].Emoji = "📳"
 		}
 	}
 
 	s.valueMutex = new(sync.RWMutex)
 
-	s.Triggers = s.fields
-
 	s.Values = make(map[string]*SensorValue)
-	for _, field := range s.fields {
-		s.Values[field] = &SensorValue{Value: nil, LastChanged: time.Unix(0, 0), History: make([]SensorHistory, 0)}
+	for _, sensor := range s.sensors {
+		s.Values[sensor.Name] = &SensorValue{Value: nil, LastChanged: time.Unix(0, 0), History: make([]SensorHistory, 0)}
 	}
 
 	return &s
 }
 
 func (s *Sensor) GetFields() []string {
-	return s.fields
+	fields := make([]string, 0, len(s.sensors))
+	for _, sensor := range s.sensors {
+		fields = append(fields, sensor.Name)
+	}
+	return fields
+}
+
+func (s *Sensor) GetSensors() []core.Sensor {
+	return s.sensors
 }
 
 func (s *Sensor) HasField(field string) bool {
-	for _, f := range s.fields {
-		if f == field {
+	for _, s := range s.sensors {
+		if s.Name == field {
 			return true
 		}
 	}
@@ -131,10 +146,10 @@ func (s *Sensor) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface)
 
 		s.parseDefaultValues(data)
 
-		for _, field := range s.fields {
-			if value, ok := data[field]; ok {
-				log.Printf("[%32s] Received new %s: %v\n", s.Name, field, value)
-				s.SetValue(field, value)
+		for _, sensor := range s.sensors {
+			if value, ok := data[sensor.Name]; ok {
+				log.Printf("[%32s] Received new %s: %v\n", s.Name, sensor.Name, value)
+				s.SetValue(sensor.Name, value)
 			}
 		}
 	}

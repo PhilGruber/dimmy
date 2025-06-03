@@ -61,7 +61,7 @@ type configOptions struct {
 
 type Sensor struct {
 	Name   string   `json:"name"`
-	Emoji  *string  `json:"emoji"`
+	Emoji  string   `json:"emoji"`
 	Values []string `json:"values"`
 	Hidden bool     `json:"hidden"`
 }

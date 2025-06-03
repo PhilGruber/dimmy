@@ -52,6 +52,10 @@ body {
   overflow: hidden;
 }
 
+.value {
+  padding-bottom: 5px;
+}
+
 .outdated {
   color: #BBB !important;
 }
