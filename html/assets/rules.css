@@ -9,22 +9,25 @@
 .trigger-emoji, .receiver-emoji {
     float: left;
     text-align: left;
-    padding-right: 5px;
+    position: absolute;
 }
 
 .rule-receivers {
     background-color: #67D0DD;
-    padding-right: 30px;
 }
 
 .receiver-label, .trigger-label {
-    padding-left: 10px;
+    padding-left: 50px;
     font-size: 14pt;
 }
 
 .receiver-value, .trigger-value {
-    padding-left: 70px;
     font-size: 10pt;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-left: 60px;
+    width: 240px;
 }
 
 .table {
@@ -38,6 +41,5 @@
 .cell {
     width: 300px;
     display: table-cell;
-    margin-bottom: 20px;
     border-bottom: 6px solid #FFF;
 }

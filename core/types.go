@@ -63,6 +63,7 @@ type Sensor struct {
 	Name   string   `json:"name"`
 	Emoji  *string  `json:"emoji"`
 	Values []string `json:"values"`
+	Hidden bool     `json:"hidden"`
 }
 
 type ServerConfig struct {
