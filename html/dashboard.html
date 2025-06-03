@@ -14,7 +14,7 @@
             setInterval(function () {
                 $.get('/api/status', null, function(data, status, jqXHR) {
                     const now = new Date()
-                     for (name in data) {
+                     for (const name in data) {
                         if (data[name].Type === 'plug') {
                             $("#value_" + name).text(data[name].value ? "on" : "off");
                         } else if (data[name].Type === 'sensor') {
@@ -31,9 +31,9 @@
                                     $(`#${name}_${key}`).text(data[name].Values[key].value);
                                 }
                                 if (age > 60) {
-                                    $("#" + key + "_" + name).addClass('outdated');
+                                    $("#" + name + "_" + key).addClass('outdated');
                                 } else {
-                                    $("#" + key + "_" + name).removeClass('outdated');
+                                    $("#" + name + "_" + key).removeClass('outdated');
                                 }
 
                                 if (data[name].Values[key].History != null) {
@@ -50,11 +50,11 @@
                                         }
 
                                         if (trend < -0.5) {
-                                            $("#trend_" + key + "_" + name).text("🔺");
+                                            $("#trend_" + name + "_" + key).text("🔺");
                                         } else if (trend > 0.5) {
-                                            $("#trend_" + key + "_" + name).text("🔻");
+                                            $("#trend_" + name + "_" + key).text("🔻");
                                         } else {
-                                            $("#trend_" + key + "_" + name).text("");
+                                            $("#trend_" + name + "_" + key).text("");
                                         }
                                     }
 
