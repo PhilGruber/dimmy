@@ -16,7 +16,7 @@ body {
 
 /* Device panels */
 .device {
-  border: 2px solid #88c0d0;
+  border: 2px solid #85cbdf;
   border-radius: 12px;
   padding: 12px;
   margin-bottom: 8px;
@@ -27,7 +27,7 @@ body {
 
 /* Panel title */
 .title {
-  background-color: #88c0d0;
+  background-color: #85cbdf;
   color: #ffffff;
   padding: 4px 10px;
   text-align: center;
@@ -47,7 +47,7 @@ body {
 .buttons a {
   height: 32px;
   border-radius: 20px;
-  background-color: #5e81ac;
+  background-color: #6fbae8;
   font-size: 12pt;
   padding: 10px 12px 0 12px;
   margin: 5px 2px 5px 2px;
