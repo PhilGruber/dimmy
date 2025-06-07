@@ -22,7 +22,7 @@ type Temperature struct {
 
 func MakeTemperature(config core.DeviceConfig) Temperature {
 	t := Temperature{}
-	t.Emoji = "🌡️"
+	t.Icon = "🌡️"
 	t.setBaseConfig(config)
 
 	t.Current = 0

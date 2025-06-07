@@ -145,22 +145,22 @@
 
                         {{ if eq .Name "temperature" }}
                             <span class="left value ">
-                                {{ .Emoji }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span> °C&nbsp;<span id="trend_{{ $deviceName }}_{{ .Name }}" class="tiny"></span>
+                                {{ .GetIconHtml }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span> °C&nbsp;<span id="trend_{{ $deviceName }}_{{ .Name }}" class="tiny"></span>
                             </span>
                         {{ end }}
                         {{ if eq .Name "humidity" }}
                             <span class="left value ">
-                                {{ .Emoji }} <span id="{{ $deviceName }}_{{ .Name }}">-- </span>%
+                                {{ .GetIconHtml }} <span id="{{ $deviceName }}_{{ .Name }}">-- </span>%
                             </span>
                         {{ end }}
                         {{ if eq .Name "illuminance" }}
                             <span class="left value ">
-                                {{ .Emoji }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span> lx
+                                {{ .GetIconHtml }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span> lx
                             </span>
                         {{ end }}
                         {{ if eq .Name "presence" }}
                             <span class="left value ">
-                                {{ .Emoji }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span>
+                                {{ .GetIconHtml }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span>
                             </span>
                         {{ end }}
 
@@ -174,14 +174,14 @@
                 <div class="panel panel-{{ .GetType }} panel-controls buttons">
 
                 {{ if eq .GetType "plug" }}
-                    <span class="left emoji">{{ .Emoji }}</span>
+                    <span class="left emoji">{{ .GetIconHtml }}</span>
                     <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', 0);">off</a>
                     <span class='value wide' id='value_{{ .GetName }}'></span>
                     <a class='right' tabindex="-1" onClick="switchDevice('{{ .GetName }}', 100);">on</a>
                 {{ end }}
 
                 {{ if eq .GetType "light" }}
-                    <span class="left emoji">{{ .Emoji }}</span>
+                    <span class="left emoji">{{ .GetIconHtml }}</span>
                     <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', 0);">off</a>
                     <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', parseInt($('#value_{{.GetName}}').text()) - 10);">➖</a>
                     <span class='value' id='value_{{ .GetName }}'></span>
@@ -191,7 +191,7 @@
                 {{ end }}
 
                 {{ if eq .GetType "IRControl" }}
-                    <span class="left emoji">{{ .Emoji }}</span>
+                    <span class="left emoji">{{ .GetIconHtml }}</span>
                     {{ $name := .GetName }}
                     {{ range $cmd := .GetCommands }}
                         <a class='textbutton' tabindex="-1" onClick="switchDevice('{{ $name }}', '{{ $cmd }}');">{{ $cmd }}</a>
@@ -200,7 +200,7 @@
                 {{ end }}
 
                 {{ if eq .GetType "door-sensor" }}
-                    <span class="left emoji">{{ .Emoji }}</span>
+                    <span class="left emoji">{{ .GetIconHtml }}</span>
                     <span class="left value">{{ .GetState }}</span>
                     <br />
                 {{ end }}

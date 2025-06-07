@@ -23,7 +23,7 @@ type lightStateMessage struct {
 
 func NewLight(config core.DeviceConfig) *Light {
 	d := Light{}
-	d.Emoji = "💡"
+	d.Icon = "💡"
 	d.setBaseConfig(config)
 
 	d.persistentFields = []string{"brightness"}

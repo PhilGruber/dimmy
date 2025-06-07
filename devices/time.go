@@ -16,7 +16,7 @@ func NewDimmyTime(config core.DeviceConfig) *DimmyTime {
 	s := DimmyTime{}
 	s.setBaseConfig(config)
 	s.Hidden = true
-	s.Emoji = "⏰"
+	s.Icon = "⏰"
 
 	s.Type = "time"
 	s.Triggers = []string{"day", "month", "year", "hour", "minute", "second", "weekday"}

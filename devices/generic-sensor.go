@@ -59,29 +59,29 @@ func NewSensor(config core.DeviceConfig) *Sensor {
 	}
 
 	for i := range s.sensors {
-		if s.sensors[i].Emoji != "" {
-			continue // Emoji is already set, skip default assignment
+		if s.sensors[i].Icon != "" {
+			continue // Icon is already set, skip default assignment
 		}
 		if s.sensors[i].Name == "humidity" {
-			s.sensors[i].Emoji = "💧"
+			s.sensors[i].Icon = "💧"
 		}
 		if s.sensors[i].Name == "temperature" {
-			s.sensors[i].Emoji = "🌡️"
+			s.sensors[i].Icon = "🌡️"
 		}
 		if s.sensors[i].Name == "illuminance" {
-			s.sensors[i].Emoji = "🔆"
+			s.sensors[i].Icon = "🔆"
 		}
 		if s.sensors[i].Name == "button" {
-			s.sensors[i].Emoji = "🔘"
+			s.sensors[i].Icon = "🔘"
 		}
 		if s.sensors[i].Name == "action" {
-			s.sensors[i].Emoji = "⚙️"
+			s.sensors[i].Icon = "⚙️"
 		}
 		if s.sensors[i].Name == "presence" {
-			s.sensors[i].Emoji = "🧍"
+			s.sensors[i].Icon = "🧍"
 		}
 		if s.sensors[i].Name == "vibration" {
-			s.sensors[i].Emoji = "📳"
+			s.sensors[i].Icon = "📳"
 		}
 	}
 

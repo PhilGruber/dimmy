@@ -22,7 +22,7 @@ func NewSwitch(config core.DeviceConfig) *Switch {
 	s.MqttState = config.Topic
 
 	s.Type = "switch"
-	s.Emoji = "🔘"
+	s.Icon = "🔘"
 	s.Triggers = []string{"button"}
 	s.onPressed = false
 	s.offPressed = false

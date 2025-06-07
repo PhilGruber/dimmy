@@ -124,11 +124,13 @@ body {
 }
 
 /* Emoji next to value */
-.emoji {
+.icon {
   float: left;
   text-align: left;
   padding-right: 8px;
   font-size: 20pt;
+  width: 40px;
+  height: 40px;
 }
 
 /* Clear float */

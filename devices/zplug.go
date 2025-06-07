@@ -26,7 +26,7 @@ func NewZPlug(config core.DeviceConfig) *ZPlug {
 
 func MakeZPlug(config core.DeviceConfig) ZPlug {
 	p := ZPlug{}
-	p.Emoji = "🔌"
+	p.Icon = "🔌"
 	p.setBaseConfig(config)
 
 	p.MqttState = config.Topic

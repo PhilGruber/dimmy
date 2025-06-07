@@ -20,7 +20,7 @@ type IrControlMessage struct {
 
 func NewIrControl(config core.DeviceConfig) *IRControl {
 	i := IRControl{}
-	i.Emoji = "📡"
+	i.Icon = "📡"
 	i.setBaseConfig(config)
 
 	i.Type = "IRControl"

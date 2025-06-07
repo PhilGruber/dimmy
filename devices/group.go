@@ -16,7 +16,7 @@ type Group struct {
 
 func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *Group {
 	g := Group{}
-	g.Emoji = "🏠"
+	g.Icon = "🏠"
 	g.setBaseConfig(config)
 
 	g.Type = ""
@@ -44,7 +44,7 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 			if ok {
 				if g.Type == "" {
 					g.Type = dev.GetType()
-					g.Emoji = dev.GetEmoji()
+					g.Icon = dev.GetEmoji()
 					g.MqttState = dev.GetMqttStateTopic()
 					g.Receivers = dev.GetReceivers()
 				} else if g.Type != dev.GetType() {

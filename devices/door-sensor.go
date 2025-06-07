@@ -22,7 +22,7 @@ type DoorSensorMessage struct {
 func MakeDoorSensor(config core.DeviceConfig) DoorSensor {
 	log.Println("Creating new door sensor with topic " + config.Topic)
 	s := DoorSensor{}
-	s.Emoji = "🚪"
+	s.Icon = "🚪"
 	s.setBaseConfig(config)
 	s.MqttState = config.Topic
 

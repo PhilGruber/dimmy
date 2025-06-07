@@ -3,7 +3,9 @@ package devices
 import (
 	"github.com/PhilGruber/dimmy/core"
 	"github.com/google/uuid"
+	"html/template"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -38,6 +40,7 @@ type DeviceInterface interface {
 	RemoveRule(*Rule)
 	IsPersistent(string) bool
 	HasReceivers() bool
+	GetIconHtml() template.HTML
 
 	PublishValue(mqtt.Client)
 	PollValue(mqtt.Client)
@@ -52,7 +55,7 @@ type Device struct {
 	Type        string
 	Hidden      bool
 	Label       string
-	Emoji       string
+	Icon        string
 	Triggers    []string
 	Receivers   []string
 	mutex       *sync.RWMutex
@@ -67,8 +70,8 @@ type Device struct {
 func (d *Device) setBaseConfig(config core.DeviceConfig) {
 	d.MqttTopic = config.Topic
 	d.Current = 0
-	if config.Emoji != "" {
-		d.Emoji = config.Emoji
+	if config.Icon != "" {
+		d.Icon = config.Icon
 	}
 
 	if config.Name != "" {
@@ -185,7 +188,7 @@ func (d *Device) GetHidden() bool {
 }
 
 func (d *Device) GetEmoji() string {
-	return d.Emoji
+	return d.Icon
 }
 
 func (d *Device) GetMax() int {
@@ -263,4 +266,11 @@ func (d *Device) IsPersistent(field string) bool {
 		}
 	}
 	return false
+}
+
+func (d *Device) GetIconHtml() template.HTML {
+	if _, err := os.Stat("html/assets/icons/" + d.Icon); err == nil {
+		return template.HTML("<img class='icon' src='/assets/icons/" + d.Icon + "' alt='" + d.GetLabel() + "'>")
+	}
+	return template.HTML(d.Icon)
 }

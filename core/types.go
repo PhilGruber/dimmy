@@ -1,5 +1,7 @@
 package core
 
+import "os"
+
 const CycleLength = 200 // ms
 
 type DeviceConfig struct {
@@ -7,7 +9,7 @@ type DeviceConfig struct {
 	Topic   string         `yaml:"topic"`
 	Name    string         `yaml:"name"`
 	Label   string         `yaml:"label"`
-	Emoji   string         `yaml:"emoji"`
+	Icon    string         `yaml:"icon"`
 	Options *configOptions `yaml:"options"`
 }
 
@@ -61,9 +63,16 @@ type configOptions struct {
 
 type Sensor struct {
 	Name   string   `json:"name"`
-	Emoji  string   `json:"emoji"`
+	Icon   string   `json:"icon"`
 	Values []string `json:"values"`
 	Hidden bool     `json:"hidden"`
+}
+
+func (s *Sensor) GetIconHtml() string {
+	if _, err := os.Stat("html/assets/icons/" + s.Icon); err == nil {
+		return "<img class='icon' src='" + s.Icon + "' alt='" + s.Name + "'>"
+	}
+	return s.Icon
 }
 
 type ServerConfig struct {

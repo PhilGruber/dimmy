@@ -12,7 +12,7 @@ type Shell struct {
 
 func NewShell(config core.DeviceConfig) *Shell {
 	s := Shell{}
-	s.Emoji = "#️"
+	s.Icon = "#️"
 	s.setBaseConfig(config)
 	s.Hidden = true
 

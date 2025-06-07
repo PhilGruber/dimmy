@@ -23,7 +23,7 @@ type plugStateMessage struct {
 
 func makePlug(config core.DeviceConfig) Plug {
 	p := Plug{}
-	p.Emoji = "🔌"
+	p.Icon = "🔌"
 	p.setBaseConfig(config)
 
 	var re = regexp.MustCompile("^cmnd/(.+)/POWER$")

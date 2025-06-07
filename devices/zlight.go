@@ -20,7 +20,7 @@ func NewZLight(config core.DeviceConfig) *ZLight {
 
 func makeZLight(config core.DeviceConfig) ZLight {
 	d := ZLight{}
-	d.Emoji = "💡"
+	d.Icon = "💡"
 	d.setBaseConfig(config)
 	d.MqttState = config.Topic
 
