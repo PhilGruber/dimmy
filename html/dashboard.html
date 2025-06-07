@@ -129,58 +129,49 @@
         </script>
     </head>
     <body>
+        <div id="dashboard-container">
         {{ range .Panels }}
-        <div class='device'>
-            <div class='title'>
-                {{ .GetLabel }}
-            </div>
-            {{ range .GetDevices }}
-            <div class="panel panel-{{ .GetType }} buttons">
+            <div class='device'>
+                <div class='title'>
+                    {{ .GetLabel }}
+                </div>
+                <div class="panel panel-sensor buttons">
+                {{ range .GetDevices }}
 
-                {{ if eq .GetType "temperature" }}
-                <span class="left value wide">
-                        🌡<span id='value_{{ .Name }}'>--</span> °C&nbsp;<span id="trend_{{ .Name }}" class="tiny"></span>
-                    </span>
-                    <span class="right value medium">
-                        {{ if gt .Humidity 0.0 }}
-                            &nbsp; 💧 <span id="humidity_{{ .Name }}">-- </span>%
-                        {{ end }}
-                    </span>
-                    <br/>
-                {{ end }}
-
-                {{ if eq .GetType "sensor" }}
-
+                    {{ if eq .GetType "sensor" }}
                     {{ $deviceName := .GetName }}
 
                     {{ range .GetSensors }}
 
                         {{ if eq .Name "temperature" }}
-                            <span class="left value wide">
+                            <span class="left value ">
                                 {{ .Emoji }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span> °C&nbsp;<span id="trend_{{ $deviceName }}_{{ .Name }}" class="tiny"></span>
                             </span>
                         {{ end }}
                         {{ if eq .Name "humidity" }}
-                            <span class="left value medium">
+                            <span class="left value ">
                                 {{ .Emoji }} <span id="{{ $deviceName }}_{{ .Name }}">-- </span>%
                             </span>
                         {{ end }}
                         {{ if eq .Name "illuminance" }}
-                            <span class="left value medium">
+                            <span class="left value ">
                                 {{ .Emoji }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span> lx
                             </span>
                         {{ end }}
                         {{ if eq .Name "presence" }}
-                            <span class="left value medium">
+                            <span class="left value ">
                                 {{ .Emoji }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span>
                             </span>
                         {{ end }}
 
                     {{ end }}
-
-                <br/>
-
                 {{ end }}
+            {{ end }}
+            </div>
+                <div class="clear"></div>
+            {{ range .GetDevices }}
+                {{ if eq .GetType "sensor" }}{{ continue }}{{ end }}
+                <div class="panel panel-{{ .GetType }} panel-controls buttons">
 
                 {{ if eq .GetType "plug" }}
                     <span class="left emoji">{{ .Emoji }}</span>
@@ -193,7 +184,7 @@
                     <span class="left emoji">{{ .Emoji }}</span>
                     <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', 0);">off</a>
                     <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', parseInt($('#value_{{.GetName}}').text()) - 10);">➖</a>
-                    <span class='value narrow' id='value_{{ .GetName }}'></span>
+                    <span class='value' id='value_{{ .GetName }}'></span>
                     <a class='right' tabindex="-1" onClick="switchDevice('{{ .GetName }}', 100);">on</a>
                     <a class='right' tabindex="-1" onClick="switchDevice('{{ .GetName }}', parseInt($('#value_{{.GetName}}').text()) + 10);">➕</a>
                     <br/>
@@ -223,5 +214,6 @@
             </div>
         </div>
         <input type="button" id="edit-rules-button" value="📝 Show Rules" onClick="window.location.href='/rules/edit';">
+        </div>
     </body>
 </html>
