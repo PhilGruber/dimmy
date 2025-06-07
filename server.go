@@ -31,6 +31,8 @@ func main() {
 		os.Exit(0)
 	}
 
+	log.Printf("Starting up dimmyd version %s", AppVersion)
+
 	config, err := core.LoadConfig()
 	if err != nil {
 		log.Println(err.Error())
