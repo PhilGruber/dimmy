@@ -166,7 +166,7 @@ func (s *Server) ShowDashboard(webroot string) http.HandlerFunc {
 		templ, _ := template.ParseFiles(webroot + "/dashboard.html")
 		err := templ.Execute(output, struct {
 			Devices map[string]dimmyDevices.DeviceInterface
-			Panels  map[string]dimmyDevices.Panel
+			Panels  []dimmyDevices.Panel
 		}{s.devices, s.panels})
 		if err != nil {
 			log.Println(err)

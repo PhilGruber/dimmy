@@ -17,7 +17,7 @@ var AppVersion = "undefined"
 
 type Server struct {
 	devices map[string]dimmyDevices.DeviceInterface
-	panels  map[string]dimmyDevices.Panel
+	panels  []dimmyDevices.Panel
 	rules   []dimmyDevices.Rule
 	channel chan core.SwitchRequest
 }
@@ -45,7 +45,6 @@ func main() {
 func (s *Server) initialize(config *core.ServerConfig) {
 
 	s.devices = make(map[string]dimmyDevices.DeviceInterface)
-	s.panels = make(map[string]dimmyDevices.Panel)
 
 	for _, deviceConfig := range config.Devices {
 		switch deviceConfig.Type {
@@ -97,12 +96,12 @@ func (s *Server) initialize(config *core.ServerConfig) {
 	}
 
 	for _, panel := range config.Panels {
-		s.panels[panel.Label] = dimmyDevices.NewPanel(panel, &s.devices)
+		s.panels = append(s.panels, dimmyDevices.NewPanel(panel, &s.devices))
 	}
 
 	for _, device := range s.devices {
 		if !device.GetHidden() {
-			s.panels[device.GetLabel()] = dimmyDevices.NewPanelFromDevice(device)
+			s.panels = append(s.panels, dimmyDevices.NewPanelFromDevice(device))
 		}
 	}
 
