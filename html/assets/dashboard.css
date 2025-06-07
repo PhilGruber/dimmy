@@ -11,7 +11,7 @@ body {
 #dashboard-container {
   max-width: 400px;
   width: 100%;
-  padding: 10px 0 0 0;
+  padding: 4px 0 0 0;
 }
 
 /* Device panels */
@@ -19,7 +19,7 @@ body {
   border: 2px solid #88c0d0;
   border-radius: 12px;
   padding: 12px;
-  margin-bottom: 15px;
+  margin-bottom: 8px;
   background-color: #ffffff;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
   max-width: 400px;
@@ -29,11 +29,12 @@ body {
 .title {
   background-color: #88c0d0;
   color: #ffffff;
-  padding: 10px;
+  padding: 4px 10px;
   text-align: center;
   font-size: 18pt;
   border-radius: 8px;
   margin-bottom: 2px;
+  font-weight: bold;
 }
 
 /* Button container */
