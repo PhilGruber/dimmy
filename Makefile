@@ -5,8 +5,8 @@ all: client server jquery
 client: client.go core/*
 	go build -ldflags "-X main.AppVersion=$(VERSION)" -o dimmy client.go
 
-server: jquery server.go devices/* core/* html/*
-	go build -ldflags "-X main.AppVersion=$(VERSION)" -o dimmyd server.go
+server: jquery server.go http-handlers.go devices/* core/* html/*
+	go build -ldflags "-X main.AppVersion=$(VERSION)" -o dimmyd server.go http-handlers.go
 
 clean:
 	rm dimmy dimmyd html/assets/jquery.js

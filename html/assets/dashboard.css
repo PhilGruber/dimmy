@@ -1,78 +1,119 @@
-
 body {
-  font-family: Verdana, sans-serif;
-  font-size: 24pt;
+  font-family: "Segoe UI", sans-serif;
+  font-size: 16pt;
+  background-color: #f4f6f8;
+  color: #333;
+  display: flex;
+  justify-content: center;
 }
 
+/* Main dashboard container */
+#dashboard-container {
+  max-width: 400px;
+  width: 100%;
+  padding: 10px 0 0 0;
+}
+
+/* Device panels */
 .device {
-  border: 3px solid #67D0DD;
-  padding: 2px;
-  max-width: 380px;
-  margin-bottom: 5px;
+  border: 2px solid #88c0d0;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 15px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  max-width: 400px;
 }
 
+/* Panel title */
 .title {
-  background-color: #67D0DD;
-  color: #F6E785;
-  padding: 6px;
+  background-color: #88c0d0;
+  color: #ffffff;
+  padding: 10px;
   text-align: center;
-}
-
-.buttons {
-  padding: 2px;
-  text-align: center;
-}
-
-.buttons a {
-  height: 36px;
-  border-radius: 20px;
-  background-color: #FAAFA5;
   font-size: 18pt;
-  padding: 2px 8px;
+  border-radius: 8px;
+  margin-bottom: 2px;
+}
+
+/* Button container */
+.buttons {
+  padding: 8px;
+  text-align: center;
+}
+
+/* Buttons */
+.buttons a {
+  height: 32px;
+  border-radius: 20px;
+  background-color: #5e81ac;
+  font-size: 12pt;
+  padding: 10px 12px 0 12px;
+  margin: 5px 2px 5px 2px;
   display: inline-block;
   text-align: center;
-  color: #FFDAC1;
-  font-weight: bold;
+  color: #ffffff;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.buttons a:hover {
+  background-color: #4c6793;
 }
 
 .buttons a:focus {
   outline: none;
-  background-color: #ff0000;
+  background-color: #bf616a;
 }
 
+/* Value display (temperature, humidity, etc.) */
 .buttons .value {
   text-wrap: nowrap;
   display: inline-block;
   text-align: center;
-  color: #666;
-  height: 38px;
-  overflow: hidden;
+  color: #444;
+  height: 32px;
+  line-height: 40px;
+  font-size: 14pt;
+  margin: 5px 10px 5px 0;
+  padding: 2px 12px 12px 8px;
+  border-radius: 15px;
+  background-color: #eceff4;
+  font-weight: bold;
 }
 
-.value {
-  padding-bottom: 5px;
+.panel-controls .value {
+  padding-bottom: 8px;
 }
 
 .outdated {
-  color: #BBB !important;
+  color: #aaa !important;
 }
 
+/* Width classes */
 .buttons .narrow {
-  width: 100px;
+  width: 60px;
 }
 
 .buttons .medium {
-  width: 135px;
+  width: 70px;
 }
 
 .buttons .wide {
-  width: 180px;
+  width: 99px;
 }
 
+.buttons .extra-wide {
+  width: 160px;
+}
+
+/* Tiny font for trends */
 .tiny {
   font-size: 12pt;
 }
 
+/* Float helpers */
 .right {
   float: right;
 }
@@ -81,32 +122,55 @@ body {
   float: left;
 }
 
+/* Emoji next to value */
+.emoji {
+  float: left;
+  text-align: left;
+  padding-right: 8px;
+  font-size: 20pt;
+}
+
+/* Clear float */
+.panel {
+  clear: both;
+  text-align: left;
+  padding: 4px 0 0 0;
+}
+
+.panel-controls {
+  border-radius: 20px;
+  padding: 0;
+  background-color: #EEE;
+  margin-top: 8px;
+}
+
+.panel-controls .emoji {
+  padding: 8px 0 0 8px;
+}
+
+.panel-sensor {
+  clear: both;
+}
+
+/* Popup styling */
+#popup {
+  position: fixed;
+  z-index: 1000;
+  background-color: #ffffff;
+  border: 2px solid #333;
+  padding: 15px;
+  display: none;
+  top: 20px;
+  left: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border-radius: 8px;
+}
+
+/* Hidden */
 .hidden {
   visibility: hidden;
 }
 
-.emoji {
-  float: left;
-  text-align: left;
-  padding-right: 5px;
-}
-
-.panel {
+div.clear {
   clear: both;
-  text-align: left;
-}
-
-.panel-sensor .left {
-  text-align: left;
-}
-
-#popup {
-  position: fixed;
-  z-index: 1000;
-  background-color: #fff;
-  border: 1px solid #000;
-  padding: 10px;
-  display: none;
-  top: 10px;
-  left: 10px;
 }
