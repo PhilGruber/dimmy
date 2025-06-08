@@ -152,6 +152,7 @@ body {
   padding: 0;
   background-color: #EEE;
   margin-top: 8px;
+  overflow-x: hidden;
 }
 
 .panel-controls .emoji {
