@@ -10,13 +10,13 @@ body {
 /* Main dashboard container */
 #dashboard-container {
   width: 100%;
-  max-width: 900px;
+  max-width: 720px;
   padding: 4px 0 0 0;
 }
 
 #device-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 12px;
 }
 
