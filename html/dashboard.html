@@ -130,6 +130,7 @@
     </head>
     <body>
         <div id="dashboard-container">
+            <div id="device-grid">
         {{ range .Panels }}
             <div class='device'>
                 <div class='title'>
@@ -208,6 +209,8 @@
             {{ end }}
         </div>
         {{ end }}
+            </div>
+        <div class="clear"></div>
         <input type="button" id="add-rule-button" value="🕓➕">
         <div id="popup" class="popup">
             <div id="popup-content" class="popup-content">

@@ -1,7 +1,7 @@
 body {
   font-family: "Segoe UI", sans-serif;
   font-size: 16pt;
-  background-color: #f4f6f8;
+  background-color: #eaf4fa;
   color: #333;
   display: flex;
   justify-content: center;
@@ -9,9 +9,15 @@ body {
 
 /* Main dashboard container */
 #dashboard-container {
-  max-width: 400px;
   width: 100%;
+  max-width: 900px;
   padding: 4px 0 0 0;
+}
+
+#device-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  gap: 12px;
 }
 
 /* Device panels */
@@ -19,17 +25,18 @@ body {
   border: 2px solid #85cbdf;
   border-radius: 12px;
   padding: 12px;
-  margin-bottom: 8px;
+  margin-bottom: 14px;
   background-color: #ffffff;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  max-width: 400px;
+  width: 320px;
+  column-span: none;
 }
 
 /* Panel title */
 .title {
   background-color: #85cbdf;
   color: #ffffff;
-  padding: 4px 10px;
+  padding: 10px 10px;
   text-align: center;
   font-size: 18pt;
   border-radius: 8px;
@@ -45,16 +52,16 @@ body {
 
 /* Buttons */
 .buttons a {
-  height: 32px;
-  border-radius: 20px;
-  background-color: #6fbae8;
   font-size: 12pt;
-  padding: 10px 12px 0 12px;
+  font-weight: 600;
+  height: 30px;
+  border-radius: 12px;
+  background-color: #6fbae8;
+  padding: 8px 12px 2px 12px;
   margin: 5px 2px 5px 2px;
   display: inline-block;
   text-align: center;
   color: #ffffff;
-  font-weight: 600;
   text-decoration: none;
   transition: background-color 0.2s ease;
 }
@@ -76,7 +83,7 @@ body {
   color: #444;
   height: 32px;
   line-height: 40px;
-  font-size: 14pt;
+  font-size: 12pt;
   margin: 5px 10px 5px 0;
   padding: 2px 12px 12px 8px;
   border-radius: 15px;
@@ -141,14 +148,15 @@ body {
 }
 
 .panel-controls {
-  border-radius: 20px;
+  border-radius: 15px;
   padding: 0;
   background-color: #EEE;
   margin-top: 8px;
 }
 
 .panel-controls .emoji {
-  padding: 8px 0 0 8px;
+  padding: 8px 10px 0 8px;
+  font-size: 22pt;
 }
 
 .panel-sensor {
