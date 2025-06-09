@@ -38,7 +38,7 @@ body {
   color: #ffffff;
   padding: 10px 10px;
   text-align: center;
-  font-size: 18pt;
+  font-size: 20pt;
   border-radius: 8px;
   margin-bottom: 2px;
   font-weight: bold;
@@ -79,20 +79,25 @@ body {
 .buttons .value {
   text-wrap: nowrap;
   display: inline-block;
+
+  font-weight: bold;
   text-align: center;
   color: #444;
   height: 32px;
   line-height: 40px;
-  font-size: 12pt;
   margin: 5px 10px 5px 0;
   padding: 2px 12px 12px 8px;
   border-radius: 15px;
   background-color: #eceff4;
-  font-weight: bold;
+}
+
+.panel-sensor .value {
+  font-size: 20pt;
 }
 
 .panel-controls .value {
   padding-bottom: 8px;
+  font-size: 12pt;
 }
 
 .outdated {
