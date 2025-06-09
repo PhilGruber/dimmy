@@ -148,18 +148,15 @@
                             <span class="left value ">
                                 {{ .GetIconHtml }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span> °C&nbsp;<span id="trend_{{ $deviceName }}_{{ .Name }}" class="tiny"></span>
                             </span>
-                        {{ end }}
-                        {{ if eq .Name "humidity" }}
+                        {{ else if eq .Name "humidity" }}
                             <span class="left value ">
                                 {{ .GetIconHtml }} <span id="{{ $deviceName }}_{{ .Name }}">-- </span>%
                             </span>
-                        {{ end }}
-                        {{ if eq .Name "illuminance" }}
+                        {{ else if eq .Name "illuminance" }}
                             <span class="left value ">
                                 {{ .GetIconHtml }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span> lx
                             </span>
-                        {{ end }}
-                        {{ if eq .Name "presence" }}
+                        {{ else }}
                             <span class="left value ">
                                 {{ .GetIconHtml }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span>
                             </span>

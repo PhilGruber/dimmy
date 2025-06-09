@@ -270,7 +270,8 @@ func (d *Device) IsPersistent(field string) bool {
 
 func (d *Device) GetIconHtml() template.HTML {
 	// TODO: prevent escaping from path
-	if _, err := os.Stat("html/assets/icons/" + d.Icon); err == nil {
+	webroot := "/usr/share/dimmy"
+	if _, err := os.Stat(webroot + "/assets/icons/" + d.Icon); err == nil {
 		return template.HTML("<img class='icon' src='/assets/icons/" + d.Icon + "' alt='" + d.GetLabel() + "'>")
 	}
 	return template.HTML(d.Icon)
