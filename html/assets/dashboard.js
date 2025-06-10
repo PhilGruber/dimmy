@@ -1,3 +1,22 @@
+function timeToAge(time) {
+    const now = new Date();
+    let age = (now - time) / 1000;
+    let ageStr = Math.round(age) + "s";
+    if (age > 60) {
+        age = age / 60;
+        ageStr = Math.round(age) + "m";
+        if (age > 60) {
+            age = age / 60;
+            ageStr = Math.round(age) + "h";
+            if (age > 24) {
+                age = age / 24;
+                ageStr = Math.round(age) + "d";
+            }
+        }
+    }
+    return ageStr;
+}
+
 $(document).ready(function() {
     setInterval(function () {
         $.get('/api/status', null, function(data, status, jqXHR) {
@@ -12,22 +31,7 @@ $(document).ready(function() {
                         const age = (now - lastChange) / 1000 / 60; // age in minutes
                         let value = data[name].Values[key].value;
                         if (data[name].Values[key].Since !== undefined && data[name].Values[key].Since !== null) {
-                            let last = new Date(data[name].Values[key].Since);
-                            let since = (now - last) / 1000;
-                            let sinceStr = Math.round(since) + "s";
-                            if (since > 60) {
-                                since = since / 60;
-                                sinceStr = Math.round(since) + "m";
-                                if (since > 60) {
-                                    since = since / 60;
-                                    sinceStr = Math.round(since) + "h";
-                                    if (since > 24) {
-                                        since = since / 24;
-                                        sinceStr = Math.round(since) + "d";
-                                    }
-                                }
-                            }
-                            value = sinceStr
+                            value = timeToAge(new Date(data[name].Values[key].Since));
                         }
 
                         if (value === null) {
