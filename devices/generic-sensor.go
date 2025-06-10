@@ -2,6 +2,7 @@ package devices
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
@@ -12,6 +13,7 @@ import (
 type SensorValue struct {
 	Value       any             `json:"value"`
 	LastChanged time.Time       `json:"LastChanged"`
+	Since       *time.Time      `json:"Since"`
 	History     []SensorHistory `json:"History"`
 }
 
@@ -120,6 +122,16 @@ func (s *Sensor) SetValue(field string, value any) {
 	s.valueMutex.Lock()
 	s.Values[field].Value = value
 	s.Values[field].LastChanged = time.Now()
+
+	for _, sensor := range s.sensors {
+		if sensor.ShowSince != nil && sensor.Name == field {
+			if fmt.Sprintf("%v", value) == fmt.Sprintf("%v", *sensor.ShowSince) {
+				now := time.Now()
+				s.Values[field].Since = &now
+			}
+		}
+	}
+
 	s.valueMutex.Unlock()
 	if s.hasHistory {
 		s.addHistory(field, value)
@@ -170,4 +182,24 @@ func (s *Sensor) ClearTrigger(trigger string) {
 	if s.HasField(trigger) {
 		s.SetValue(trigger, nil)
 	}
+}
+
+func (s *Sensor) DisplaySince(field string) string {
+	var idx int
+	for i, sensor := range s.sensors {
+		if sensor.Name == field {
+			idx = i
+		}
+	}
+	if s.Values[field] != nil {
+		if fmt.Sprintf("%v", s.Values[field].Value) == fmt.Sprintf("%v", s.sensors[idx].ShowSince) {
+			return "now"
+		}
+		for _, h := range s.Values[field].History {
+			if fmt.Sprintf("%v", h.Value) == fmt.Sprintf("%v", s.sensors[idx].ShowSince) {
+				return h.Time.Format("15:04")
+			}
+		}
+	}
+	return "--"
 }

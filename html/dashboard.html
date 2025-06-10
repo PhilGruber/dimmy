@@ -22,13 +22,32 @@
                                 const prec = (key === "temperature" ? 10 : 1);
                                 const lastChange = new Date(data[name].Values[key].LastChanged);
                                 const age = (now - lastChange) / 1000 / 60; // age in minutes
+                                let value = data[name].Values[key].value;
+                                if (data[name].Values[key].Since !== undefined && data[name].Values[key].Since !== null) {
+                                    let last = new Date(data[name].Values[key].Since);
+                                    let since = (now - last) / 1000;
+                                    let sinceStr = Math.round(since) + "s";
+                                    if (since > 60) {
+                                        since = since / 60;
+                                        sinceStr = Math.round(since) + "m";
+                                        if (since > 60) {
+                                            since = since / 60;
+                                            sinceStr = Math.round(since) + "h";
+                                            if (since > 24) {
+                                                since = since / 24;
+                                                sinceStr = Math.round(since) + "d";
+                                            }
+                                        }
+                                    }
+                                    value = sinceStr
+                                }
 
-                                if (data[name].Values[key].value === null) {
+                                if (value === null) {
                                     $(`#${name}_${key}`).text("--")
-                                } else if (typeof data[name].Values[key].value === 'number') {
-                                    $(`#${name}_${key}`).text(Math.round(data[name].Values[key].value * prec) / prec);
+                                } else if (typeof value === 'number') {
+                                    $(`#${name}_${key}`).text(Math.round(value * prec) / prec);
                                 } else {
-                                    $(`#${name}_${key}`).text(data[name].Values[key].value);
+                                    $(`#${name}_${key}`).text(value);
                                 }
                                 if (age > 60) {
                                     $("#" + name + "_" + key).addClass('outdated');

@@ -62,10 +62,11 @@ type configOptions struct {
 }
 
 type Sensor struct {
-	Name   string   `json:"name"`
-	Icon   string   `json:"icon"`
-	Values []string `json:"values"`
-	Hidden bool     `json:"hidden"`
+	Name      string   `yaml:"name"`
+	Icon      string   `yaml:"icon"`
+	Values    []string `yaml:"values"`
+	Hidden    bool     `yaml:"hidden"`
+	ShowSince *string  `yaml:"show_since"`
 }
 
 func (s *Sensor) GetIconHtml() string {
