@@ -67,45 +67,6 @@ $(document).ready(function() {
 
                         }
                     }
-                } else if (data[name].Type === 'temperature') {
-                    /* deprecated */
-                    $("#value_" + name).text(Math.round(data[name].value*10)/10);
-                    if (data[name].Humidity !== 0) {
-                        $("#humidity_" + name).text(Math.round(data[name].Humidity));
-                    }
-                    // age of value in minutes
-                    let age = ((new Date() - (new Date(data[name].lastUpdate)))) / 1000 / 60;
-                    if (age > 180) {
-                        $("#value_" + name).text("--");
-                        $("#value_" + name).addClass('outdated');
-                    } else if (age > 60) {
-                        $("#value_" + name).addClass('outdated');
-                    } else {
-                        $("#value_" + name).removeClass('outdated');
-                    }
-
-                    if (data[name].history != null) {
-                        let currentDate = new Date(data[name].history[data[name].history.length - 1].Time)
-                        let previousTime = new Date(currentDate - 30 * 60 * 1000);
-
-                        let trend = 0;
-                        for (let i = data[name].history.length - 1; i >= 0; i--) {
-                            if (new Date(data[name].history[i].Time) < previousTime) {
-                                trend = data[name].history[i].Temperature - data[name].value;
-                                break;
-                            }
-                        }
-
-                        if (trend < -0.5) {
-                            $("#trend_" + name).text("🔺");
-                        } else if (trend > 0.5) {
-                            $("#trend_" + name).text("🔻");
-                        } else {
-                            $("#trend_" + name).text("");
-                        }
-                    }
-                } else if (data[name].Type === 'door-sensor') {
-                    $("#value_" + name).text(data[name].value ? "open" : "closed");
                 } else {
                     $("#value_" + name).text(Math.round(data[name].value) + '%');
                 }
