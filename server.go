@@ -57,8 +57,6 @@ func (s *Server) initialize(config *core.ServerConfig) {
 			s.devices[deviceConfig.Name] = dimmyDevices.NewZSensor(deviceConfig)
 		case "switch":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewSwitch(deviceConfig)
-		case "door-sensor":
-			s.devices[deviceConfig.Name] = dimmyDevices.NewDoorSensor(deviceConfig)
 		case "light":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewLight(deviceConfig)
 		case "zlight":
@@ -67,8 +65,6 @@ func (s *Server) initialize(config *core.ServerConfig) {
 			s.devices[deviceConfig.Name] = dimmyDevices.NewPlug(deviceConfig)
 		case "zplug":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewZPlug(deviceConfig)
-		case "temperature":
-			s.devices[deviceConfig.Name] = dimmyDevices.NewTemperature(deviceConfig)
 		case "ircontrol":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewIrControl(deviceConfig)
 		case "group":
