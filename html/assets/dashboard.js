@@ -22,6 +22,7 @@ $(document).ready(function() {
         $.get('/api/status', null, function(data, status, jqXHR) {
             const now = new Date()
             for (const name in data) {
+
                 if (data[name].Type === 'plug') {
                     $("#value_" + name).text(data[name].value ? "on" : "off");
                 } else if (data[name].Type === 'sensor') {
@@ -30,46 +31,45 @@ $(document).ready(function() {
                         const lastChange = new Date(data[name].Values[key].LastChanged);
                         const age = (now - lastChange) / 1000 / 60; // age in minutes
                         let value = data[name].Values[key].value;
+
                         if (data[name].Values[key].Since !== undefined && data[name].Values[key].Since !== null) {
                             value = timeToAge(new Date(data[name].Values[key].Since));
                         }
 
                         if (value === null) {
-                            $(`#${name}_${key}`).text("--")
+                            value = "--"
                         } else if (typeof value === 'number') {
-                            $(`#${name}_${key}`).text(Math.round(value * prec) / prec);
-                        } else {
-                            $(`#${name}_${key}`).text(value);
+                            value = Math.round(value * prec) / prec;
                         }
+
+                        $(`#${name}_${key}`).text(value);
+
                         if (age > 60) {
                             $("#" + name + "_" + key).addClass('outdated');
                         } else {
                             $("#" + name + "_" + key).removeClass('outdated');
                         }
 
-                        if (data[name].Values[key].History != null) {
-                            let currentDate = new Date(data[name].Values[key].LastChanged)
-                            let previousTime = new Date(currentDate.getTime() - 25 * 60 * 1000);
-
-                            if (key === "temperature") {
-                                let trend = 0;
-                                for (let i = data[name].Values[key].History.length - 1; i >= 0; i--) {
-                                    if (new Date(data[name].Values[key].History[i].Time) <= previousTime) {
-                                        trend = data[name].Values[key].History[i].Value - data[name].Values[key].value;
-                                        break;
-                                    }
-                                }
-
-                                if (trend < -0.5) {
-                                    $("#trend_" + name + "_" + key).text("🔺");
-                                } else if (trend > 0.5) {
-                                    $("#trend_" + name + "_" + key).text("🔻");
-                                } else {
-                                    $("#trend_" + name + "_" + key).text("");
+                        if (data[name].Values[key].History != null && key === "temperature") {
+                            let previousTime = new Date(lastChange.getTime() - 25 * 60 * 1000);
+                            let trend = 0;
+                            for (let i = data[name].Values[key].History.length - 1; i >= 0; i--) {
+                                if (new Date(data[name].Values[key].History[i].Time) <= previousTime) {
+                                    trend = data[name].Values[key].History[i].Value - data[name].Values[key].value;
+                                    break;
                                 }
                             }
 
+                            let icon = "";
+                            if (trend < -0.5) {
+                                icon = "🔺";
+                            } else if (trend > 0.5) {
+                                icon = "🔻";
+                            }
+
+                            $("#trend_" + name + "_" + key).text(icon);
                         }
+
                     }
                 } else {
                     $("#value_" + name).text(Math.round(data[name].value) + '%');
@@ -83,7 +83,7 @@ $(document).ready(function() {
 });
 
 function switchDevice(device, value) {
-    var data = {
+    const data = {
         device: device,
         value: value.toString(),
         duration: 1,
