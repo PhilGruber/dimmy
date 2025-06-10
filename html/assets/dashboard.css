@@ -97,6 +97,7 @@ body {
 
 .panel-controls .value {
   padding-bottom: 8px;
+  margin-right: 0;
   font-size: 12pt;
 }
 
@@ -157,7 +158,8 @@ body {
   padding: 0;
   background-color: #EEE;
   margin-top: 8px;
-  overflow-x: hidden;
+  overflow: hidden;
+  height: 50px;
 }
 
 .panel-controls .emoji {
