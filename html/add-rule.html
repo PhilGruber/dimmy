@@ -75,7 +75,7 @@ Device:
     <select id="device" name="device" onchange="showDeviceOptions(this)">
         <option value="">Select a device</option>
         {{ range .Devices }}
-            <option value="{{ .Name }}">{{ .Icon }} {{ .Name }}</option>
+            <option value="{{ .Name }}">{{ .GetIconHtml }} {{ .Name }}</option>
         {{ end }}
     </select>
     {{ range $device := .Devices }}

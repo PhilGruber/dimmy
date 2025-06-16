@@ -19,7 +19,7 @@
                     <div class='rule-trigger'>
                         {{ if ne .Device.GetName $last }}
                             {{ $last = .Device.GetName }}
-                            <span class="trigger-emoji">{{ .Device.GetEmoji }}</span>
+                            <span class="trigger-emoji">{{ .Device.GetIconHtml }}</span>
                             <span class='trigger-label'>{{ .Device.GetName }} </span>
                         {{ end }}
                         <div class='trigger-value'>{{ .Key }} {{ .Condition.Operator }} {{ .Condition.Value }} </div>
@@ -32,7 +32,7 @@
                     <div class='rule-receiver'>
                         {{ if ne .Device.GetName $last }}
                             {{ $last = .Device.GetName }}
-                            <span class="receiver-emoji">{{ .Device.GetEmoji }}</span>
+                            <span class="receiver-emoji">{{ .Device.GetIconHtml }}</span>
                             <span class='receiver-label'>{{ .Device.GetName }} </span>
                         {{ end }}
                         <div class='receiver-value'>{{ .Key }}: {{ .Value }} </div>

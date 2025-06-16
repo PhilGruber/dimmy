@@ -87,6 +87,10 @@ func NewSensor(config core.DeviceConfig) *Sensor {
 		}
 	}
 
+	if s.Icon == "" && len(s.sensors) > 0 {
+		s.Icon = s.sensors[0].Icon
+	}
+
 	s.valueMutex = new(sync.RWMutex)
 
 	s.Values = make(map[string]*SensorValue)
