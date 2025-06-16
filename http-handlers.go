@@ -65,7 +65,7 @@ func (s *Server) ShowStatus(devices *map[string]dimmyDevices.DeviceInterface) ht
 func (s *Server) AddSingleUseRule(webroot string) http.HandlerFunc {
 	var devices []dimmyDevices.DeviceInterface
 	for _, device := range s.devices {
-		if device.HasReceivers() && !device.GetHidden() {
+		if device.HasReceivers() {
 			devices = append(devices, device)
 		}
 	}
