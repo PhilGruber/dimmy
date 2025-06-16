@@ -25,27 +25,20 @@
                     {{ if eq .GetType "sensor" }}
                     {{ $deviceName := .GetName }}
 
-                    {{ range .GetSensors }}
+                        <span class="left value">
+                            {{ range .GetSensors }}
+                                {{ if eq .Name "temperature" }}
+                                    {{ .GetIconHtml }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span> °C&nbsp;<span id="trend_{{ $deviceName }}_{{ .Name }}" class="tiny"></span>
+                                {{ else if eq .Name "humidity" }}
+                                    {{ .GetIconHtml }} <span id="{{ $deviceName }}_{{ .Name }}">--</span>%
+                                {{ else if eq .Name "illuminance" }}
+                                    {{ .GetIconHtml }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span> lx
+                                {{ else }}
+                                    {{ .GetIconHtml }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span>
+                                {{ end }}
+                            {{ end }}
+                        </span>
 
-                        {{ if eq .Name "temperature" }}
-                            <span class="left value ">
-                                {{ .GetIconHtml }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span> °C&nbsp;<span id="trend_{{ $deviceName }}_{{ .Name }}" class="tiny"></span>
-                            </span>
-                        {{ else if eq .Name "humidity" }}
-                            <span class="left value ">
-                                {{ .GetIconHtml }} <span id="{{ $deviceName }}_{{ .Name }}">-- </span>%
-                            </span>
-                        {{ else if eq .Name "illuminance" }}
-                            <span class="left value ">
-                                {{ .GetIconHtml }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span> lx
-                            </span>
-                        {{ else }}
-                            <span class="left value ">
-                                {{ .GetIconHtml }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span>
-                            </span>
-                        {{ end }}
-
-                    {{ end }}
                 {{ end }}
             {{ end }}
             </div>
