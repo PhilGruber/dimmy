@@ -73,10 +73,19 @@
                     <br/>
                 {{ end }}
 
-            </div>
-            {{ end }}
-        </div>
-        {{ end }}
+                {{ if eq .GetType "shell" }}
+                    <span class="left emoji">{{ .GetIconHtml }}</span>
+                    {{ $name := .GetName }}
+                    {{ range $cmd := .GetCommands }}
+                    <a class='textbutton' tabindex="-1" onClick="switchDevice('{{ $name }}', '{{ $cmd }}');">{{ $cmd }}</a>
+                    {{ end }}
+                    <br/>
+                {{ end }}
+
+                    </div>
+                    {{ end }}
+                </div>
+                {{ end }}
             </div>
         <div class="clear"></div>
         <input type="button" id="add-rule-button" value="🕓➕">

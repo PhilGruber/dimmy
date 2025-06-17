@@ -67,6 +67,8 @@ func (s *Server) initialize(config *core.ServerConfig) {
 			s.devices[deviceConfig.Name] = dimmyDevices.NewZPlug(deviceConfig)
 		case "ircontrol":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewIrControl(deviceConfig)
+		case "shell":
+			s.devices[deviceConfig.Name] = dimmyDevices.NewShell(deviceConfig)
 		case "group":
 		default:
 			log.Println("Skipping deviceConfig of unknown type '" + deviceConfig.Type + "'")
