@@ -26,12 +26,12 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 
 	if config.Options == nil {
 		log.Println("Group " + config.Name + " has no options")
-		return &g
+		return nil
 	}
 
 	if config.Options == nil || config.Options.Devices == nil {
 		log.Println("Group " + config.Name + " has no devices")
-		return &g
+		return nil
 	}
 
 	g.devices = make([]DeviceInterface, len(*config.Options.Devices))
