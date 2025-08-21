@@ -67,9 +67,13 @@ func (s *ZSensor) GetMessageHandler(channel chan core.SwitchRequest, sensor Devi
 }
 
 func (s *ZSensor) ClearTrigger(trigger string) {
-	if trigger == "sensor" {
+	if trigger == "motion" {
 		s.SetCurrent(-1)
 	}
+}
+
+func (s *ZSensor) GetTriggers() []string {
+	return []string{"motion"}
 }
 
 func (s *ZSensor) GenerateRequest(cmd string) (core.SwitchRequest, bool) {
