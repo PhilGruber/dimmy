@@ -61,6 +61,8 @@ func (s *Server) initialize(config *core.ServerConfig) {
 			s.devices[deviceConfig.Name] = dimmyDevices.NewLight(deviceConfig)
 		case "zlight":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewZLight(deviceConfig)
+		case "blind":
+			s.devices[deviceConfig.Name] = dimmyDevices.NewBlind(deviceConfig)
 		case "plug":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewPlug(deviceConfig)
 		case "zplug":

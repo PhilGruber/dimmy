@@ -17,3 +17,13 @@ type Zigbee2MqttLightMessage struct {
 	Brightness *int    `json:"brightness"`
 	Transition *int    `json:"transition,omitempty"`
 }
+
+type Zigbee2MqttBlindMessage struct {
+	Position *int `json:"position"`
+}
+
+type Zigbee2MqttBlindStatusMessage struct {
+	Zigbee2MqttMessage
+	Zigbee2MqttBlindMessage
+	State *string `json:"state"`
+}
