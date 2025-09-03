@@ -3,14 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/PhilGruber/dimmy/core"
-	dimmyDevices "github.com/PhilGruber/dimmy/devices"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/PhilGruber/dimmy/core"
+	dimmyDevices "github.com/PhilGruber/dimmy/devices"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 var AppVersion = "undefined"
@@ -52,7 +53,7 @@ func (s *Server) initialize(config *core.ServerConfig) {
 		switch deviceConfig.Type {
 		case "motion-sensor":
 		case "sensor":
-			s.devices[deviceConfig.Name] = dimmyDevices.NewSensor(deviceConfig)
+			s.devices[deviceConfig.Name] = dimmyDevices.NewDevice(deviceConfig)
 		case "zsensor":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewZSensor(deviceConfig)
 		case "switch":

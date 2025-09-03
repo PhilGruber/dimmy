@@ -3,20 +3,22 @@ package devices
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/PhilGruber/dimmy/core"
 	"log"
 	"math"
 	"strconv"
 	"time"
+
+	"github.com/PhilGruber/dimmy/core"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 type Blind struct {
 	Device
-	Min          int
-	Max          int
-	Position     int
+	Min      int
+	Max      int
+	Position int
+
 	needsSending bool
 }
 
@@ -27,14 +29,14 @@ func NewBlind(config core.DeviceConfig) *Blind {
 
 func makeBlind(config core.DeviceConfig) Blind {
 	d := Blind{}
-	d.Icon = "💡"
+	d.Icon = "🪟"
 	d.setBaseConfig(config)
 	d.MqttState = config.Topic
 
 	d.Min = 0
-	d.Max = 254
-	d.Type = "light"
-	d.Receivers = []string{"position", "duration"}
+	d.Max = 100
+	d.Type = "blind"
+	d.Receivers = []string{"position"}
 
 	if config.Options != nil {
 		if config.Options.Min != nil {
@@ -95,8 +97,11 @@ func (b *Blind) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInte
 		fmt.Printf("[%32s] Received state Position %d\n", b.GetName(), *data.Position)
 		b.Position = *data.Position
 		if data.State != nil {
-			if *data.State == "OFF" {
+			if *data.State == "CLOSE" {
 				b.SetCurrent(0)
+			}
+			if *data.State == "OPEN" {
+				b.SetCurrent(100)
 			}
 		}
 		if data.Battery != nil {

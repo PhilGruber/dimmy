@@ -64,6 +64,16 @@
                     <br/>
                 {{ end }}
 
+                {{ if eq .GetType "blind" }}
+                    <span class="left emoji">{{ .GetIconHtml }}</span>
+                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', 0);">close</a>
+                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', parseInt($('#value_{{.GetName}}').text()) - 10);">➖</a>
+                    <span class='value left' id='value_{{ .GetName }}'></span>
+                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', parseInt($('#value_{{.GetName}}').text()) + 10);">➕</a>
+                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', 100);">open</a>
+                    <br/>
+                {{ end }}
+
                 {{ if eq .GetType "IRControl" }}
                     <span class="left emoji">{{ .GetIconHtml }}</span>
                     {{ $name := .GetName }}

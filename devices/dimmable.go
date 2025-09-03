@@ -1,12 +1,13 @@
 package devices
 
 import (
-	"github.com/PhilGruber/dimmy/core"
 	"log"
 	"math"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/PhilGruber/dimmy/core"
 )
 
 type Dimmable struct {

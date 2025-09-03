@@ -43,22 +43,48 @@ type PanelConfig struct {
 }
 
 type configOptions struct {
-	Hidden            *bool              `yaml:"hidden"`
-	Timeout           *int               `yaml:"timeout"`
-	TargetOnDuration  *int               `yaml:"targetOnDuration"`
-	TargetOffDuration *int               `yaml:"targetOffDuration"`
-	Target            *string            `yaml:"target"`
-	Min               *int               `yaml:"min"`
-	Max               *int               `yaml:"max"`
-	Devices           *[]string          `yaml:"devices,flow"`
-	Margin            *float64           `yaml:"margin"`
-	Transition        *bool              `yaml:"transition"`
-	Commands          *map[string]string `yaml:"commands,flow"`
-	Sensors           *[]Sensor          `yaml:"sensors,flow"`
-	History           *bool              `yaml:"history"`
+	Hidden     *bool              `yaml:"hidden"`
+	Transition *bool              `yaml:"transition"`
+	Commands   *map[string]string `yaml:"commands,flow"`
+	Sensors    *[]Sensor          `yaml:"sensors,flow"`
+	Controls   *[]Control         `yaml:"controls,flow"`
+	Devices    *[]string          `yaml:"devices,flow"`
+
+	History *bool `yaml:"history"`
 
 	/* deprecated */
 	Fields *[]string `yaml:"fields,flow"`
+	/* deprecated */
+	Timeout *int `yaml:"timeout"`
+	/* deprecated */
+	Target *string `yaml:"target"`
+	/* deprecated */
+	Min *int `yaml:"min"`
+	/* deprecated */
+	Max *int `yaml:"max"`
+	/* deprecated */
+	Margin *float64 `yaml:"margin"`
+}
+
+type ControlType string
+
+const (
+	ControlTypeScale    ControlType = "scale"
+	ControlTypeBool     ControlType = "bool"
+	ControlTypeList     ControlType = "list"
+	ControlTypeDimmable ControlType = "dimmable"
+	ControlTypeColour   ControlType = "colour"
+)
+
+type Control struct {
+	Name         string      `yaml:"name"`
+	Icon         string      `yaml:"icon"`
+	Type         ControlType `yaml:"type"`
+	Hidden       bool        `yaml:"hidden"`
+	Min          *int        `yaml:"min"`
+	Max          *int        `yaml:"max"`
+	NeedsSending bool
+	Value        any
 }
 
 type Sensor struct {
@@ -67,6 +93,7 @@ type Sensor struct {
 	Values    []string `yaml:"values"`
 	Hidden    bool     `yaml:"hidden"`
 	ShowSince *string  `yaml:"show_since"`
+	History   *bool    `yaml:"history"`
 }
 
 func (s *Sensor) GetIconHtml() string {
