@@ -14,8 +14,6 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-var AppVersion = "undefined"
-
 type Server struct {
 	devices map[string]dimmyDevices.DeviceInterface
 	panels  []dimmyDevices.Panel
@@ -28,11 +26,11 @@ func main() {
 	flag.Parse()
 
 	if *version {
-		fmt.Printf("dimmyd version %s\n", AppVersion)
+		fmt.Printf("dimmyd version %s\n", core.AppVersion)
 		os.Exit(0)
 	}
 
-	log.Printf("Starting up dimmyd version %s", AppVersion)
+	log.Printf("Starting up dimmyd version %s", core.AppVersion)
 
 	config, err := core.LoadConfig()
 	if err != nil {
@@ -52,6 +50,7 @@ func (s *Server) initialize(config *core.ServerConfig) {
 	for _, deviceConfig := range config.Devices {
 		switch deviceConfig.Type {
 		case "motion-sensor":
+		case "device":
 		case "sensor":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewDevice(deviceConfig)
 		case "zsensor":

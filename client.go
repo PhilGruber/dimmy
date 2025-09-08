@@ -6,16 +6,15 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/PhilGruber/dimmy/core"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
-)
 
-var AppVersion = "undefined"
+	"github.com/PhilGruber/dimmy/core"
+)
 
 type listRequest struct {
 	Value       float64 `json:"Value"`
@@ -88,7 +87,7 @@ func main() {
 	flag.Parse()
 
 	if *version {
-		fmt.Printf("dimmy client version %s\n", AppVersion)
+		fmt.Printf("dimmy client version %s\n", core.AppVersion)
 		os.Exit(0)
 	}
 

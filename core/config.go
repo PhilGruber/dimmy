@@ -2,10 +2,13 @@ package core
 
 import (
 	"errors"
-	"gopkg.in/yaml.v3"
 	"log"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
+
+var AppVersion = "undefined"
 
 func LoadConfig() (*ServerConfig, error) {
 
