@@ -51,6 +51,7 @@ func (s *Server) initialize(config *core.ServerConfig) {
 		switch deviceConfig.Type {
 		case "motion-sensor":
 		case "device":
+			s.devices[deviceConfig.Name] = dimmyDevices.NewDevice(deviceConfig)
 		case "sensor":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewDevice(deviceConfig)
 		case "zsensor":

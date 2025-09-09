@@ -79,6 +79,7 @@ func main() {
 	host = flag.String("host", *host, "hostname to connect to")
 	port = flag.Int("port", *port, "port to connect to")
 
+	key := flag.String("key", "brightness", "Key to set on device")
 	value := flag.String("value", "100", "Value to send to device")
 	device := flag.String("device", "", "Device to send command to")
 	duration := flag.Int("duration", 0, "Duration of the dimming curve (seconds)")
@@ -131,6 +132,7 @@ func main() {
 
 	request := core.SwitchRequest{
 		Device:   *device,
+		Key:      *key,
 		Value:    *value,
 		Duration: *duration,
 	}
