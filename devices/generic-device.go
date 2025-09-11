@@ -162,7 +162,7 @@ func (d *GenericDevice) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInt
 
 		for _, sensor := range d.sensors {
 			if value, ok := data[sensor.Name]; ok {
-				log.Printf("[%32s] Received new %d: %v\n", d.Name, sensor.Name, value)
+				log.Printf("[%32s] Received new %s: %v\n", d.Name, sensor.Name, value)
 				d.setSensorValue(sensor.Name, value)
 			}
 		}
