@@ -1,8 +1,10 @@
 package devices
 
 import (
-	"github.com/PhilGruber/dimmy/core"
 	"time"
+
+	"github.com/PhilGruber/dimmy/core"
+	sunrise "github.com/nathan-osman/go-sunrise"
 )
 
 type DimmyTime struct {
@@ -10,33 +12,65 @@ type DimmyTime struct {
 
 	values        map[string]int
 	triggerValues map[string]int
+
+	events map[string]time.Time
+	lat    float64
+	lon    float64
 }
 
-func NewDimmyTime(config core.DeviceConfig) *DimmyTime {
+func NewDimmyTime(config core.DeviceConfig, lat float64, lon float64) *DimmyTime {
 	s := DimmyTime{}
 	s.setBaseConfig(config)
 	s.Hidden = true
 	s.Icon = "⏰"
 
 	s.Type = "time"
-	s.Triggers = []string{"day", "month", "year", "hour", "minute", "second", "weekday"}
+	s.Triggers = []string{"day", "month", "year", "hour", "minute", "second", "weekday", "event"}
 
 	s.values = make(map[string]int)
 	s.triggerValues = make(map[string]int)
+	s.events = make(map[string]time.Time)
+
+	s.lon = lon
+	s.lat = lat
 
 	s.persistentFields = []string{"day", "month", "year", "hour", "weekday"}
 
 	return &s
 }
 
-func (s *DimmyTime) InitRule(rule *Rule) {
+func (s *DimmyTime) updateEvents() {
+	if s.lat == 0 && s.lon == 0 {
+		return
+	}
 	now := time.Now()
+	rise, set := sunrise.SunriseSunset(s.lat, s.lon, now.Year(), now.Month(), now.Day())
+	s.events["sunrise"] = rise.Truncate(time.Second)
+	s.events["sunset"] = set.Truncate(time.Second)
+}
+
+func (s *DimmyTime) InitRule(rule *Rule) {
+	now := time.Now().Truncate(time.Second)
 	s.UpdateRule(rule, "day", now.Day())
 	s.UpdateRule(rule, "month", int(now.Month()))
 	s.UpdateRule(rule, "year", now.Year())
 	s.UpdateRule(rule, "hour", now.Hour())
 	s.UpdateRule(rule, "minute", now.Minute())
 	s.UpdateRule(rule, "second", now.Second())
+	s.updateEvents()
+
+	if rise, ok := s.events["sunrise"]; ok && rise.Equal(now) {
+		s.UpdateRule(rule, "event", "sunrise")
+		return
+	}
+
+	if set, ok := s.events["sunset"]; ok && set.Equal(now) {
+		s.UpdateRule(rule, "event", "sunset")
+		return
+	}
+
+	s.UpdateRule(rule, "event", "")
+
 }
 
 func (s *DimmyTime) AddRule(rule *Rule) {
@@ -48,6 +82,7 @@ func (s *DimmyTime) UpdateValue() (float64, bool) {
 	now := time.Now()
 	if s.values["day"] != now.Day() {
 		s.UpdateRules("day", now.Day())
+		s.updateEvents()
 	}
 	if s.values["month"] != int(now.Month()) {
 		s.UpdateRules("month", int(now.Month()))
@@ -75,11 +110,19 @@ func (s *DimmyTime) UpdateValue() (float64, bool) {
 	s.values["second"] = now.Second()
 	s.values["weekday"] = int(now.Weekday())
 
+	if rise, ok := s.events["sunrise"]; ok && rise.Equal(now) {
+		s.UpdateRules("event", "sunrise")
+	}
+
+	if set, ok := s.events["sunset"]; ok && set.Equal(now) {
+		s.UpdateRules("event", "sunset")
+	}
+
 	return 0, false
 }
 
 func (s *DimmyTime) ClearTrigger(trigger string) {
-	if trigger == "minute" || trigger == "second" {
+	if trigger == "minute" || trigger == "second" || trigger == "event" {
 		s.triggerValues[trigger] = -1
 	}
 }

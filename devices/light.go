@@ -51,6 +51,7 @@ func NewLight(config core.DeviceConfig) *Light {
 	tt := time.Now()
 	d.LastChanged = &tt
 	d.Type = "light"
+	d.Triggers = []string{"brightness"}
 
 	d.init()
 
