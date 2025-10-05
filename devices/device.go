@@ -1,13 +1,15 @@
 package devices
 
 import (
-	"github.com/PhilGruber/dimmy/core"
-	"github.com/google/uuid"
+	"encoding/json"
 	"html/template"
 	"log"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/PhilGruber/dimmy/core"
+	"github.com/google/uuid"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -160,6 +162,15 @@ func (d *Device) PollValue(mqtt.Client) {
 
 func (d *Device) GetMessageHandler(channel chan core.SwitchRequest, sensor DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
+		payload := mqttMessage.Payload()
+		var data map[string]any
+		err := json.Unmarshal(payload, &data)
+		if err != nil {
+			log.Printf("[%32s] Error: %d\n", d.Name, err.Error())
+			return
+		}
+
+		d.parseDefaultValues(data)
 	}
 }
 
