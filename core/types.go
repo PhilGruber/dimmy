@@ -88,12 +88,13 @@ type Control struct {
 }
 
 type Sensor struct {
-	Name      string   `yaml:"name"`
-	Icon      string   `yaml:"icon"`
-	Values    []string `yaml:"values"`
-	Hidden    bool     `yaml:"hidden"`
-	ShowSince *string  `yaml:"show_since"`
-	History   *bool    `yaml:"history"`
+	Name       string            `yaml:"name"`
+	Icon       string            `yaml:"icon"`
+	Values     []string          `yaml:"values"`
+	Hidden     bool              `yaml:"hidden"`
+	ShowSince  *string           `yaml:"show_since"`
+	History    *bool             `yaml:"history"`
+	ValueIcons map[string]string `yaml:"value_icons"`
 }
 
 func (s *Sensor) GetIconHtml() string {

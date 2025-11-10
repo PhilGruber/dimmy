@@ -31,6 +31,8 @@
                                     {{ .GetIconHtml }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span> °C&nbsp;<span id="trend_{{ $deviceName }}_{{ .Name }}" class="tiny"></span>
                                 {{ else if eq .Name "humidity" }}
                                     {{ .GetIconHtml }} <span id="{{ $deviceName }}_{{ .Name }}">--</span>%
+                                {{ else if eq .Name "soil_moisture" }}
+                                    {{ .GetIconHtml }} <span id="{{ $deviceName }}_{{ .Name }}">--</span>%
                                 {{ else if eq .Name "illuminance" }}
                                     {{ .GetIconHtml }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span> lx
                                 {{ else }}

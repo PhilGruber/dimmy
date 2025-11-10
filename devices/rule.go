@@ -2,12 +2,13 @@ package devices
 
 import (
 	"fmt"
-	"github.com/PhilGruber/dimmy/core"
 	"log"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/PhilGruber/dimmy/core"
 )
 
 type Rule struct {
@@ -257,7 +258,7 @@ func makeComparable(value any, target any) (any, any, error) {
 			if err != nil {
 				return fmt.Sprintf("%d", value), target, nil
 			}
-			return value, float64(targetFloat), nil
+			return value, targetFloat, nil
 		}
 	case string:
 		switch target.(type) {
