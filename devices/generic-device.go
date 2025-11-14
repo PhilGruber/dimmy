@@ -97,6 +97,11 @@ func (d *GenericDevice) GetSensors() []core.Sensor {
 }
 
 func (d *GenericDevice) setControlValue(key string, value any) {
+	d.valueMutex.Lock()
+	d.Values[key].Value = value
+	d.Values[key].LastChanged = time.Now()
+	d.valueMutex.Unlock()
+
 	for _, control := range d.controls {
 		if control.Name == key {
 			control.Value = value
@@ -109,26 +114,26 @@ func (d *GenericDevice) setControlValue(key string, value any) {
 	fmt.Printf("[%32s] Warning: Control %s not found\n", d.Name, key)
 }
 
-func (d *GenericDevice) setSensorValue(field string, value any) {
+func (d *GenericDevice) setSensorValue(key string, value any) {
 	d.valueMutex.Lock()
-	d.Values[field].Value = value
-	d.Values[field].LastChanged = time.Now()
+	d.Values[key].Value = value
+	d.Values[key].LastChanged = time.Now()
 
 	for _, sensor := range d.sensors {
-		if sensor.ShowSince != nil && sensor.Name == field {
+		if sensor.ShowSince != nil && sensor.Name == key {
 			if fmt.Sprintf("%v", value) == fmt.Sprintf("%v", *sensor.ShowSince) {
 				now := time.Now()
-				d.Values[field].Since = &now
+				d.Values[key].Since = &now
 			}
 		}
 	}
 
 	d.valueMutex.Unlock()
 	if d.hasHistory {
-		d.addHistory(field, value)
+		d.addHistory(key, value)
 	}
 
-	d.UpdateRules(field, value)
+	d.UpdateRules(key, value)
 }
 
 func (d *GenericDevice) GetValue(field string) any {
@@ -152,10 +157,8 @@ func (d *GenericDevice) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInt
 		if key, ok := data["key"]; ok {
 			for _, control := range d.controls {
 				if control.Name == key {
-					log.Printf("[%32s] Received new control %s: %v\n", d.Name, control.Name, data["value"])
-					control.Value = data["value"]
-					control.NeedsSending = true
 					d.setControlValue(control.Name, control.Value)
+					log.Printf("[%32s] Received new control %s: %v\n", d.Name, control.Name, data["value"])
 				}
 			}
 		}

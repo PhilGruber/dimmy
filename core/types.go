@@ -43,12 +43,13 @@ type PanelConfig struct {
 }
 
 type configOptions struct {
-	Hidden     *bool              `yaml:"hidden"`
-	Transition *bool              `yaml:"transition"`
-	Commands   *map[string]string `yaml:"commands,flow"`
-	Sensors    *[]Sensor          `yaml:"sensors,flow"`
-	Controls   *[]Control         `yaml:"controls,flow"`
-	Devices    *[]string          `yaml:"devices,flow"`
+	Hidden           *bool              `yaml:"hidden"`
+	Transition       *bool              `yaml:"transition"`
+	Commands         *map[string]string `yaml:"commands,flow"`
+	Sensors          *[]Sensor          `yaml:"sensors,flow"`
+	Controls         *[]Control         `yaml:"controls,flow"`
+	Devices          *[]string          `yaml:"devices,flow"`
+	PreventResending bool               `yaml:"prevent_resending"`
 
 	History *bool `yaml:"history"`
 
