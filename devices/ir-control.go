@@ -2,16 +2,19 @@ package devices
 
 import (
 	"encoding/json"
+	"log"
+
 	"github.com/PhilGruber/dimmy/core"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"log"
 )
 
 type IRControl struct {
 	Device
 
-	commands    map[string]string
-	nextRequest *IrControlMessage
+	commands         map[string]string
+	nextRequest      *IrControlMessage
+	preventResending bool
+	lastCommand      string
 }
 
 type IrControlMessage struct {
@@ -22,6 +25,7 @@ func NewIrControl(config core.DeviceConfig) *IRControl {
 	i := IRControl{}
 	i.Icon = "📡"
 	i.setBaseConfig(config)
+	i.preventResending = config.Options.PreventResending
 
 	i.Type = "IRControl"
 	i.commands = *config.Options.Commands
@@ -33,12 +37,16 @@ func NewIrControl(config core.DeviceConfig) *IRControl {
 }
 
 func (i *IRControl) ProcessRequest(request core.SwitchRequest) {
-	log.Printf("Processing request for Device %s: %v\n", i.Name, request.Value)
 	command, ok := i.commands[request.Value]
 	if !ok {
 		log.Printf("Device %s does not support command %s. Please define this in config file.\n", i.Name, request.Value)
 		return
 	}
+	if i.preventResending && i.lastCommand == command {
+		log.Printf("Skipping request for Device %s, as we have sent it before: %v\n", i.Name, request.Value)
+		return
+	}
+	log.Printf("Processing request for Device %s: %v\n", i.Name, request.Value)
 	req := IrControlMessage{IrCode: command}
 	i.nextRequest = &req
 }
@@ -49,6 +57,7 @@ func (i *IRControl) PublishValue(mqtt mqtt.Client) {
 	}
 	s, _ := json.Marshal(i.nextRequest)
 	mqtt.Publish(i.MqttTopic, 0, false, s)
+	i.lastCommand = i.nextRequest.IrCode
 	i.nextRequest = nil
 }
 
