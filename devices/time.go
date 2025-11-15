@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/PhilGruber/dimmy/core"
-	sunrise "github.com/nathan-osman/go-sunrise"
+	"github.com/nathan-osman/go-sunrise"
 )
 
 type DimmyTime struct {
@@ -79,7 +79,7 @@ func (s *DimmyTime) AddRule(rule *Rule) {
 }
 
 func (s *DimmyTime) UpdateValue() (float64, bool) {
-	now := time.Now()
+	now := time.Now().Truncate(time.Second)
 	if s.values["day"] != now.Day() {
 		s.UpdateRules("day", now.Day())
 		s.updateEvents()
