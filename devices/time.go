@@ -1,6 +1,7 @@
 package devices
 
 import (
+	"log"
 	"time"
 
 	"github.com/PhilGruber/dimmy/core"
@@ -45,6 +46,7 @@ func (s *DimmyTime) updateEvents() {
 	}
 	now := time.Now()
 	rise, set := sunrise.SunriseSunset(s.lat, s.lon, now.Year(), now.Month(), now.Day())
+	log.Printf("Setting sunrise=%s sunset=%s ", rise.In(now.Location()).Format("15:04:05"), set.In(now.Location()).Format("15:04:05"))
 	s.events["sunrise"] = rise.Truncate(time.Second)
 	s.events["sunset"] = set.Truncate(time.Second)
 }
