@@ -26,7 +26,7 @@ func NewDimmyTime(config core.DeviceConfig, lat float64, lon float64) *DimmyTime
 	s.Icon = "⏰"
 
 	s.Type = "time"
-	s.Triggers = []string{"day", "month", "year", "hour", "minute", "second", "weekday", "event"}
+	s.Triggers = []string{"day", "month", "year", "hour", "minute", "second", "weekday", "event", "minutes_until_sunrise", "minutes_after_sunrise", "minutes_until_sunset", "minutes_after_sunset"}
 
 	s.values = make(map[string]int)
 	s.triggerValues = make(map[string]int)
@@ -45,10 +45,23 @@ func (s *DimmyTime) updateEvents() {
 		return
 	}
 	now := time.Now()
+	yesterday := now.AddDate(0, 0, -1)
+	tomorrow := now.AddDate(0, 0, 1)
+
 	rise, set := sunrise.SunriseSunset(s.lat, s.lon, now.Year(), now.Month(), now.Day())
-	log.Printf("Setting sunrise=%s sunset=%s ", rise.In(now.Location()).Format("15:04:05"), set.In(now.Location()).Format("15:04:05"))
 	s.events["sunrise"] = rise.Truncate(time.Second)
 	s.events["sunset"] = set.Truncate(time.Second)
+
+	riseYesterday, setYesterday := sunrise.SunriseSunset(s.lat, s.lon, yesterday.Year(), yesterday.Month(), yesterday.Day())
+	riseTomorrow, setTomorrow := sunrise.SunriseSunset(s.lat, s.lon, tomorrow.Year(), tomorrow.Month(), tomorrow.Day())
+	s.events["sunset_yesterday"] = setYesterday.Truncate(time.Second)
+	s.events["sunrise_yesterday"] = riseYesterday.Truncate(time.Second)
+	s.events["sunrise_tomorrow"] = riseTomorrow.Truncate(time.Second)
+	s.events["sunset_tomorrow"] = setTomorrow.Truncate(time.Second)
+
+	log.Printf("Yesterday: sunrise at %s, sunset at %s ", s.events["sunrise_yesterday"].In(now.Location()).Format("15:04:05"), s.events["sunset_yesterday"].In(now.Location()).Format("15:04:05"))
+	log.Printf("Today: sunrise at %s, sunset at %s ", rise.In(now.Location()).Format("15:04:05"), set.In(now.Location()).Format("15:04:05"))
+	log.Printf("Tomorrow: sunrise at %s, sunset at %s ", s.events["sunrise_tomorrow"].In(now.Location()).Format("15:04:05"), s.events["sunset_tomorrow"].In(now.Location()).Format("15:04:05"))
 }
 
 func (s *DimmyTime) InitRule(rule *Rule) {
@@ -104,6 +117,42 @@ func (s *DimmyTime) UpdateValue() (float64, bool) {
 	if s.values["weekday"] != int(now.Weekday()) {
 		s.UpdateRules("weekday", int(now.Weekday()))
 	}
+
+	rise, ok := s.events["sunrise"]
+	if ok && rise.Equal(now) {
+		s.UpdateRules("event", "sunrise")
+	}
+
+	set, ok := s.events["sunset"]
+	if ok && set.Equal(now) {
+		s.UpdateRules("event", "sunset")
+	}
+
+	if s.values["minute"] != now.Minute() {
+		if now.After(rise) {
+			s.values["minutes_until_sunrise"] = int(s.events["sunrise_tomorrow"].Sub(now).Minutes())
+			s.values["minutes_after_sunrise"] = int(now.Sub(rise).Minutes())
+		} else {
+			s.values["minutes_until_sunrise"] = int(rise.Sub(now).Minutes())
+			s.values["minutes_after_sunrise"] = -int(s.events["sunrise_yesterday"].Sub(now).Minutes())
+		}
+
+		if now.After(set) {
+			s.values["minutes_until_sunset"] = int(s.events["sunset_tomorrow"].Sub(now).Minutes())
+			s.values["minutes_after_sunset"] = int(now.Sub(set).Minutes())
+		} else {
+			s.values["minutes_until_sunset"] = int(set.Sub(now).Minutes())
+			s.values["minutes_after_sunset"] = -int(s.events["sunset_yesterday"].Sub(now).Minutes())
+		}
+
+		log.Printf("%v", s.values)
+
+		s.UpdateRules("minutes_until_sunrise", s.values["minutes_until_sunrise"])
+		s.UpdateRules("minutes_after_sunrise", s.values["minutes_after_sunrise"])
+		s.UpdateRules("minutes_until_sunset", s.values["minutes_until_sunset"])
+		s.UpdateRules("minutes_after_sunset", s.values["minutes_after_sunset"])
+	}
+
 	s.values["day"] = now.Day()
 	s.values["month"] = int(now.Month())
 	s.values["year"] = now.Year()
@@ -111,14 +160,6 @@ func (s *DimmyTime) UpdateValue() (float64, bool) {
 	s.values["minute"] = now.Minute()
 	s.values["second"] = now.Second()
 	s.values["weekday"] = int(now.Weekday())
-
-	if rise, ok := s.events["sunrise"]; ok && rise.Equal(now) {
-		s.UpdateRules("event", "sunrise")
-	}
-
-	if set, ok := s.events["sunset"]; ok && set.Equal(now) {
-		s.UpdateRules("event", "sunset")
-	}
 
 	return 0, false
 }
