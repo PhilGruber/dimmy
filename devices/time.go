@@ -145,8 +145,6 @@ func (s *DimmyTime) UpdateValue() (float64, bool) {
 			s.values["minutes_after_sunset"] = -int(s.events["sunset_yesterday"].Sub(now).Minutes())
 		}
 
-		log.Printf("%v", s.values)
-
 		s.UpdateRules("minutes_until_sunrise", s.values["minutes_until_sunrise"])
 		s.UpdateRules("minutes_after_sunrise", s.values["minutes_after_sunrise"])
 		s.UpdateRules("minutes_until_sunset", s.values["minutes_until_sunset"])
