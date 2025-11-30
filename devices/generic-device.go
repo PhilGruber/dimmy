@@ -47,7 +47,7 @@ func NewDevice(config core.DeviceConfig) *GenericDevice {
 			s.controls = make([]core.Control, len(*config.Options.Controls))
 			for i, controlConfig := range *config.Options.Controls {
 				s.controls[i] = controlConfig
-				s.Receivers = append(s.Triggers, controlConfig.Name)
+				s.Triggers = append(s.Triggers, controlConfig.Name)
 			}
 		}
 
