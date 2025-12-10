@@ -26,8 +26,8 @@ type SensorHistory struct {
 type GenericDevice struct {
 	Device
 
-	sensors    []core.Sensor
-	controls   []core.Control
+	Sensors    []core.Sensor           `json:"Sensors"`
+	Controls   []core.Control          `json:"Controls"`
 	Values     map[string]*SensorValue `json:"Values"`
 	hasHistory bool
 	valueMutex *sync.RWMutex
@@ -44,24 +44,24 @@ func NewDevice(config core.DeviceConfig) *GenericDevice {
 	if config.Options != nil {
 
 		if config.Options.Controls != nil && len(*config.Options.Controls) > 0 {
-			s.controls = make([]core.Control, len(*config.Options.Controls))
+			s.Controls = make([]core.Control, len(*config.Options.Controls))
 			for i, controlConfig := range *config.Options.Controls {
-				s.controls[i] = controlConfig
+				s.Controls[i] = controlConfig
 				s.Triggers = append(s.Triggers, controlConfig.Name)
 			}
 		}
 
 		if config.Options.Sensors != nil && len(*config.Options.Sensors) > 0 {
-			s.sensors = make([]core.Sensor, len(*config.Options.Sensors))
+			s.Sensors = make([]core.Sensor, len(*config.Options.Sensors))
 			for i, sensorConfig := range *config.Options.Sensors {
-				s.sensors[i] = sensorConfig
+				s.Sensors[i] = sensorConfig
 				s.Triggers = append(s.Triggers, sensorConfig.Name)
 			}
 		} else {
 			// deprecated
 			if config.Options.Fields != nil {
 				for _, field := range *config.Options.Fields {
-					s.sensors = append(s.sensors, core.Sensor{Name: field, Hidden: false})
+					s.Sensors = append(s.Sensors, core.Sensor{Name: field, Hidden: false})
 					s.Triggers = append(s.Triggers, field)
 				}
 			}
@@ -72,20 +72,20 @@ func NewDevice(config core.DeviceConfig) *GenericDevice {
 		}
 	}
 
-	for i := range s.sensors {
-		if s.sensors[i].Icon == "" {
-			s.sensors[i].Icon = getIcon(s.sensors[i].Name)
+	for i := range s.Sensors {
+		if s.Sensors[i].Icon == "" {
+			s.Sensors[i].Icon = getIcon(s.Sensors[i].Name)
 		}
 	}
 
-	if s.Icon == "" && len(s.sensors) > 0 {
-		s.Icon = s.sensors[0].Icon
+	if s.Icon == "" && len(s.Sensors) > 0 {
+		s.Icon = s.Sensors[0].Icon
 	}
 
 	s.valueMutex = new(sync.RWMutex)
 
 	s.Values = make(map[string]*SensorValue)
-	for _, sensor := range s.sensors {
+	for _, sensor := range s.Sensors {
 		s.Values[sensor.Name] = &SensorValue{Value: nil, LastChanged: time.Unix(0, 0), History: make([]SensorHistory, 0)}
 	}
 
@@ -93,25 +93,20 @@ func NewDevice(config core.DeviceConfig) *GenericDevice {
 }
 
 func (d *GenericDevice) GetSensors() []core.Sensor {
-	return d.sensors
+	return d.Sensors
 }
 
-func (d *GenericDevice) setControlValue(key string, value any) {
-	d.valueMutex.Lock()
-	d.Values[key].Value = value
-	d.Values[key].LastChanged = time.Now()
-	d.valueMutex.Unlock()
+func (d *GenericDevice) setControlValue(key string, value any, send bool) {
 
-	for _, control := range d.controls {
+	for idx, control := range d.Controls {
 		if control.Name == key {
-			control.Value = value
-			control.NeedsSending = true
+			d.Controls[idx].Value = value
+			d.Controls[idx].NeedsSending = send
 			d.UpdateRules(key, value)
-			fmt.Printf("[%32s] Setting %s to %v\n", d.Name, key, value)
 			return
 		}
 	}
-	fmt.Printf("[%32s] Warning: Control %s not found\n", d.Name, key)
+	log.Printf("[%32s] Warning: Control %s not found\n", d.Name, key)
 }
 
 func (d *GenericDevice) setSensorValue(key string, value any) {
@@ -119,7 +114,7 @@ func (d *GenericDevice) setSensorValue(key string, value any) {
 	d.Values[key].Value = value
 	d.Values[key].LastChanged = time.Now()
 
-	for _, sensor := range d.sensors {
+	for _, sensor := range d.Sensors {
 		if sensor.ShowSince != nil && sensor.Name == key {
 			if fmt.Sprintf("%v", value) == fmt.Sprintf("%v", *sensor.ShowSince) {
 				now := time.Now()
@@ -148,22 +143,22 @@ func (d *GenericDevice) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInt
 		var data map[string]any
 		err := json.Unmarshal(payload, &data)
 		if err != nil {
-			log.Printf("[%32s] Error: %d\n", d.Name, err.Error())
+			log.Printf("[%32s] Error: %s\n", d.Name, err.Error())
 			return
 		}
 
 		d.parseDefaultValues(data)
 
-		if key, ok := data["key"]; ok {
-			for _, control := range d.controls {
+		for key, value := range data {
+			for _, control := range d.Controls {
 				if control.Name == key {
-					d.setControlValue(control.Name, control.Value)
-					log.Printf("[%32s] Received new control %s: %v\n", d.Name, control.Name, data["value"])
+					d.setControlValue(key, value, false)
+					continue
 				}
 			}
 		}
 
-		for _, sensor := range d.sensors {
+		for _, sensor := range d.Sensors {
 			if value, ok := data[sensor.Name]; ok {
 				log.Printf("[%32s] Received new %s: %v (%T)\n", d.Name, sensor.Name, value, value)
 				d.setSensorValue(sensor.Name, value)
@@ -182,8 +177,9 @@ func (d *GenericDevice) addHistory(field string, value any) {
 }
 
 func (d *GenericDevice) UpdateValue() (float64, bool) {
-	for _, control := range d.controls {
+	for idx, control := range d.Controls {
 		if control.NeedsSending {
+			d.Controls[idx].NeedsSending = false
 			return 0, true
 		}
 	}
@@ -191,12 +187,12 @@ func (d *GenericDevice) UpdateValue() (float64, bool) {
 }
 
 func (d *GenericDevice) ProcessRequest(request core.SwitchRequest) {
-	d.setControlValue(request.Key, request.Value)
+	d.setControlValue(request.Key, request.Value, true)
 }
 
 func (d *GenericDevice) PublishValue(client mqtt.Client) {
 	values := make(map[string]any)
-	for _, control := range d.controls {
+	for _, control := range d.Controls {
 		if control.NeedsSending {
 			values[control.Name] = control.Value
 		}
@@ -216,19 +212,11 @@ func (d *GenericDevice) PublishValue(client mqtt.Client) {
 		return
 	}
 
-	// TODO: see if this can cause race conditions
-	for name := range values {
-		for _, control := range d.controls {
-			if control.Name == name {
-				control.NeedsSending = false
-			}
-		}
-	}
 }
 
 func (d *GenericDevice) PollValue(client mqtt.Client) {
 	values := make(map[string]any)
-	for _, control := range d.controls {
+	for _, control := range d.Controls {
 		values[control.Name] = ""
 	}
 	if len(values) == 0 {
@@ -245,17 +233,17 @@ func (d *GenericDevice) PollValue(client mqtt.Client) {
 
 func (d *GenericDevice) DisplaySince(field string) string {
 	var idx int
-	for i, sensor := range d.sensors {
+	for i, sensor := range d.Sensors {
 		if sensor.Name == field {
 			idx = i
 		}
 	}
 	if d.Values[field] != nil {
-		if fmt.Sprintf("%v", d.Values[field].Value) == fmt.Sprintf("%v", d.sensors[idx].ShowSince) {
+		if fmt.Sprintf("%v", d.Values[field].Value) == fmt.Sprintf("%v", d.Sensors[idx].ShowSince) {
 			return "now"
 		}
 		for _, h := range d.Values[field].History {
-			if fmt.Sprintf("%v", h.Value) == fmt.Sprintf("%v", d.sensors[idx].ShowSince) {
+			if fmt.Sprintf("%v", h.Value) == fmt.Sprintf("%v", d.Sensors[idx].ShowSince) {
 				return h.Time.Format("15:04")
 			}
 		}

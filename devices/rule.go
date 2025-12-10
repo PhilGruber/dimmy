@@ -37,7 +37,8 @@ func (c *condition) Clear() {
 }
 
 func (c *condition) check() bool {
-	value, target, err := makeComparable(c.LastValue, c.Value)
+	needsNumeric := c.Operator == ">" || c.Operator == ">=" || c.Operator == "<" || c.Operator == "<="
+	value, target, err := makeComparable(c.LastValue, c.Value, needsNumeric)
 	if err != nil {
 		log.Println(err)
 		return false
@@ -73,7 +74,7 @@ func (c *condition) check() bool {
 		case int64:
 			return value.(int64) > target.(int64)
 		default:
-			log.Printf("Can't compare %v and %v\n", value, target)
+			log.Printf("Can't compare %v [%T] > %v [%T]\n", value, value, target, target)
 			return false
 		}
 	case ">=":
@@ -85,7 +86,7 @@ func (c *condition) check() bool {
 		case int64:
 			return value.(int64) >= target.(int64)
 		default:
-			log.Printf("Can't compare %v and %v\n", value, target)
+			log.Printf("Can't compare %v >= %v\n", value, target)
 			return false
 		}
 
@@ -98,7 +99,7 @@ func (c *condition) check() bool {
 		case int64:
 			return value.(int64) < target.(int64)
 		default:
-			log.Printf("Can't compare %v and %v\n", value, target)
+			log.Printf("Can't compare %v < %v\n", value, target)
 			return false
 		}
 
@@ -111,7 +112,7 @@ func (c *condition) check() bool {
 		case int64:
 			return value.(int64) <= target.(int64)
 		default:
-			log.Printf("Can't compare %v and %v\n", value, target)
+			log.Printf("Can't compare %v <= %v\n", value, target)
 			return false
 		}
 	}
@@ -177,7 +178,7 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 		r.Receivers = append(r.Receivers, receiver)
 	}
 
-	log.Printf("Created rule %s\n", r.String())
+	log.Printf("Created %s\n", r.String())
 	return &r
 }
 
@@ -190,7 +191,7 @@ func (r *Rule) Fire(channel chan core.SwitchRequest) []Receiver {
 		if !ok {
 			request = core.SwitchRequest{Device: receiver.Device.GetName()}
 		}
-		request.Command = receiver.Key
+		request.Key = receiver.Key
 		switch receiver.Key {
 		case "duration":
 			duration, err := strconv.Atoi(receiver.Value)
@@ -213,12 +214,19 @@ func (r *Rule) Fire(channel chan core.SwitchRequest) []Receiver {
 	return firedReceivers
 }
 
-func makeComparable(value any, target any) (any, any, error) {
+func makeComparable(value any, target any, numeric bool) (any, any, error) {
 	if reflect.TypeOf(value) == reflect.TypeOf(target) {
 		return value, target, nil
 	}
 	if value == nil || target == nil {
 		return value, target, nil
+	}
+	if numeric && reflect.TypeOf(value).Kind() == reflect.String {
+		var err error
+		value, err = strconv.ParseFloat(value.(string), 64)
+		if err != nil {
+			return nil, nil, fmt.Errorf("can't convert %v [%s] to number: %s", value, reflect.TypeOf(value), err.Error())
+		}
 	}
 	switch value.(type) {
 	case int:

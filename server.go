@@ -144,15 +144,13 @@ func (s *Server) eventLoop(mqttServer string) {
 
 		for name := range s.devices {
 			if _, ok := s.devices[name].UpdateValue(); ok {
-				s.devices[name].PublishValue(client)
+				go s.devices[name].PublishValue(client)
 			}
 		}
 
 		var firedRules []int
 		for idx, rule := range s.rules {
-			//			fmt.Printf("Checking rule %s\n", rule.String())
 			if rule.CheckTriggers() {
-				//				fmt.Printf("\tFiring!\n", rule.String())
 				rule.Fire(s.channel)
 				firedRules = append(firedRules, idx)
 			}
