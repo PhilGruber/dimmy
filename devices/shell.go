@@ -2,9 +2,10 @@ package devices
 
 import (
 	"fmt"
-	"github.com/PhilGruber/dimmy/core"
 	"log"
 	"os/exec"
+
+	"github.com/PhilGruber/dimmy/core"
 )
 
 type Shell struct {
@@ -30,7 +31,8 @@ func NewShell(config core.DeviceConfig) *Shell {
 }
 
 func (s *Shell) ProcessRequest(request core.SwitchRequest) {
-	if request.Command == "command" {
+	if request.Key == "command" {
+		// TODO: sanitize this
 		go s.execCommand(request.Value)
 		return
 	}
