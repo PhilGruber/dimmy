@@ -298,8 +298,10 @@ func (r *Rule) CheckTriggers() bool {
 	matches := 0
 	for _, trigger := range r.Triggers {
 		if !trigger.Condition.check() {
+			core.D(fmt.Sprintf("\t --> Trigger %s does not match\n", trigger.String()))
 			return false
 		}
+		core.D(fmt.Sprintf("\t --> Trigger %s matched\n", trigger.String()))
 		matches++
 	}
 
@@ -307,6 +309,7 @@ func (r *Rule) CheckTriggers() bool {
 }
 
 func (t *Trigger) IsPersistent() bool {
+	core.D(fmt.Sprintf("Checking if %s.%s is persistent: %v\n", t.Device.GetName(), t.Key, t.Device.IsPersistent(t.Key)))
 	return t.Device.IsPersistent(t.Key)
 }
 
