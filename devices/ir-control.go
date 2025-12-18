@@ -42,7 +42,7 @@ func (i *IRControl) ProcessRequest(request core.SwitchRequest) {
 		log.Printf("Device %s does not support command %s. Please define this in config file.\n", i.Name, request.Value)
 		return
 	}
-	if i.preventResending && i.lastCommand == command {
+	if i.preventResending && i.lastCommand == command && !request.Force {
 		log.Printf("Skipping request for Device %s, as we have sent it before: %v\n", i.Name, request.Value)
 		return
 	}

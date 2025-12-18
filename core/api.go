@@ -7,4 +7,5 @@ type SwitchRequest struct {
 	Key      string `json:"key"`
 	Value    string `json:"value"`
 	Duration int    `json:"duration"`
+	Force    bool
 }

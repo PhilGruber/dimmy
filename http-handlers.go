@@ -3,14 +3,15 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/PhilGruber/dimmy/core"
-	dimmyDevices "github.com/PhilGruber/dimmy/devices"
 	"html/template"
 	"io"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/PhilGruber/dimmy/core"
+	dimmyDevices "github.com/PhilGruber/dimmy/devices"
 )
 
 func (s *Server) ReceiveRequest() http.HandlerFunc {
@@ -36,6 +37,7 @@ func (s *Server) ReceiveRequest() http.HandlerFunc {
 		var request core.SwitchRequest
 
 		err = json.Unmarshal(body, &request)
+		request.Force = true
 
 		if err != nil {
 			log.Println("Error: ", err)
