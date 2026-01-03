@@ -21,16 +21,18 @@ type Server struct {
 	channel chan core.SwitchRequest
 }
 
+var AppVersion = "undefined"
+
 func main() {
 	version := flag.Bool("version", false, "Print version")
 	flag.Parse()
 
 	if *version {
-		fmt.Printf("dimmyd version %s\n", core.AppVersion)
+		fmt.Printf("dimmyd version %s\n", AppVersion)
 		os.Exit(0)
 	}
 
-	log.Printf("Starting up dimmyd version %s", core.AppVersion)
+	log.Printf("Starting up dimmyd version %s", AppVersion)
 
 	config, err := core.LoadConfig()
 	if err != nil {

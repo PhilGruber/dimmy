@@ -16,6 +16,8 @@ import (
 	"github.com/PhilGruber/dimmy/core"
 )
 
+var AppVersion = "undefined"
+
 type listRequest struct {
 	Value       float64 `json:"Value"`
 	Type        string  `json:"Type"`
@@ -88,7 +90,7 @@ func main() {
 	flag.Parse()
 
 	if *version {
-		fmt.Printf("dimmy client version %s\n", core.AppVersion)
+		fmt.Printf("dimmy client version %s\n", AppVersion)
 		os.Exit(0)
 	}
 

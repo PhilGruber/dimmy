@@ -8,8 +8,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var AppVersion = "undefined"
-
 func LoadConfig() (*ServerConfig, error) {
 
 	var filename string
