@@ -102,6 +102,7 @@ func (d *GenericDevice) setControlValue(key string, value any, send bool) {
 		if control.Name == key {
 			d.Controls[idx].Value = value
 			d.Controls[idx].NeedsSending = send
+			//			log.Printf("[%32s] Setting control %s to %v (send=%v)\n", d.Name, key, value, send)
 			d.UpdateRules(key, value)
 			return
 		}
@@ -177,9 +178,8 @@ func (d *GenericDevice) addHistory(field string, value any) {
 }
 
 func (d *GenericDevice) UpdateValue() (float64, bool) {
-	for idx, control := range d.Controls {
+	for _, control := range d.Controls {
 		if control.NeedsSending {
-			d.Controls[idx].NeedsSending = false
 			return 0, true
 		}
 	}
