@@ -77,6 +77,9 @@ func (d *Dimmable) setTarget(target float64) {
 }
 
 func (d *Dimmable) ProcessRequest(request core.SwitchRequest) {
+	if request.Key == "" {
+		request.Key = "brightness"
+	}
 	relativeValue := false
 	if request.Value[0] == '+' || request.Value[0] == '-' {
 		relativeValue = true

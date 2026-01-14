@@ -187,6 +187,12 @@ func (d *GenericDevice) UpdateValue() (float64, bool) {
 }
 
 func (d *GenericDevice) ProcessRequest(request core.SwitchRequest) {
+	if request.Key == "" {
+		if len(d.Controls) > 0 {
+			request.Key = d.Controls[0].Name
+		}
+		log.Printf("[%32s] Warning: No key specified in request. Defaulting to %s\n", d.Name, request.Key)
+	}
 	d.setControlValue(request.Key, request.Value, true)
 }
 
