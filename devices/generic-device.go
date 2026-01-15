@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 
@@ -110,6 +111,16 @@ func (d *GenericDevice) setControlValue(key string, value any, send bool) {
 	log.Printf("[%32s] Warning: Control %s not found\n", d.Name, key)
 }
 
+func (d *GenericDevice) getControlValue(key string) any {
+	for _, control := range d.Controls {
+		if control.Name == key {
+			return control.Value
+		}
+	}
+	log.Printf("[%32s] Warning: Control %s not found\n", d.Name, key)
+	return nil
+}
+
 func (d *GenericDevice) setSensorValue(key string, value any) {
 	d.valueMutex.Lock()
 	d.Values[key].Value = value
@@ -192,6 +203,12 @@ func (d *GenericDevice) ProcessRequest(request core.SwitchRequest) {
 			request.Key = d.Controls[0].Name
 		}
 		log.Printf("[%32s] Warning: No key specified in request. Defaulting to %s\n", d.Name, request.Key)
+	}
+
+	if request.Value[0] == '+' || request.Value[0] == '-' {
+		value, _ := strconv.ParseFloat(request.Value, 64)
+		currentValue, _ := strconv.ParseFloat(fmt.Sprintf("%v", d.getControlValue(request.Key)), 64)
+		request.Value = fmt.Sprintf("%f", currentValue+value)
 	}
 	d.setControlValue(request.Key, request.Value, true)
 }
