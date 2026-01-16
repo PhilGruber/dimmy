@@ -206,9 +206,17 @@ func (d *GenericDevice) ProcessRequest(request core.SwitchRequest) {
 	}
 
 	if request.Value[0] == '+' || request.Value[0] == '-' {
-		value, _ := strconv.ParseFloat(request.Value, 64)
-		currentValue, _ := strconv.ParseFloat(fmt.Sprintf("%v", d.getControlValue(request.Key)), 64)
-		request.Value = fmt.Sprintf("%f", currentValue+value)
+		value, err := strconv.ParseFloat(request.Value, 64)
+		if err != nil {
+			log.Printf("[%32s] Can't convert %s to number: %s\n", d.Name, err.Error())
+			return
+		}
+		currentValue, err := strconv.ParseFloat(fmt.Sprintf("%v", d.getControlValue(request.Key)), 64)
+		if err != nil {
+			log.Printf("[%32s] Can't convert %s to number: %s\n", d.Name, err.Error())
+			return
+		}
+		request.Value = fmt.Sprintf("%d", int(currentValue+value))
 	}
 	d.setControlValue(request.Key, request.Value, true)
 }
@@ -218,6 +226,13 @@ func (d *GenericDevice) PublishValue(client mqtt.Client) {
 	for _, control := range d.Controls {
 		if control.NeedsSending {
 			values[control.Name] = control.Value
+			if control.Type == "scale" || control.Type == "dimmable" {
+				var err error
+				values[control.Name], err = strconv.Atoi(fmt.Sprintf("%v", control.Value))
+				if err != nil {
+					values[control.Name] = control.Value
+				}
+			}
 		}
 	}
 	if len(values) == 0 {
