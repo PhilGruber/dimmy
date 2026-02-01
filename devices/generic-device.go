@@ -208,10 +208,14 @@ func (d *GenericDevice) ProcessRequest(request core.SwitchRequest) {
 	if request.Value[0] == '+' || request.Value[0] == '-' {
 		value, err := strconv.ParseFloat(request.Value, 64)
 		if err != nil {
-			log.Printf("[%32s] Can't convert %s to number: %s\n", d.Name, err.Error())
+			log.Printf("[%32s] Can't convert %s to number: %s\n", d.Name, request.Value, err.Error())
 			return
 		}
-		currentValue, err := strconv.ParseFloat(fmt.Sprintf("%v", d.getControlValue(request.Key)), 64)
+		currentValueRaw := d.getControlValue(request.Key)
+		if currentValueRaw == nil {
+			currentValueRaw = "0"
+		}
+		currentValue, err := strconv.ParseFloat(fmt.Sprintf("%v", currentValueRaw), 64)
 		if err != nil {
 			log.Printf("[%32s] Can't convert %s to number: %s\n", d.Name, err.Error())
 			return
