@@ -217,7 +217,7 @@ func (d *GenericDevice) ProcessRequest(request core.SwitchRequest) {
 		}
 		currentValue, err := strconv.ParseFloat(fmt.Sprintf("%v", currentValueRaw), 64)
 		if err != nil {
-			log.Printf("[%32s] Can't convert %s to number: %s\n", d.Name, err.Error())
+			log.Printf("[%32s] Can't convert to number: %s\n", d.Name, err.Error())
 			return
 		}
 		request.Value = fmt.Sprintf("%d", int(currentValue+value))

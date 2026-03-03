@@ -166,7 +166,7 @@ func (d *Device) GetMessageHandler(channel chan core.SwitchRequest, sensor Devic
 		var data map[string]any
 		err := json.Unmarshal(payload, &data)
 		if err != nil {
-			log.Printf("[%32s] Error: %d\n", d.Name, err.Error())
+			log.Printf("[%32s] Error: %s\n", d.Name, err.Error())
 			return
 		}
 
