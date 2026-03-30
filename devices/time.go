@@ -145,16 +145,16 @@ func (s *DimmyTime) UpdateValue() (float64, bool) {
 			s.values["minutes_after_sunset"] = -int(s.events["sunset_yesterday"].Sub(now).Minutes())
 		}
 
-		if s.values["minutes_until_sunrise"] <= 720 {
+		if s.values["minutes_until_sunrise"] <= 360 {
 			s.UpdateRules("minutes_until_sunrise", s.values["minutes_until_sunrise"])
 		}
-		if s.values["minutes_after_sunrise"] <= 720 {
+		if s.values["minutes_after_sunrise"] <= 360 {
 			s.UpdateRules("minutes_after_sunrise", s.values["minutes_after_sunrise"])
 		}
-		if s.values["minutes_until_sunset"] <= 720 {
+		if s.values["minutes_until_sunset"] <= 360 {
 			s.UpdateRules("minutes_until_sunset", s.values["minutes_until_sunset"])
 		}
-		if s.values["minutes_after_sunset"] <= 720 {
+		if s.values["minutes_after_sunset"] <= 360 {
 			s.UpdateRules("minutes_after_sunset", s.values["minutes_after_sunset"])
 		}
 	}

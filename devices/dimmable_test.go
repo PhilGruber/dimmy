@@ -2,8 +2,10 @@ package devices
 
 import (
 	"testing"
+	"time"
 
 	"github.com/PhilGruber/dimmy/core"
+	"github.com/stretchr/testify/assert"
 )
 
 // newTestLight returns a properly initialised Light (and thus Dimmable) for
@@ -131,6 +133,19 @@ func TestDimmable_UpdateValue_DoesNotOvershoot(t *testing.T) {
 	if send2 {
 		t.Error("expected send=false once target is reached")
 	}
+}
+
+func TestDimmable_DecreaseFromOne_WithDuration(t *testing.T) {
+	d := newTestLight()
+	d.SetCurrent(1)
+	// decrease by 10 from 1 → target clamps to 0; duration=10 → cycles=50, step=-0.02
+	d.ProcessRequest(core.SwitchRequest{Value: "-10", Duration: 3})
+	assert.Equal(t, 0.0, d.GetTarget())
+	for i := 0.0; i < 3; i = i + .2 {
+		time.Sleep(core.CycleLength * time.Millisecond)
+		d.UpdateValue()
+	}
+	assert.Equal(t, 0.0, d.GetCurrent())
 }
 
 func TestDimmable_UpdateValue_TransitionJumpsImmediately(t *testing.T) {

@@ -135,6 +135,11 @@ func (d *Dimmable) UpdateValue() (float64, bool) {
 			current += d.GetStep()
 			current = math.Min(current, d.Target)
 		}
+
+		if math.Abs(current-d.GetTarget()) < .0001 {
+			current = d.GetTarget()
+		}
+
 		d.SetCurrent(current)
 		return current, true
 	}
