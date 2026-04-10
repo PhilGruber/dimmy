@@ -21,8 +21,6 @@ type Server struct {
 	channel chan core.SwitchRequest
 }
 
-var AppVersion = "undefined"
-
 func main() {
 	version := flag.Bool("version", false, "Print version")
 	flag.Parse()

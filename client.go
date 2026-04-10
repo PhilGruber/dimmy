@@ -16,8 +16,6 @@ import (
 	"github.com/PhilGruber/dimmy/core"
 )
 
-var AppVersion = "undefined"
-
 type listRequest struct {
 	Value       float64 `json:"Value"`
 	Type        string  `json:"Type"`
