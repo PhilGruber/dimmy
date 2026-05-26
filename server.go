@@ -124,7 +124,7 @@ func (s *Server) initialize(config *core.ServerConfig) {
 		s.dashboards["all"][i] = panel
 		i++
 	}
-	s.dashboards["default"] = s.dashboards["default"][:j-1]
+	s.dashboards["default"] = s.dashboards["default"][:j]
 
 	s.channel = make(chan core.SwitchRequest, len(s.devices))
 }
