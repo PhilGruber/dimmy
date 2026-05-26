@@ -15,10 +15,10 @@ import (
 )
 
 type Server struct {
-	devices map[string]dimmyDevices.DeviceInterface
-	panels  []dimmyDevices.Panel
-	rules   []dimmyDevices.Rule
-	channel chan core.SwitchRequest
+	dashboards map[string][]dimmyDevices.Panel
+	devices    map[string]dimmyDevices.DeviceInterface
+	rules      []dimmyDevices.Rule
+	channel    chan core.SwitchRequest
 }
 
 func main() {
@@ -98,15 +98,33 @@ func (s *Server) initialize(config *core.ServerConfig) {
 		}
 	}
 
-	for _, panel := range config.Panels {
-		s.panels = append(s.panels, dimmyDevices.NewPanel(panel, &s.devices))
+	s.dashboards = make(map[string][]dimmyDevices.Panel)
+	s.dashboards["all"] = make([]dimmyDevices.Panel, len(config.Panels)+len(s.devices))
+	s.dashboards["default"] = make([]dimmyDevices.Panel, len(config.Panels)+len(s.devices))
+
+	i := 0
+	for _, panelCfg := range config.Panels {
+		panel := dimmyDevices.NewPanel(panelCfg, &s.devices)
+		s.dashboards["default"][i] = panel
+		s.dashboards["all"][i] = panel
+		i++
 	}
 
+	j := i
+
 	for _, device := range s.devices {
-		if !device.GetHidden() {
-			s.panels = append(s.panels, dimmyDevices.NewPanelFromDevice(device))
+		if device.IsPseudoDevice() {
+			continue
 		}
+		panel := dimmyDevices.NewPanelFromDevice(device)
+		if !device.GetHidden() {
+			s.dashboards["default"][j] = panel
+			j++
+		}
+		s.dashboards["all"][i] = panel
+		i++
 	}
+	s.dashboards["default"] = s.dashboards["default"][:j-1]
 
 	s.channel = make(chan core.SwitchRequest, len(s.devices))
 }
@@ -120,7 +138,8 @@ func (s *Server) Start(config *core.ServerConfig) {
 	http.Handle("/assets/", http.StripPrefix("/assets/", assets))
 	http.Handle("/api/switch", s.ReceiveRequest())
 	http.Handle("/api/status", s.ShowStatus(&s.devices))
-	http.Handle("/", s.ShowDashboard(config.WebRoot))
+	http.Handle("/", s.ShowDashboard(config.WebRoot, "default"))
+	http.Handle("/dashboard/all", s.ShowDashboard(config.WebRoot, "all"))
 	http.Handle("/rules/add-single-use", s.AddSingleUseRule(config.WebRoot))
 	http.Handle("/rules/edit", s.EditRules(config.WebRoot))
 

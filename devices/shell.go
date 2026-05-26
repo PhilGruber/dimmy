@@ -67,3 +67,7 @@ func (s *Shell) GetCommands() []string {
 func (s *Shell) UpdateValue() (float64, bool) {
 	return 0, false // Shell does not have a value to update
 }
+
+func (s *Shell) IsPseudoDevice() bool {
+	return true
+}

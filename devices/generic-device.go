@@ -317,6 +317,8 @@ func getIcon(deviceType string) string {
 		return "⚡"
 	case "light":
 		return "💡"
+	case "occupancy":
+		return "🧍"
 	}
-	return ""
+	return " "
 }

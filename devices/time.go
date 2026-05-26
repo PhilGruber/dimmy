@@ -199,3 +199,7 @@ func (s *DimmyTime) CreateTriggersFromTime(value time.Time) []core.TriggerConfig
 
 	return triggers
 }
+
+func (d *DimmyTime) IsPseudoDevice() bool {
+	return true
+}

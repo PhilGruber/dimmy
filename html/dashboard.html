@@ -17,7 +17,7 @@
         {{ range .Panels }}
             <div class='device'>
                 <div class='title'>
-                    {{ .GetLabel }}
+                   {{ .GetLabel }}
                 </div>
                 <div class="panel panel-sensor buttons">
                 {{ range .GetDevices }}
@@ -36,7 +36,7 @@
                                 {{ else if eq .Name "illuminance" }}
                                     {{ .GetIconHtml }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span> lx
                                 {{ else }}
-                                    {{ .GetIconHtml }} <span id='{{ $deviceName }}_{{ .Name }}'>--</span>
+                                    {{ .GetIconHtml }}<span id='{{ $deviceName }}_{{ .Name }}'>--</span>
                                 {{ end }}
                             {{ end }}
                         </span>

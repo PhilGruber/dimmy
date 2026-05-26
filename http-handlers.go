@@ -142,7 +142,7 @@ func (s *Server) AddSingleUseRule(webroot string) http.HandlerFunc {
 	}
 }
 
-func (s *Server) ShowDashboard(webroot string) http.HandlerFunc {
+func (s *Server) ShowDashboard(webroot string, name string) http.HandlerFunc {
 	return func(output http.ResponseWriter, request *http.Request) {
 		if request.Method == "POST" {
 			err := request.ParseForm()
@@ -165,11 +165,22 @@ func (s *Server) ShowDashboard(webroot string) http.HandlerFunc {
 			}
 		}
 
-		templ, _ := template.ParseFiles(webroot + "/dashboard.html")
-		err := templ.Execute(output, struct {
+		log.Printf("Showing dashboard %s with %d items\n", name, len(s.dashboards[name]))
+		for n, db := range s.dashboards[name] {
+			log.Printf("\t%d: %s\n", n, db.GetLabel())
+			for _, dev := range db.GetDevices() {
+				log.Printf("\t\t%s\n", dev.GetLabel())
+			}
+		}
+		templ, err := template.ParseFiles(webroot + "/dashboard.html")
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		err = templ.Execute(output, struct {
 			Devices map[string]dimmyDevices.DeviceInterface
 			Panels  []dimmyDevices.Panel
-		}{s.devices, s.panels})
+		}{s.devices, s.dashboards[name]})
 		if err != nil {
 			log.Println(err)
 			return

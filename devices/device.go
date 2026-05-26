@@ -43,6 +43,7 @@ type DeviceInterface interface {
 	IsPersistent(string) bool
 	HasReceivers() bool
 	GetIconHtml() template.HTML
+	IsPseudoDevice() bool
 
 	PublishValue(mqtt.Client)
 	PollValue(mqtt.Client)
@@ -286,4 +287,8 @@ func (d *Device) GetIconHtml() template.HTML {
 		return template.HTML("<img class='icon' src='/assets/icons/" + d.Icon + "' alt='" + d.GetLabel() + "'>")
 	}
 	return template.HTML(d.Icon)
+}
+
+func (d *Device) IsPseudoDevice() bool {
+	return false
 }
