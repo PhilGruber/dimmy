@@ -82,9 +82,10 @@ $(document).ready(function() {
     });
 });
 
-function switchDevice(device, value) {
+function switchDevice(device, control, value) {
     const data = {
         device: device,
+        key: control,
         value: value.toString(),
         duration: 1,
     };

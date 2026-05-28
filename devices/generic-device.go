@@ -338,7 +338,9 @@ func getIcon(deviceType string) string {
 	case "occupancy":
 		return "🧍"
 	case "motor_speed":
-		return "⚙️"
+		return "🌀"
+	case "position":
+		return "🪟"
 	}
 	return " "
 }

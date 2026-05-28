@@ -49,16 +49,16 @@
                             <div class="panel panel-{{ .GetType }} panel-controls buttons">
                             {{ if eq .GetType "scale" }}
                                 <span class="left emoji">{{ .GetIconHtml }}</span>
-                                <a class='left' tabindex="-1" onClick="switchDevice('{{ .Name }}', 0);">off</a>
-                                <a class='left' tabindex="-1" onClick="switchDevice('{{ .Name }}', parseInt($('#value_{{.Name}}').text()) - 10);">➖</a>
+                                <a class='left' tabindex="-1" onClick="switchDevice('{{ .Name }}', '', 0);">off</a>
+                                <a class='left' tabindex="-1" onClick="switchDevice('{{ .Name }}', '', parseInt($('#value_{{.Name}}').text()) - 10);">➖</a>
                                 <span class='value left' id='value_{{ .Name }}'></span>
-                                <a class='left' tabindex="-1" onClick="switchDevice('{{ .Name }}', parseInt($('#value_{{.Name}}').text()) + 10);">➕</a>
-                                <a class='left' tabindex="-1" onClick="switchDevice('{{ .Name }}', 100);">on</a>
+                                <a class='left' tabindex="-1" onClick="switchDevice('{{ .Name }}', '', parseInt($('#value_{{.Name}}').text()) + 10);">➕</a>
+                                <a class='left' tabindex="-1" onClick="switchDevice('{{ .Name }}', '', 100);">on</a>
                                 <br />
                             {{ else if eq .GetType "bool" }}
                                 <span class="left emoji">{{ .GetIconHtml }}</span>
                                 <a class='left' tabindex="-1" onClick="switchDevice('{{ $deviceName }}', '{{ .Name }}', 0);">off</a>
-                                <span class='value wide' id='value_{{ .Name }}'></span>
+                                <span class='value wide' id='value_{{ $deviceName }}_{{ .Name }}'></span>
                                 <a class='right' tabindex="-1" onClick="switchDevice('{{ $deviceName }}', '{{ .Name }}', 100);">on</a>
                                 <br />
                             {{ else if eq .GetType "list" }}
@@ -77,28 +77,28 @@
 
                 {{ if eq .GetType "plug" }}
                     <span class="left emoji">{{ .GetIconHtml }}</span>
-                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', 0);">off</a>
+                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', '', 0);">off</a>
                     <span class='value wide' id='value_{{ .GetName }}'></span>
-                    <a class='right' tabindex="-1" onClick="switchDevice('{{ .GetName }}', 100);">on</a>
+                    <a class='right' tabindex="-1" onClick="switchDevice('{{ .GetName }}', '', 100);">on</a>
                 {{ end }}
 
                 {{ if eq .GetType "light" }}
                     <span class="left emoji">{{ .GetIconHtml }}</span>
-                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', 0);">off</a>
-                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', parseInt($('#value_{{.GetName}}').text()) - 10);">➖</a>
+                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', '', 0);">off</a>
+                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', '', parseInt($('#value_{{.GetName}}').text()) - 10);">➖</a>
                     <span class='value left' id='value_{{ .GetName }}'></span>
-                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', parseInt($('#value_{{.GetName}}').text()) + 10);">➕</a>
-                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', 100);">on</a>
+                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', '', parseInt($('#value_{{.GetName}}').text()) + 10);">➕</a>
+                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', '', 100);">on</a>
                     <br/>
                 {{ end }}
 
                 {{ if eq .GetType "blind" }}
                     <span class="left emoji">{{ .GetIconHtml }}</span>
-                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', 0);">close</a>
-                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', parseInt($('#value_{{.GetName}}').text()) - 10);">➖</a>
+                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', '', 0);">close</a>
+                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', '', parseInt($('#value_{{.GetName}}').text()) - 10);">➖</a>
                     <span class='value left' id='value_{{ .GetName }}'></span>
-                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', parseInt($('#value_{{.GetName}}').text()) + 10);">➕</a>
-                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', 100);">open</a>
+                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', '', parseInt($('#value_{{.GetName}}').text()) + 10);">➕</a>
+                    <a class='left' tabindex="-1" onClick="switchDevice('{{ .GetName }}', '', 100);">open</a>
                     <br/>
                 {{ end }}
 
@@ -106,7 +106,7 @@
                     <span class="left emoji">{{ .GetIconHtml }}</span>
                     {{ $name := .GetName }}
                     {{ range $cmd := .GetCommands }}
-                        <a class='textbutton' tabindex="-1" onClick="switchDevice('{{ $name }}', '{{ $cmd }}');">{{ $cmd }}</a>
+                        <a class='textbutton' tabindex="-1" onClick="switchDevice('{{ $name }}', '', '{{ $cmd }}');">{{ $cmd }}</a>
                     {{ end }}
                     <br/>
                 {{ end }}
@@ -115,7 +115,7 @@
                     <span class="left emoji">{{ .GetIconHtml }}</span>
                     {{ $name := .GetName }}
                     {{ range $cmd := .GetCommands }}
-                    <a class='textbutton' tabindex="-1" onClick="switchDevice('{{ $name }}', '{{ $cmd }}');">{{ $cmd }}</a>
+                    <a class='textbutton' tabindex="-1" onClick="switchDevice('{{ $name }}', '', '{{ $cmd }}');">{{ $cmd }}</a>
                     {{ end }}
                     <br/>
                 {{ end }}
