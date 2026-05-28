@@ -165,13 +165,6 @@ func (s *Server) ShowDashboard(webroot string, name string) http.HandlerFunc {
 			}
 		}
 
-		log.Printf("Showing dashboard %s with %d items\n", name, len(s.dashboards[name]))
-		for n, db := range s.dashboards[name] {
-			log.Printf("\t%d: %s\n", n, db.GetLabel())
-			for _, dev := range db.GetDevices() {
-				log.Printf("\t\t%s\n", dev.GetLabel())
-			}
-		}
 		templ, err := template.ParseFiles(webroot + "/dashboard.html")
 		if err != nil {
 			log.Println(err)

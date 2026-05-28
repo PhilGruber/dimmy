@@ -79,6 +79,12 @@ func NewDevice(config core.DeviceConfig) *GenericDevice {
 		}
 	}
 
+	for i := range s.Controls {
+		if s.Controls[i].Icon == "" {
+			s.Controls[i].Icon = getIcon(s.Controls[i].Name)
+		}
+	}
+
 	if s.Icon == "" && len(s.Sensors) > 0 {
 		s.Icon = s.Sensors[0].Icon
 	}
@@ -93,8 +99,20 @@ func NewDevice(config core.DeviceConfig) *GenericDevice {
 	return &s
 }
 
+func (d *GenericDevice) HasSensors() bool {
+	return len(d.Sensors) > 0
+}
+
 func (d *GenericDevice) GetSensors() []core.Sensor {
 	return d.Sensors
+}
+
+func (d *GenericDevice) HasControls() bool {
+	return len(d.Controls) > 0
+}
+
+func (d *GenericDevice) GetControls() []core.Control {
+	return d.Controls
 }
 
 func (d *GenericDevice) setControlValue(key string, value any, send bool) {
@@ -319,6 +337,8 @@ func getIcon(deviceType string) string {
 		return "💡"
 	case "occupancy":
 		return "🧍"
+	case "motor_speed":
+		return "⚙️"
 	}
 	return " "
 }

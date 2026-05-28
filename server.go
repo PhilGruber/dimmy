@@ -102,9 +102,13 @@ func (s *Server) initialize(config *core.ServerConfig) {
 	s.dashboards["all"] = make([]dimmyDevices.Panel, len(config.Panels)+len(s.devices))
 	s.dashboards["default"] = make([]dimmyDevices.Panel, len(config.Panels)+len(s.devices))
 
+	devicesInPanels := make(map[string]bool)
 	i := 0
 	for _, panelCfg := range config.Panels {
 		panel := dimmyDevices.NewPanel(panelCfg, &s.devices)
+		for _, p := range panel.GetDevices() {
+			devicesInPanels[p.GetName()] = true
+		}
 		s.dashboards["default"][i] = panel
 		s.dashboards["all"][i] = panel
 		i++
@@ -116,6 +120,9 @@ func (s *Server) initialize(config *core.ServerConfig) {
 		if device.IsPseudoDevice() {
 			continue
 		}
+		if _, ok := devicesInPanels[device.GetName()]; ok {
+			continue
+		}
 		panel := dimmyDevices.NewPanelFromDevice(device)
 		if !device.GetHidden() {
 			s.dashboards["default"][j] = panel
@@ -125,6 +132,7 @@ func (s *Server) initialize(config *core.ServerConfig) {
 		i++
 	}
 	s.dashboards["default"] = s.dashboards["default"][:j]
+	s.dashboards["all"] = s.dashboards["all"][:i]
 
 	s.channel = make(chan core.SwitchRequest, len(s.devices))
 }

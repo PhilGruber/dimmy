@@ -69,5 +69,5 @@ func (s *Shell) UpdateValue() (float64, bool) {
 }
 
 func (s *Shell) IsPseudoDevice() bool {
-	return true
+	return len(s.commands) == 0
 }

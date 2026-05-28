@@ -25,6 +25,7 @@
                     {{ if eq .GetType "sensor" }}
                     {{ $deviceName := .GetName }}
 
+                        {{ if .HasSensors }}
                         <span class="left value">
                             {{ range .GetSensors }}
                                 {{ if eq .Name "temperature" }}
@@ -40,8 +41,33 @@
                                 {{ end }}
                             {{ end }}
                         </span>
+                        {{ end }}
 
+
+                    {{ if .HasControls }}
+                        {{ range .GetControls }}
+                            <div class="panel panel-{{ .GetType }} panel-controls buttons">
+                            {{ if eq .GetType "scale" }}
+                                <span class="left emoji">{{ .GetIconHtml }}</span>
+                                <a class='left' tabindex="-1" onClick="switchDevice('{{ .Name }}', 0);">off</a>
+                                <a class='left' tabindex="-1" onClick="switchDevice('{{ .Name }}', parseInt($('#value_{{.Name}}').text()) - 10);">➖</a>
+                                <span class='value left' id='value_{{ .Name }}'></span>
+                                <a class='left' tabindex="-1" onClick="switchDevice('{{ .Name }}', parseInt($('#value_{{.Name}}').text()) + 10);">➕</a>
+                                <a class='left' tabindex="-1" onClick="switchDevice('{{ .Name }}', 100);">on</a>
+                                <br />
+                            {{ else if eq .GetType "bool" }}
+                                <span class="left emoji">{{ .GetIconHtml }}</span>
+                                <a class='left' tabindex="-1" onClick="switchDevice('{{ $deviceName }}', '{{ .Name }}', 0);">off</a>
+                                <span class='value wide' id='value_{{ .Name }}'></span>
+                                <a class='right' tabindex="-1" onClick="switchDevice('{{ $deviceName }}', '{{ .Name }}', 100);">on</a>
+                                <br />
+                            {{ else if eq .GetType "list" }}
+                            {{ end }}
+                            </div>
+                        {{ end }}
+                    {{ end }}
                 {{ end }}
+
             {{ end }}
             </div>
                 <div class="clear"></div>

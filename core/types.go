@@ -88,6 +88,10 @@ type Control struct {
 	Value        any
 }
 
+func (c *Control) GetType() string {
+	return string(c.Type)
+}
+
 type Sensor struct {
 	Name       string            `yaml:"name"`
 	Icon       string            `yaml:"icon"`
@@ -98,11 +102,22 @@ type Sensor struct {
 	ValueIcons map[string]string `yaml:"value_icons"`
 }
 
-func (s *Sensor) GetIconHtml() string {
-	if _, err := os.Stat("html/assets/icons/" + s.Icon); err == nil {
-		return "<img class='icon' src='" + s.Icon + "' alt='" + s.Name + "'>"
+func GetIconHtml(icon string, name string) string {
+	if len(icon) == 0 {
+		return name
 	}
-	return s.Icon
+	if _, err := os.Stat("html/assets/icons/" + icon); err == nil {
+		return "<img class='icon' src='" + icon + "' alt='" + name + "'>"
+	}
+	return icon
+}
+
+func (c *Control) GetIconHtml() string {
+	return GetIconHtml(c.Icon, c.Name)
+}
+
+func (s *Sensor) GetIconHtml() string {
+	return GetIconHtml(s.Icon, s.Name)
 }
 
 type ServerConfig struct {
