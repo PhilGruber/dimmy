@@ -24,9 +24,11 @@ install:
 	cp -R html/* /usr/share/dimmy
 
 deb: all
+	go test ./devices
 	rm -rf deb
 	mkdir -p deb/dimmy/usr/bin
 	mkdir -p deb/dimmy/etc/dimmy
+	mkdir -p deb/dimmy/etc/init.d
 	mkdir -p deb/dimmy/usr/share/dimmy
 	mkdir deb/dimmy/DEBIAN
 	cp deb.control deb/dimmy/DEBIAN/control
@@ -35,6 +37,7 @@ deb: all
 	cat deb/dimmy/DEBIAN/control
 	cp dimmy deb/dimmy/usr/bin
 	cp dimmyd deb/dimmy/usr/bin
+	install -m 755 dimmyd.init deb/dimmy/etc/init.d/dimmyd
 	cp *.conf.yaml.example deb/dimmy/etc/dimmy/
 	cp -R html/* deb/dimmy/usr/share/dimmy
 	dpkg-deb -Zgzip --root-owner-group --build deb/dimmy

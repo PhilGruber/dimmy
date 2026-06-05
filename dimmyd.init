@@ -1,0 +1,75 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          dimmyd
+# Required-Start:    $remote_fs $network
+# Required-Stop:     $remote_fs $network
+# Should-Start:      mosquitto
+# Should-Stop:       mosquitto
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Dimmy home automation daemon
+# Description:       Starts the Dimmy daemon, JSON API, and web dashboard.
+### END INIT INFO
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="Dimmy home automation daemon"
+NAME=dimmyd
+DAEMON=/usr/bin/$NAME
+PIDFILE=/run/$NAME.pid
+LOGFILE=/var/log/$NAME.log
+SCRIPTNAME=/etc/init.d/$NAME
+
+[ -x "$DAEMON" ] || exit 0
+
+. /lib/lsb/init-functions
+
+do_start() {
+	start-stop-daemon --start --quiet --background --make-pidfile \
+		--pidfile "$PIDFILE" --exec "$DAEMON" -- \
+		>>"$LOGFILE" 2>&1
+}
+
+do_stop() {
+	start-stop-daemon --stop --quiet --retry=TERM/30/KILL/5 \
+		--pidfile "$PIDFILE" --name "$NAME"
+	RETVAL="$?"
+	[ "$RETVAL" = 2 ] && return 2
+	rm -f "$PIDFILE"
+	return "$RETVAL"
+}
+
+case "$1" in
+	start)
+		log_daemon_msg "Starting $DESC" "$NAME"
+		do_start
+		log_end_msg "$?"
+		;;
+	stop)
+		log_daemon_msg "Stopping $DESC" "$NAME"
+		do_stop
+		log_end_msg "$?"
+		;;
+	restart|force-reload)
+		log_daemon_msg "Restarting $DESC" "$NAME"
+		do_stop
+		case "$?" in
+			0|1)
+				do_start
+				log_end_msg "$?"
+				;;
+			*)
+				log_end_msg 1
+				;;
+		esac
+		;;
+	status)
+		status_of_proc -p "$PIDFILE" "$DAEMON" "$NAME"
+		exit "$?"
+		;;
+	*)
+		echo "Usage: $SCRIPTNAME {start|stop|restart|force-reload|status}" >&2
+		exit 3
+		;;
+esac
+
+exit 0
