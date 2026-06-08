@@ -9,7 +9,7 @@ ExecStart=/usr/bin/dimmyd
 Restart=on-failure
 RestartSec=5s
 StandardOutput=append:/var/log/dimmyd.log
-StandardError=append:/var/log/dimmyd.errors.log
+StandardError=append:/var/log/dimmyd.log
 
 [Install]
 WantedBy=multi-user.target
