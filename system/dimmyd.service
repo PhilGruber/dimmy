@@ -1,0 +1,15 @@
+[Unit]
+Description=Dimmy home automation daemon
+After=network-online.target mosquitto.service
+Wants=network-online.target mosquitto.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/dimmyd
+Restart=on-failure
+RestartSec=5s
+StandardOutput=append:/var/log/dimmyd.log
+StandardError=append:/var/log/dimmyd.errors.log
+
+[Install]
+WantedBy=multi-user.target

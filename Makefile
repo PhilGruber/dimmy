@@ -30,6 +30,7 @@ deb: all
 	mkdir -p deb/dimmy/etc/dimmy
 	mkdir -p deb/dimmy/etc/init.d
 	mkdir -p deb/dimmy/usr/share/dimmy
+	mkdir -p deb/dimmy/lib/systemd/system
 	mkdir deb/dimmy/DEBIAN
 	cp deb.control deb/dimmy/DEBIAN/control
 	sed -i'' "s/__version__/$(VERSION)/" deb/dimmy/DEBIAN/control
@@ -37,7 +38,9 @@ deb: all
 	cat deb/dimmy/DEBIAN/control
 	cp dimmy deb/dimmy/usr/bin
 	cp dimmyd deb/dimmy/usr/bin
-	install -m 755 dimmyd.init deb/dimmy/etc/init.d/dimmyd
-	cp *.conf.yaml.example deb/dimmy/etc/dimmy/
+	install -m 755 system/dimmyd.init deb/dimmy/etc/init.d/dimmyd
+	install -m 755 system/dimmyd.service deb/dimmy/lib/systemd/system
+	cp dimmyd.conf.yaml.example deb/dimmy/etc/dimmy/dimmyd.conf.yaml
+	cp rules.conf.yaml.example deb/dimmy/etc/dimmy/rules.conf.yaml
 	cp -R html/* deb/dimmy/usr/share/dimmy
 	dpkg-deb -Zgzip --root-owner-group --build deb/dimmy
