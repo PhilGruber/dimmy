@@ -8,9 +8,9 @@ type DeviceConfig struct {
 	Type    string         `yaml:"type"`
 	Topic   string         `yaml:"topic"`
 	Name    string         `yaml:"name"`
-	Label   string         `yaml:"label"`
-	Icon    string         `yaml:"icon"`
-	Options *configOptions `yaml:"options"`
+	Label   string         `yaml:"label,omitempty"`
+	Icon    string         `yaml:"icon,omitempty"`
+	Options *ConfigOptions `yaml:"options,omitempty"`
 }
 
 type RuleConfig struct {
@@ -42,29 +42,29 @@ type PanelConfig struct {
 	Devices []string `yaml:"devices"`
 }
 
-type configOptions struct {
-	Hidden           *bool              `yaml:"hidden"`
-	Transition       *bool              `yaml:"transition"`
-	Commands         *map[string]string `yaml:"commands,flow"`
-	Sensors          *[]Sensor          `yaml:"sensors,flow"`
-	Controls         *[]Control         `yaml:"controls,flow"`
-	Devices          *[]string          `yaml:"devices,flow"`
-	PreventResending bool               `yaml:"prevent_resending"`
+type ConfigOptions struct {
+	Hidden           *bool              `yaml:"hidden,omitempty"`
+	Transition       *bool              `yaml:"transition,omitempty"`
+	Commands         *map[string]string `yaml:"commands,omitempty,flow"`
+	Sensors          *[]Sensor          `yaml:"sensors,omitempty,flow"`
+	Controls         *[]Control         `yaml:"controls,omitempty,flow"`
+	Devices          *[]string          `yaml:"devices,omitempty,flow"`
+	PreventResending bool               `yaml:"prevent_resending,omitempty"`
 
-	History *bool `yaml:"history"`
+	History *bool `yaml:"history,omitempty"`
 
 	/* deprecated */
-	Fields *[]string `yaml:"fields,flow"`
+	Fields *[]string `yaml:"fields,omitempty,flow"`
 	/* deprecated */
-	Timeout *int `yaml:"timeout"`
+	Timeout *int `yaml:"timeout,omitempty"`
 	/* deprecated */
-	Target *string `yaml:"target"`
+	Target *string `yaml:"target,omitempty"`
 	/* deprecated */
-	Min *int `yaml:"min"`
+	Min *int `yaml:"min,omitempty"`
 	/* deprecated */
-	Max *int `yaml:"max"`
+	Max *int `yaml:"max,omitempty"`
 	/* deprecated */
-	Margin *float64 `yaml:"margin"`
+	Margin *float64 `yaml:"margin,omitempty"`
 }
 
 type ControlType string
@@ -79,13 +79,14 @@ const (
 
 type Control struct {
 	Name         string      `yaml:"name"`
-	Icon         string      `yaml:"icon"`
+	Icon         string      `yaml:"icon,omitempty"`
 	Type         ControlType `yaml:"type"`
-	Hidden       bool        `yaml:"hidden"`
-	Min          *int        `yaml:"min"`
-	Max          *int        `yaml:"max"`
-	NeedsSending bool
-	Value        any
+	Hidden       bool        `yaml:"hidden,omitempty"`
+	Min          *int        `yaml:"min,omitempty"`
+	Max          *int        `yaml:"max,omitempty"`
+	NeedsSending bool        `yaml:"-"`
+	Value        any         `yaml:"-"`
+	Values       any         `yaml:"values,omitempty"`
 }
 
 func (c *Control) GetType() string {
@@ -94,12 +95,12 @@ func (c *Control) GetType() string {
 
 type Sensor struct {
 	Name       string            `yaml:"name"`
-	Icon       string            `yaml:"icon"`
-	Values     []string          `yaml:"values"`
-	Hidden     bool              `yaml:"hidden"`
-	ShowSince  *string           `yaml:"show_since"`
-	History    *bool             `yaml:"history"`
-	ValueIcons map[string]string `yaml:"value_icons"`
+	Icon       string            `yaml:"icon,omitempty"`
+	Values     []string          `yaml:"values,omitempty"`
+	Hidden     bool              `yaml:"hidden,omitempty"`
+	ShowSince  *string           `yaml:"show_since,omitempty"`
+	History    *bool             `yaml:"history,omitempty"`
+	ValueIcons map[string]string `yaml:"value_icons,omitempty"`
 }
 
 func GetIconHtml(icon string, name string) string {
@@ -129,6 +130,7 @@ type ServerConfig struct {
 	Devices    []DeviceConfig `yaml:"devices"`
 	Rules      []RuleConfig   `yaml:"rules"`
 	Panels     []PanelConfig  `yaml:"panels"`
+	Filename   string         `yaml:"-"`
 }
 
 func ToPtr[T any](v T) *T {

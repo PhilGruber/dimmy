@@ -99,6 +99,99 @@ func NewDevice(config core.DeviceConfig) *GenericDevice {
 	return &s
 }
 
+func NewDeviceFromMessage(topic string, data map[string]any) *GenericDevice {
+	d := GenericDevice{}
+	d.setBaseConfig(core.DeviceConfig{Name: topic, Topic: topic})
+	d.MqttState = topic
+	d.Type = LikelyDeviceType(topic, data)
+	d.valueMutex = new(sync.RWMutex)
+	d.Values = make(map[string]*SensorValue)
+
+	d.UpdateFromMessage(data)
+
+	log.Printf("Found a new device: %v\n", data)
+
+	return &d
+}
+
+func (d *GenericDevice) UpdateFromMessage(data map[string]any) {
+
+	d.Type = LikelyDeviceType("", data)
+
+	for key, value := range data {
+		if d.likelySensor(key) && !d.hasSensor(key) {
+			log.Printf("\tAdding new Sensor: %s\n", key)
+			sensor := core.Sensor{
+				Name:   key,
+				Icon:   getIcon(key),
+				Hidden: true,
+			}
+			if val, ok := value.(string); ok {
+				sensor.Values = make([]string, 1)
+				sensor.Values[0] = val
+			}
+			d.Sensors = append(d.Sensors, sensor)
+			d.Triggers = append(d.Triggers, key)
+			d.Values[key] = &SensorValue{LastChanged: time.Unix(0, 0), History: make([]SensorHistory, 0)}
+		}
+		if d.likelyControl(key) && !d.hasControl(key) {
+			log.Printf("\tAdding new Control: %s\n", key)
+			controlType := core.ControlTypeBool
+			var minValue *int
+			var maxValue *int
+			if key == "brightness" {
+				controlType = core.ControlTypeScale
+				minValue = core.ToPtr(0)
+				maxValue = core.ToPtr(254)
+			}
+			control := core.Control{
+				Name:         key,
+				Icon:         getIcon(key),
+				Type:         controlType,
+				Hidden:       true,
+				Min:          minValue,
+				Max:          maxValue,
+				NeedsSending: false,
+				Value:        nil,
+			}
+			d.Controls = append(d.Controls, control)
+			d.Receivers = append(d.Receivers, key)
+		}
+	}
+}
+
+func (d *GenericDevice) hasSensor(name string) bool {
+	for _, sensor := range d.Sensors {
+		if sensor.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func (d *GenericDevice) hasControl(name string) bool {
+	for _, control := range d.Controls {
+		if control.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func (d *GenericDevice) Config(name string) core.DeviceConfig {
+	sensors := append([]core.Sensor(nil), d.Sensors...)
+	controls := append([]core.Control(nil), d.Controls...)
+	return core.DeviceConfig{
+		Name:  name,
+		Type:  "device",
+		Topic: d.MqttTopic,
+		Options: &core.ConfigOptions{
+			Sensors:  &sensors,
+			Controls: &controls,
+		},
+	}
+}
+
 func (d *GenericDevice) HasSensors() bool {
 	return len(d.Sensors) > 0
 }

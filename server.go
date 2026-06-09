@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/PhilGruber/dimmy/core"
@@ -15,10 +17,14 @@ import (
 )
 
 type Server struct {
-	dashboards map[string][]dimmyDevices.Panel
-	devices    map[string]dimmyDevices.DeviceInterface
-	rules      []dimmyDevices.Rule
-	channel    chan core.SwitchRequest
+	dashboards     map[string][]dimmyDevices.Panel
+	devices        map[string]dimmyDevices.DeviceInterface
+	unknownDevices map[string]dimmyDevices.DeviceInterface
+	rules          []dimmyDevices.Rule
+	channel        chan core.SwitchRequest
+	config         *core.ServerConfig
+	mqttClient     mqtt.Client
+	mutex          sync.RWMutex
 }
 
 func main() {
@@ -44,8 +50,10 @@ func main() {
 }
 
 func (s *Server) initialize(config *core.ServerConfig) {
+	s.config = config
 
 	s.devices = make(map[string]dimmyDevices.DeviceInterface)
+	s.unknownDevices = make(map[string]dimmyDevices.DeviceInterface)
 
 	for _, deviceConfig := range config.Devices {
 		switch deviceConfig.Type {
@@ -146,10 +154,12 @@ func (s *Server) Start(config *core.ServerConfig) {
 	http.Handle("/assets/", http.StripPrefix("/assets/", assets))
 	http.Handle("/api/switch", s.ReceiveRequest())
 	http.Handle("/api/status", s.ShowStatus(&s.devices))
-	http.Handle("/", s.ShowDashboard(config.WebRoot, "default"))
 	http.Handle("/dashboard/all", s.ShowDashboard(config.WebRoot, "all"))
+	http.Handle("/devices/new-devices", s.ShowUnknownDevices(config.WebRoot))
+	http.Handle("/devices/new-devices/save", s.SaveUnknownDevice())
 	http.Handle("/rules/add-single-use", s.AddSingleUseRule(config.WebRoot))
 	http.Handle("/rules/edit", s.EditRules(config.WebRoot))
+	http.Handle("/", s.ShowDashboard(config.WebRoot, "default"))
 
 	log.Printf("Listening on port %d", config.Port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
@@ -158,20 +168,25 @@ func (s *Server) Start(config *core.ServerConfig) {
 func (s *Server) eventLoop(mqttServer string) {
 	hostname, _ := os.Hostname()
 	client := s.initMqtt(mqttServer, "goserver-"+hostname)
+	s.mutex.Lock()
+	s.mqttClient = client
+	s.mutex.Unlock()
 
-	for name := range s.devices {
-		if s.devices[name].GetMqttStateTopic() != "" {
-			log.Printf("[%32s] Subscribing to %s\n", name, s.devices[name].GetMqttStateTopic())
-			client.Subscribe(s.devices[name].GetMqttStateTopic(), 0, s.devices[name].GetMessageHandler(s.channel, s.devices[name]))
-			s.devices[name].PollValue(client)
+	client.Subscribe("#", 0, s.DetectDevice())
+
+	for name, device := range s.deviceSnapshot() {
+		if device.GetMqttStateTopic() != "" {
+			log.Printf("[%32s] Subscribing to %s\n", name, device.GetMqttStateTopic())
+			client.Subscribe(device.GetMqttStateTopic(), 0, device.GetMessageHandler(s.channel, device))
+			device.PollValue(client)
 		}
 	}
 
 	for {
 
-		for name := range s.devices {
-			if _, ok := s.devices[name].UpdateValue(); ok {
-				go s.devices[name].PublishValue(client)
+		for _, device := range s.deviceSnapshot() {
+			if _, ok := device.UpdateValue(); ok {
+				go device.PublishValue(client)
 			}
 		}
 
@@ -202,13 +217,31 @@ func (s *Server) processRequests() {
 	for {
 		request := <-s.channel
 		for _, device := range strings.Split(request.Device, ",") {
-			if _, ok := s.devices[device]; ok {
-				s.devices[device].ProcessRequest(request)
+			target, ok := s.getDevice(device)
+			if ok {
+				target.ProcessRequest(request)
 			} else {
 				log.Printf("Can't find device for request [%s (%s)]", device, request.Device)
 			}
 		}
 	}
+}
+
+func (s *Server) deviceSnapshot() map[string]dimmyDevices.DeviceInterface {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	devices := make(map[string]dimmyDevices.DeviceInterface, len(s.devices))
+	for name, device := range s.devices {
+		devices[name] = device
+	}
+	return devices
+}
+
+func (s *Server) getDevice(name string) (dimmyDevices.DeviceInterface, bool) {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+	device, ok := s.devices[name]
+	return device, ok
 }
 
 func (s *Server) initMqtt(hostname string, clientId string) mqtt.Client {
@@ -224,4 +257,53 @@ func (s *Server) initMqtt(hostname string, clientId string) mqtt.Client {
 	}
 	log.Println("Connected to MQTT at " + hostname)
 	return client
+}
+
+func (s *Server) DetectDevice() mqtt.MessageHandler {
+	log.Println("Subscribing to detect new devices")
+	// Parse incoming mqtt messages for new devices
+	return func(client mqtt.Client, mqttMessage mqtt.Message) {
+		if IsMetaTopic(mqttMessage.Topic()) {
+			return
+		}
+		payload := mqttMessage.Payload()
+		var data map[string]any
+		err := json.Unmarshal(payload, &data)
+		if err != nil {
+			return
+		}
+		topic := dimmyDevices.LikelyDeviceTopic(mqttMessage.Topic())
+		s.mutex.Lock()
+		defer s.mutex.Unlock()
+		for _, d := range s.devices {
+			if d.GetMqttTopic() == topic || d.GetMqttStateTopic() == topic {
+				// We know this device. Nothing to do.
+				return
+			}
+		}
+
+		var newDevice dimmyDevices.DeviceInterface
+		for _, d := range s.unknownDevices {
+			if d.GetMqttTopic() == topic || d.GetMqttStateTopic() == topic {
+				log.Printf("Device %s detected previously. Updating config...\n", topic)
+				d.UpdateFromMessage(data)
+				return
+			}
+		}
+
+		if newDevice == nil {
+			newDevice = dimmyDevices.NewDeviceFromMessage(topic, data)
+		}
+
+		s.unknownDevices[newDevice.GetName()] = newDevice
+		log.Printf("New device %s added. We now have %d unknown devices\n\n", topic, len(s.unknownDevices))
+	}
+}
+
+func IsMetaTopic(topic string) bool {
+	r := strings.Split(topic, "/")
+	if len(r) > 1 && r[1] == "bridge" {
+		return true
+	}
+	return false
 }

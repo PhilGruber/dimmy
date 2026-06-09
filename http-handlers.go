@@ -7,7 +7,9 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/PhilGruber/dimmy/core"
@@ -46,27 +48,142 @@ func (s *Server) ReceiveRequest() http.HandlerFunc {
 			return
 		}
 		s.channel <- request
-		_, _ = fmt.Fprintf(output, jsonResponse(true, request, fmt.Sprintf("Sent %s command to %s", request.Command, request.Device)))
+		_, _ = io.WriteString(output, jsonResponse(true, request, fmt.Sprintf("Sent %s command to %s", request.Command, request.Device)))
 	}
 }
 
 func (s *Server) ShowStatus(devices *map[string]dimmyDevices.DeviceInterface) http.HandlerFunc {
 	return func(output http.ResponseWriter, request *http.Request) {
 		output.Header().Set("Content-Type", "application/json")
-		for _, device := range *devices {
+		snapshot := s.deviceSnapshot()
+		for _, device := range snapshot {
 			device.Lock()
 		}
-		jsonDevices, _ := json.Marshal(devices)
-		for _, device := range *devices {
+		jsonDevices, _ := json.Marshal(snapshot)
+		for _, device := range snapshot {
 			device.Unlock()
 		}
-		_, _ = fmt.Fprintf(output, string(jsonDevices))
+		_, _ = output.Write(jsonDevices)
+	}
+}
+
+type unknownDeviceView struct {
+	Name     string
+	Topic    string
+	Type     string
+	Sensors  []string
+	Controls []string
+}
+
+func (s *Server) ShowUnknownDevices(webroot string) http.HandlerFunc {
+	return func(output http.ResponseWriter, request *http.Request) {
+		s.mutex.RLock()
+		devices := make([]unknownDeviceView, 0, len(s.unknownDevices))
+		for _, device := range s.unknownDevices {
+			view := unknownDeviceView{
+				Name:  device.GetName(),
+				Topic: device.GetMqttTopic(),
+				Type:  device.GetType(),
+			}
+			if generic, ok := device.(*dimmyDevices.GenericDevice); ok {
+				for _, sensor := range generic.GetSensors() {
+					view.Sensors = append(view.Sensors, sensor.Name)
+				}
+				for _, control := range generic.GetControls() {
+					view.Controls = append(view.Controls, control.Name)
+				}
+			}
+			devices = append(devices, view)
+		}
+		s.mutex.RUnlock()
+		sort.Slice(devices, func(i, j int) bool {
+			return devices[i].Topic < devices[j].Topic
+		})
+
+		templ, err := template.ParseFiles(webroot + "/unknown-devices.html")
+		if err != nil {
+			http.Error(output, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if err := templ.Execute(output, struct {
+			Devices []unknownDeviceView
+		}{devices}); err != nil {
+			log.Println(err)
+		}
+	}
+}
+
+func (s *Server) SaveUnknownDevice() http.HandlerFunc {
+	return func(output http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodPost {
+			http.Error(output, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		if err := request.ParseForm(); err != nil {
+			http.Error(output, "invalid form data", http.StatusBadRequest)
+			return
+		}
+
+		topic := strings.TrimSpace(request.FormValue("topic"))
+		name := strings.TrimSpace(request.FormValue("name"))
+		if topic == "" || name == "" {
+			http.Error(output, "topic and device name are required", http.StatusBadRequest)
+			return
+		}
+
+		s.mutex.Lock()
+
+		if _, exists := s.devices[name]; exists {
+			s.mutex.Unlock()
+			http.Error(output, "a device with that name already exists", http.StatusConflict)
+			return
+		}
+		device, exists := s.unknownDevices[topic]
+		if !exists {
+			s.mutex.Unlock()
+			http.Error(output, "unknown device was not found", http.StatusNotFound)
+			return
+		}
+		generic, ok := device.(*dimmyDevices.GenericDevice)
+		if !ok {
+			s.mutex.Unlock()
+			http.Error(output, "unknown device type cannot be saved", http.StatusUnprocessableEntity)
+			return
+		}
+
+		deviceConfig := generic.Config(name)
+		if err := core.AddDeviceToConfig(s.config.Filename, deviceConfig); err != nil {
+			s.mutex.Unlock()
+			log.Printf("Could not save device %s: %s", topic, err)
+			http.Error(output, "could not update config: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		generic.Name = name
+		generic.Label = name
+		s.devices[name] = generic
+		delete(s.unknownDevices, topic)
+		s.config.Devices = append(s.config.Devices, deviceConfig)
+		mqttClient := s.mqttClient
+		s.mutex.Unlock()
+
+		if mqttClient != nil && generic.GetMqttStateTopic() != "" {
+			token := mqttClient.Subscribe(generic.GetMqttStateTopic(), 0, generic.GetMessageHandler(s.channel, generic))
+			if token.Wait() && token.Error() != nil {
+				log.Printf("Could not subscribe saved device %s: %s", name, token.Error())
+			}
+			generic.PollValue(mqttClient)
+		}
+
+		output.Header().Set("Content-Type", "application/json")
+		output.WriteHeader(http.StatusCreated)
+		_, _ = fmt.Fprintf(output, `{"name":%q}`, name)
 	}
 }
 
 func (s *Server) AddSingleUseRule(webroot string) http.HandlerFunc {
 	var devices []dimmyDevices.DeviceInterface
-	for _, device := range s.devices {
+	for _, device := range s.deviceSnapshot() {
 		if device.HasReceivers() {
 			devices = append(devices, device)
 		}
@@ -83,7 +200,12 @@ func (s *Server) AddSingleUseRule(webroot string) http.HandlerFunc {
 			log.Printf("Form: %v\n", form)
 
 			var dimmyTime *dimmyDevices.DimmyTime
-			dimmyTime = s.devices["time"].(*dimmyDevices.DimmyTime)
+			timeDevice, ok := s.getDevice("time")
+			if !ok {
+				http.Error(output, "time device is unavailable", http.StatusInternalServerError)
+				return
+			}
+			dimmyTime = timeDevice.(*dimmyDevices.DimmyTime)
 
 			var unit time.Duration
 			switch form["unit"] {
@@ -111,7 +233,12 @@ func (s *Server) AddSingleUseRule(webroot string) http.HandlerFunc {
 				},
 				Triggers: dimmyTime.CreateTriggersFromTime(triggerTime),
 			}
-			if s.devices[form["device"]].GetType() == "light" {
+			targetDevice, ok := s.getDevice(form["device"])
+			if !ok {
+				http.Error(output, "device was not found", http.StatusNotFound)
+				return
+			}
+			if targetDevice.GetType() == "light" {
 				ruleConfig.Receivers = append(ruleConfig.Receivers, core.ReceiverConfig{
 					DeviceName: form["device"],
 					Key:        "duration",
@@ -121,7 +248,7 @@ func (s *Server) AddSingleUseRule(webroot string) http.HandlerFunc {
 
 			log.Printf("Rec: %v\n", ruleConfig.Receivers[0])
 
-			rule := dimmyDevices.NewRule(ruleConfig, s.devices)
+			rule := dimmyDevices.NewRule(ruleConfig, s.deviceSnapshot())
 			rule.SingleUse = true
 
 			s.rules = append(s.rules, *rule)
@@ -157,9 +284,13 @@ func (s *Server) ShowDashboard(webroot string, name string) http.HandlerFunc {
 				case "off":
 					sr.Value = "0"
 				case "+":
-					sr.Value = fmt.Sprintf("%.3f", s.devices[sr.Device].GetCurrent()+10)
+					if device, ok := s.getDevice(sr.Device); ok {
+						sr.Value = fmt.Sprintf("%.3f", device.GetCurrent()+10)
+					}
 				case "-":
-					sr.Value = fmt.Sprintf("%.3f", s.devices[sr.Device].GetCurrent()-10)
+					if device, ok := s.getDevice(sr.Device); ok {
+						sr.Value = fmt.Sprintf("%.3f", device.GetCurrent()-10)
+					}
 				}
 				s.channel <- sr
 			}
@@ -173,7 +304,7 @@ func (s *Server) ShowDashboard(webroot string, name string) http.HandlerFunc {
 		err = templ.Execute(output, struct {
 			Devices map[string]dimmyDevices.DeviceInterface
 			Panels  []dimmyDevices.Panel
-		}{s.devices, s.dashboards[name]})
+		}{s.deviceSnapshot(), s.dashboards[name]})
 		if err != nil {
 			log.Println(err)
 			return

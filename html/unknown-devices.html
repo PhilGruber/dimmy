@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Unknown Devices - Dimmy</title>
+        <link rel="stylesheet" type="text/css" href="/assets/unknown-devices.css">
+        <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    </head>
+    <body>
+        <main class="page">
+            <header>
+                <div>
+                    <p class="eyebrow">Dimmy</p>
+                    <h1>New detected devices</h1>
+                    <p class="intro">Devices detected from MQTT that are not in the configuration yet.</p>
+                </div>
+                <a class="back-link" href="/">Dashboard</a>
+            </header>
+
+            <div id="message" class="message" hidden></div>
+
+            <section class="table-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>MQTT topic</th>
+                            <th>Type</th>
+                            <th>Sensors</th>
+                            <th>Controls</th>
+                            <th><span class="visually-hidden">Actions</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="device-rows">
+                    {{ range .Devices }}
+                        <tr data-topic="{{ .Topic }}">
+                            <td class="topic">{{ .Topic }}</td>
+                            <td>{{ .Type }}</td>
+                            <td>
+                                {{ range .Sensors }}<span class="tag sensor">{{ . }}</span>{{ else }}<span class="muted">None</span>{{ end }}
+                            </td>
+                            <td>
+                                {{ range .Controls }}<span class="tag control">{{ . }}</span>{{ else }}<span class="muted">None</span>{{ end }}
+                            </td>
+                            <td class="actions"><a href="#" class="save-link" data-topic="{{ .Topic }}">save</a></td>
+                        </tr>
+                    {{ else }}
+                        <tr id="empty-row">
+                            <td colspan="5" class="empty">No new devices detected.</td>
+                        </tr>
+                    {{ end }}
+                    </tbody>
+                </table>
+            </section>
+        </main>
+
+        <script>
+            const message = document.getElementById("message");
+
+            function showMessage(text, isError) {
+                message.textContent = text;
+                message.className = isError ? "message error" : "message success";
+                message.hidden = false;
+            }
+
+            document.querySelectorAll(".save-link").forEach((link) => {
+                link.addEventListener("click", async (event) => {
+                    event.preventDefault();
+                    const topic = link.dataset.topic;
+                    const name = window.prompt("Device name", topic.split("/").pop());
+                    if (name === null || name.trim() === "") {
+                        return;
+                    }
+
+                    link.classList.add("busy");
+                    link.textContent = "saving...";
+                    try {
+                        const response = await fetch("/devices/new-devices/save", {
+                            method: "POST",
+                            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                            body: new URLSearchParams({topic: topic, name: name.trim()})
+                        });
+                        if (!response.ok) {
+                            throw new Error((await response.text()).trim() || "Could not save device");
+                        }
+
+                        link.closest("tr").remove();
+                        showMessage(`Saved ${name.trim()}.`, false);
+                        if (!document.querySelector("#device-rows tr")) {
+                            document.getElementById("device-rows").innerHTML =
+                                '<tr id="empty-row"><td colspan="5" class="empty">No unknown devices detected.</td></tr>';
+                        }
+                    } catch (error) {
+                        link.classList.remove("busy");
+                        link.textContent = "save";
+                        showMessage(error.message, true);
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

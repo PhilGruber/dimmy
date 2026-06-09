@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -44,6 +45,7 @@ type DeviceInterface interface {
 	HasReceivers() bool
 	GetIconHtml() template.HTML
 	IsPseudoDevice() bool
+	UpdateFromMessage(map[string]any)
 
 	PublishValue(mqtt.Client)
 	PollValue(mqtt.Client)
@@ -291,4 +293,66 @@ func (d *Device) GetIconHtml() template.HTML {
 
 func (d *Device) IsPseudoDevice() bool {
 	return false
+}
+
+func (d *Device) likelySensor(name string) bool {
+	switch name {
+	case "temperature", "humidity", "illuminance", "action", "contact", "occupancy", "presence", "vibration",
+		"soil_moisture", "current", "energy":
+		return true
+	}
+	return false
+}
+
+func (d *Device) likelyControl(name string) bool {
+	switch name {
+	case "brightness", "color", "position", "motor_speed", "color_temp", "color_mode",
+		"Dimmer", "Color", "CT":
+		return true
+	}
+	return false
+}
+
+func LikelyDeviceTopic(topic string) string {
+	if strings.HasSuffix(topic, "/availability") {
+		return topic[0 : len(topic)-13]
+	}
+	if strings.HasSuffix(topic, "/STATE") {
+		return topic[0 : len(topic)-6]
+	}
+	if strings.HasSuffix(topic, "/RESULT") {
+		return topic[0 : len(topic)-7]
+	}
+	if strings.HasSuffix(topic, "/set") {
+		return topic[0 : len(topic)-4]
+	}
+	if strings.HasSuffix(topic, "/get") {
+		return topic[0 : len(topic)-4]
+	}
+	return topic
+}
+
+func LikelyDeviceType(topic string, data map[string]any) string {
+	if _, ok := data["brightness"]; ok {
+		if _, ok := data["color"]; ok {
+			return "zlight"
+		}
+		if _, ok := data["color_temp"]; ok {
+			return "zlight"
+		}
+		if _, ok := data["color_mode"]; ok {
+			return "zlight"
+		}
+	}
+	if _, ok := data["Dimmer"]; ok {
+		return "light"
+	}
+	if _, ok := data["learned_ir_code"]; ok {
+		return "ir-control"
+	}
+	return "device"
+}
+
+func (d *Device) UpdateFromMessage(data map[string]any) {
+	d.Type = LikelyDeviceType("", data)
 }
