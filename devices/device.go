@@ -343,6 +343,9 @@ func LikelyDeviceType(topic string, data map[string]any) string {
 		if _, ok := data["color_mode"]; ok {
 			return "zlight"
 		}
+		if state, ok := data["state"]; ok && (state == "ON" || state == "OFF") {
+			return "zlight"
+		}
 	}
 	if _, ok := data["Dimmer"]; ok {
 		return "light"
