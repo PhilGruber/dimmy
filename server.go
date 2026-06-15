@@ -285,7 +285,6 @@ func (s *Server) DetectDevice() mqtt.MessageHandler {
 		var newDevice dimmyDevices.DeviceInterface
 		for _, d := range s.unknownDevices {
 			if d.GetMqttTopic() == topic || d.GetMqttStateTopic() == topic {
-				log.Printf("Device %s detected previously. Updating config...\n", topic)
 				d.UpdateFromMessage(data)
 				return
 			}
@@ -296,7 +295,6 @@ func (s *Server) DetectDevice() mqtt.MessageHandler {
 		}
 
 		s.unknownDevices[newDevice.GetName()] = newDevice
-		log.Printf("New device %s added. We now have %d unknown devices\n\n", topic, len(s.unknownDevices))
 	}
 }
 

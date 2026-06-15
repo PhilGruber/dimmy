@@ -127,3 +127,17 @@ func (l *Light) ValueToPercentage(value int) float64 {
 	}
 	return 1 + float64(value-l.GetMin()-1)*99/float64(l.GetMax()-l.GetMin()-1)
 }
+
+func (d *Light) GetConfig(name string) core.DeviceConfig {
+	config := core.DeviceConfig{
+		Name:  name,
+		Type:  "light",
+		Icon:  d.Icon,
+		Topic: d.MqttTopic,
+		Options: &core.ConfigOptions{
+			Transition: &d.transition,
+			Hidden:     &d.Hidden,
+		},
+	}
+	return config
+}

@@ -88,3 +88,18 @@ func (i *IRControl) SetReceiverValue(key string, value interface{}) {
 		i.nextRequest = &req
 	}
 }
+
+func (d *IRControl) GetConfig(name string) core.DeviceConfig {
+	config := core.DeviceConfig{
+		Name:  name,
+		Type:  "device",
+		Topic: d.MqttTopic,
+		Icon:  d.Icon,
+		Options: &core.ConfigOptions{
+			Commands:         &d.commands,
+			Hidden:           &d.Hidden,
+			PreventResending: d.preventResending,
+		},
+	}
+	return config
+}

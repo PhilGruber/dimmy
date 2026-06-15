@@ -46,6 +46,9 @@ type DeviceInterface interface {
 	GetIconHtml() template.HTML
 	IsPseudoDevice() bool
 	UpdateFromMessage(map[string]any)
+	GetConfig(string) core.DeviceConfig
+	SetName(string)
+	SetLabel(string)
 
 	PublishValue(mqtt.Client)
 	PollValue(mqtt.Client)
@@ -358,4 +361,23 @@ func LikelyDeviceType(topic string, data map[string]any) string {
 
 func (d *Device) UpdateFromMessage(data map[string]any) {
 	d.Type = LikelyDeviceType("", data)
+}
+
+func (d *Device) GetConfig(name string) core.DeviceConfig {
+	config := core.DeviceConfig{
+		Name:    name,
+		Type:    "device",
+		Topic:   d.MqttTopic,
+		Icon:    d.Icon,
+		Options: &core.ConfigOptions{},
+	}
+	return config
+}
+
+func (d *Device) SetName(name string) {
+	d.Name = name
+}
+
+func (d *Device) SetLabel(label string) {
+	d.Label = label
 }

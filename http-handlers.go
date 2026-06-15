@@ -126,10 +126,13 @@ func (s *Server) SaveUnknownDevice() http.HandlerFunc {
 
 		topic := strings.TrimSpace(request.FormValue("topic"))
 		name := strings.TrimSpace(request.FormValue("name"))
+		deviceType := strings.TrimSpace(request.FormValue("type"))
 		if topic == "" || name == "" {
 			http.Error(output, "topic and device name are required", http.StatusBadRequest)
 			return
 		}
+
+		log.Printf("Saving device %s of type %s (topic=%s)\n", name, deviceType, topic)
 
 		s.mutex.Lock()
 
@@ -138,20 +141,32 @@ func (s *Server) SaveUnknownDevice() http.HandlerFunc {
 			http.Error(output, "a device with that name already exists", http.StatusConflict)
 			return
 		}
-		device, exists := s.unknownDevices[topic]
+		bareDevice, exists := s.unknownDevices[topic]
 		if !exists {
 			s.mutex.Unlock()
 			http.Error(output, "unknown device was not found", http.StatusNotFound)
 			return
 		}
-		generic, ok := device.(*dimmyDevices.GenericDevice)
+		var device dimmyDevices.DeviceInterface
+		var deviceConfig core.DeviceConfig
+		ok := true
+		switch deviceType {
+		case "generic-device":
+			device = dimmyDevices.NewDevice(bareDevice.GetConfig(name))
+		case "zlight":
+			device = dimmyDevices.NewZLight(bareDevice.GetConfig(name))
+		case "light":
+			device = dimmyDevices.NewLight(bareDevice.GetConfig(name))
+		case "ir-control":
+			device = dimmyDevices.NewIrControl(bareDevice.GetConfig(name))
+		}
 		if !ok {
 			s.mutex.Unlock()
-			http.Error(output, "unknown device type cannot be saved", http.StatusUnprocessableEntity)
+			http.Error(output, "unknown device of type "+deviceType+" cannot be saved", http.StatusUnprocessableEntity)
 			return
 		}
+		deviceConfig = device.GetConfig(name)
 
-		deviceConfig := generic.Config(name)
 		if err := core.AddDeviceToConfig(s.config.Filename, deviceConfig); err != nil {
 			s.mutex.Unlock()
 			log.Printf("Could not save device %s: %s", topic, err)
@@ -159,20 +174,20 @@ func (s *Server) SaveUnknownDevice() http.HandlerFunc {
 			return
 		}
 
-		generic.Name = name
-		generic.Label = name
-		s.devices[name] = generic
+		device.SetName(name)
+		device.SetLabel(name)
+		s.devices[name] = device
 		delete(s.unknownDevices, topic)
 		s.config.Devices = append(s.config.Devices, deviceConfig)
 		mqttClient := s.mqttClient
 		s.mutex.Unlock()
 
-		if mqttClient != nil && generic.GetMqttStateTopic() != "" {
-			token := mqttClient.Subscribe(generic.GetMqttStateTopic(), 0, generic.GetMessageHandler(s.channel, generic))
+		if mqttClient != nil && device.GetMqttStateTopic() != "" {
+			token := mqttClient.Subscribe(device.GetMqttStateTopic(), 0, device.GetMessageHandler(s.channel, device))
 			if token.Wait() && token.Error() != nil {
 				log.Printf("Could not subscribe saved device %s: %s", name, token.Error())
 			}
-			generic.PollValue(mqttClient)
+			device.PollValue(mqttClient)
 		}
 
 		output.Header().Set("Content-Type", "application/json")

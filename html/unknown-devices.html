@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Unknown Devices - Dimmy</title>
-        <link rel="stylesheet" type="text/css" href="/assets/unknown-devices.css">
+        <link rel="stylesheet" type="text/css" href="/assets/devices.css">
         <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
     </head>
     <body>
@@ -53,9 +53,38 @@
                 </table>
             </section>
         </main>
+        <dialog id="save-device-modal" class="save-modal">
+            <form id="save-device-form" method="dialog" class="save-modal-form">
+                <h2>Save device</h2>
+                <p id="save-device-topic" class="save-modal-topic"></p>
+
+                <label for="device-name-input">Device name</label>
+                <input id="device-name-input" name="name" type="text" required>
+
+                <label for="device-type-input">Device type</label>
+                <select id="device-type-input" name="type" required>
+                    <option value="generic-device">Generic Device</option>
+                    <option value="ir-control">IR Sender</option>
+                    <option value="light">Tuya Light</option>
+                    <option value="zlight">Zigbee Light</option>
+                </select>
+
+                <div class="save-modal-actions">
+                    <button type="button" id="cancel-save-btn" class="secondary-btn">Cancel</button>
+                    <button type="submit" id="confirm-save-btn" class="primary-btn">Save</button>
+                </div>
+            </form>
+        </dialog>
 
         <script>
             const message = document.getElementById("message");
+            const saveModal = document.getElementById("save-device-modal");
+            const saveForm = document.getElementById("save-device-form");
+            const saveTopicText = document.getElementById("save-device-topic");
+            const nameInput = document.getElementById("device-name-input");
+            const typeInput = document.getElementById("device-type-input");
+            const cancelSaveBtn = document.getElementById("cancel-save-btn");
+            let activeSave = null;
 
             function showMessage(text, isError) {
                 message.textContent = text;
@@ -63,40 +92,76 @@
                 message.hidden = false;
             }
 
+            function openSaveModal(link, topic, type) {
+                activeSave = { link, topic };
+                saveTopicText.textContent = topic;
+                nameInput.value = topic.split("/").pop() || "";
+                typeInput.value = type;
+                saveModal.showModal();
+                nameInput.focus();
+                nameInput.select();
+            }
+
+            function closeSaveModal() {
+                saveModal.close();
+                activeSave = null;
+                saveForm.reset();
+            }
+
+            cancelSaveBtn.addEventListener("click", () => {
+                closeSaveModal();
+            });
+
+            saveForm.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                if (!activeSave) {
+                    return;
+                }
+
+                const name = nameInput.value.trim();
+                const deviceType = typeInput.value;
+                if (name === "" || deviceType === "") {
+                    return;
+                }
+
+                const { link, topic } = activeSave;
+                closeSaveModal();
+
+                link.classList.add("busy");
+                link.textContent = "saving...";
+                try {
+                    const response = await fetch("/devices/new-devices/save", {
+                        method: "POST",
+                        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                        body: new URLSearchParams({topic: topic, name: name, type: deviceType})
+                    });
+                    if (!response.ok) {
+                        throw new Error((await response.text()).trim() || "Could not save device");
+                    }
+
+                    link.closest("tr").remove();
+                    showMessage(`Saved ${name}.`, false);
+                    if (!document.querySelector("#device-rows tr")) {
+                        document.getElementById("device-rows").innerHTML =
+                            '<tr id="empty-row"><td colspan="5" class="empty">No unknown devices detected.</td></tr>';
+                    }
+                } catch (error) {
+                    link.classList.remove("busy");
+                    link.textContent = "save";
+                    showMessage(error.message, true);
+                }
+            });
+
             document.querySelectorAll(".save-link").forEach((link) => {
-                link.addEventListener("click", async (event) => {
+                link.addEventListener("click", (event) => {
                     event.preventDefault();
                     const topic = link.dataset.topic;
-                    const name = window.prompt("Device name", topic.split("/").pop());
-                    if (name === null || name.trim() === "") {
-                        return;
-                    }
-
-                    link.classList.add("busy");
-                    link.textContent = "saving...";
-                    try {
-                        const response = await fetch("/devices/new-devices/save", {
-                            method: "POST",
-                            headers: {"Content-Type": "application/x-www-form-urlencoded"},
-                            body: new URLSearchParams({topic: topic, name: name.trim()})
-                        });
-                        if (!response.ok) {
-                            throw new Error((await response.text()).trim() || "Could not save device");
-                        }
-
-                        link.closest("tr").remove();
-                        showMessage(`Saved ${name.trim()}.`, false);
-                        if (!document.querySelector("#device-rows tr")) {
-                            document.getElementById("device-rows").innerHTML =
-                                '<tr id="empty-row"><td colspan="5" class="empty">No unknown devices detected.</td></tr>';
-                        }
-                    } catch (error) {
-                        link.classList.remove("busy");
-                        link.textContent = "save";
-                        showMessage(error.message, true);
-                    }
+                    const type = link.dataset.type
+                    openSaveModal(link, topic, type);
                 });
             });
+
+
         </script>
     </body>
 </html>

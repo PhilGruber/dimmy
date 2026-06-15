@@ -106,10 +106,11 @@ func NewDeviceFromMessage(topic string, data map[string]any) *GenericDevice {
 	d.Type = LikelyDeviceType(topic, data)
 	d.valueMutex = new(sync.RWMutex)
 	d.Values = make(map[string]*SensorValue)
+	d.Hidden = false
 
 	d.UpdateFromMessage(data)
 
-	log.Printf("Found a new device: %v\n", data)
+	log.Printf("Found a new device of type %s at %s\n", d.Type, topic)
 
 	return &d
 }
@@ -120,7 +121,6 @@ func (d *GenericDevice) UpdateFromMessage(data map[string]any) {
 
 	for key, value := range data {
 		if d.likelySensor(key) && !d.hasSensor(key) {
-			log.Printf("\tAdding new Sensor: %s\n", key)
 			sensor := core.Sensor{
 				Name:   key,
 				Icon:   getIcon(key),
@@ -135,7 +135,6 @@ func (d *GenericDevice) UpdateFromMessage(data map[string]any) {
 			d.Values[key] = &SensorValue{LastChanged: time.Unix(0, 0), History: make([]SensorHistory, 0)}
 		}
 		if d.likelyControl(key) && !d.hasControl(key) {
-			log.Printf("\tAdding new Control: %s\n", key)
 			controlType := core.ControlTypeBool
 			var minValue *int
 			var maxValue *int
@@ -176,20 +175,6 @@ func (d *GenericDevice) hasControl(name string) bool {
 		}
 	}
 	return false
-}
-
-func (d *GenericDevice) Config(name string) core.DeviceConfig {
-	sensors := append([]core.Sensor(nil), d.Sensors...)
-	controls := append([]core.Control(nil), d.Controls...)
-	return core.DeviceConfig{
-		Name:  name,
-		Type:  "device",
-		Topic: d.MqttTopic,
-		Options: &core.ConfigOptions{
-			Sensors:  &sensors,
-			Controls: &controls,
-		},
-	}
 }
 
 func (d *GenericDevice) HasSensors() bool {
@@ -436,4 +421,20 @@ func getIcon(deviceType string) string {
 		return "🪟"
 	}
 	return " "
+}
+
+func (d *GenericDevice) GetConfig(name string) core.DeviceConfig {
+	controls := append([]core.Control(nil), d.Controls...)
+	sensors := append([]core.Sensor(nil), d.Sensors...)
+	config := core.DeviceConfig{
+		Name:  name,
+		Type:  "device",
+		Topic: d.MqttTopic,
+		Icon:  d.Icon,
+		Options: &core.ConfigOptions{
+			Controls: &controls,
+			Sensors:  &sensors,
+		},
+	}
+	return config
 }
