@@ -1,48 +1,67 @@
+<!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>
-            Dimmy Rules Editor
-        </title>
-        <link rel='stylesheet' type='text/css' href='/assets/dashboard.css' />
-        <link rel='stylesheet' type='text/css' href='/assets/rules.css' />
-        <script src='/assets/jquery.js'></script>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Rules - Dimmy</title>
+        <link rel="stylesheet" type="text/css" href="/assets/devices.css">
+        <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
     </head>
     <body>
-
-    <div class="table">
-        {{ range .Rules }}
-        <div class='rule row'>
-            <div class='rule-content'>
-                <div class='rule-triggers cell'>
-                    {{ $last := "" }}
-                    {{ range .Triggers }}
-                    <div class='rule-trigger'>
-                        {{ if ne .Device.GetName $last }}
-                            {{ $last = .Device.GetName }}
-                            <span class="trigger-emoji">{{ .Device.GetIconHtml }}</span>
-                            <span class='trigger-label'>{{ .Device.GetName }} </span>
-                        {{ end }}
-                        <div class='trigger-value'>{{ .Key }} {{ .Condition.Operator }} {{ .Condition.Value }} </div>
-                    </div>
-                    {{ end }}
+        <main class="page">
+            <header>
+                <div>
+                    <p class="eyebrow">Dimmy</p>
+                    <h1>Rules</h1>
+                    <p class="intro">Configured automation rules with triggers and receivers.</p>
                 </div>
-                <div class='rule-receivers cell'>
-                    {{ $last := "" }}
-                    {{ range .Receivers }}
-                    <div class='rule-receiver'>
-                        {{ if ne .Device.GetName $last }}
-                            {{ $last = .Device.GetName }}
-                            <span class="receiver-emoji">{{ .Device.GetIconHtml }}</span>
-                            <span class='receiver-label'>{{ .Device.GetName }} </span>
-                        {{ end }}
-                        <div class='receiver-value'>{{ .Key }}: {{ .Value }} </div>
-                    </div>
-                    {{ end }}
-                </div>
-            </div>
-        </div>
-    {{ end }}
-    </div>
+                <a class="back-link" href="/">Dashboard</a>
+            </header>
 
+            <section class="table-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Triggers</th>
+                            <th>Receivers</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{ range .Rules }}
+                        <tr>
+                            <td>
+                                {{ $last := "" }}
+                                {{ range .Triggers }}
+                                <div>
+                                    {{ if ne .Device.GetName $last }}
+                                        {{ $last = .Device.GetName }}
+                                        <span class="tag sensor">{{ .Device.GetIconHtml }} {{ .Device.GetName }}</span>
+                                    {{ end }}
+                                    <div class="muted">{{ .Key }} {{ .Condition.Operator }} {{ .Condition.Value }}</div>
+                                </div>
+                                {{ end }}
+                            </td>
+                            <td>
+                                {{ $last := "" }}
+                                {{ range .Receivers }}
+                                <div>
+                                    {{ if ne .Device.GetName $last }}
+                                        {{ $last = .Device.GetName }}
+                                        <span class="tag control">{{ .Device.GetIconHtml }} {{ .Device.GetName }}</span>
+                                    {{ end }}
+                                    <div class="muted">{{ .Key }}: {{ .Value }}</div>
+                                </div>
+                                {{ end }}
+                            </td>
+                        </tr>
+                        {{ else }}
+                        <tr>
+                            <td colspan="2" class="empty">No rules configured.</td>
+                        </tr>
+                        {{ end }}
+                    </tbody>
+                </table>
+            </section>
+        </main>
     </body>
 </html>
