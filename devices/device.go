@@ -80,6 +80,8 @@ func (d *Device) setBaseConfig(config core.DeviceConfig) {
 	d.Current = 0
 	if config.Icon != "" {
 		d.Icon = config.Icon
+	} else {
+		d.Icon = getIcon(config.Type)
 	}
 
 	if config.Name != "" {
