@@ -411,7 +411,7 @@ func getIcon(deviceType string) string {
 		return "🔋"
 	case "power":
 		return "⚡"
-	case "light":
+	case "light", "zlight":
 		return "💡"
 	case "occupancy":
 		return "🧍"
