@@ -302,8 +302,20 @@ func (d *Device) IsPseudoDevice() bool {
 
 func (d *Device) likelySensor(name string) bool {
 	switch name {
-	case "temperature", "humidity", "illuminance", "action", "contact", "occupancy", "presence", "vibration",
-		"soil_moisture", "current", "energy":
+	// Environmental / power telemetry
+	case "temperature", "humidity", "pressure", "illuminance", "soil_moisture",
+		"co2", "voc", "pm25", "pm10", "formaldehyd", "device_temperature",
+		"current", "energy", "voltage", "power", "power_apparent", "power_factor",
+		"battery", "linkquality":
+		return true
+
+	// Binary / state-like readouts
+	case "action", "contact", "occupancy", "presence", "vibration", "tamper",
+		"smoke", "gas", "water_leak", "carbon_monoxide", "moving", "opening":
+		return true
+
+	// Motion/tilt style sensor values
+	case "angle", "angle_x", "angle_y", "angle_z", "x_axis", "y_axis", "z_axis":
 		return true
 	}
 	return false
@@ -311,8 +323,23 @@ func (d *Device) likelySensor(name string) bool {
 
 func (d *Device) likelyControl(name string) bool {
 	switch name {
-	case "brightness", "color", "position", "motor_speed", "color_temp", "color_mode",
-		"Dimmer", "Color", "CT":
+	// Light controls
+	case "state", "brightness", "color", "color_temp", "color_mode", "color_xy",
+		"hue", "saturation", "transition", "effect", "alert":
+		return true
+
+	// Cover/fan/lock controls
+	case "position", "motor_speed", "child_lock", "lock", "led_disabled":
+		return true
+
+	// Thermostat / advanced controls
+	case "system_mode", "preset", "fan_mode", "occupied_heating_setpoint",
+		"local_temperature_calibration", "occupancy_timeout", "sensitivity",
+		"power_on_behavior", "operation_mode":
+		return true
+
+	// Tuya-style fields seen in mixed environments
+	case "Dimmer", "Color", "CT":
 		return true
 	}
 	return false
