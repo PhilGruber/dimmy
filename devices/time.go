@@ -1,7 +1,6 @@
 package devices
 
 import (
-	"log"
 	"time"
 
 	"github.com/PhilGruber/dimmy/core"
@@ -58,10 +57,6 @@ func (s *DimmyTime) updateEvents() {
 	s.events["sunrise_yesterday"] = riseYesterday.Truncate(time.Second)
 	s.events["sunrise_tomorrow"] = riseTomorrow.Truncate(time.Second)
 	s.events["sunset_tomorrow"] = setTomorrow.Truncate(time.Second)
-
-	log.Printf("Yesterday: sunrise at %s, sunset at %s ", s.events["sunrise_yesterday"].In(now.Location()).Format("15:04:05"), s.events["sunset_yesterday"].In(now.Location()).Format("15:04:05"))
-	log.Printf("Today: sunrise at %s, sunset at %s ", rise.In(now.Location()).Format("15:04:05"), set.In(now.Location()).Format("15:04:05"))
-	log.Printf("Tomorrow: sunrise at %s, sunset at %s ", s.events["sunrise_tomorrow"].In(now.Location()).Format("15:04:05"), s.events["sunset_tomorrow"].In(now.Location()).Format("15:04:05"))
 }
 
 func (s *DimmyTime) InitRule(rule *Rule) {
