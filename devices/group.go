@@ -2,11 +2,12 @@ package devices
 
 import (
 	"fmt"
-	"github.com/PhilGruber/dimmy/core"
 	"log"
 	"math"
 	"strconv"
 	"time"
+
+	"github.com/PhilGruber/dimmy/core"
 )
 
 type Group struct {
@@ -53,7 +54,7 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 					return nil
 				}
 				g.devices[i] = dev
-				i = i + 1
+				i++
 			}
 		} else {
 			fmt.Println("Could not find Device " + key + ", as part of a group")
@@ -68,8 +69,7 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 }
 
 func (g *Group) GetCurrent() float64 {
-	var current float64
-	current = 0
+	var current float64 = 0
 	for _, d := range g.devices {
 		current = math.Max(d.GetCurrent(), current)
 	}
