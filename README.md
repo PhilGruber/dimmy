@@ -8,10 +8,10 @@ It contains a daemon, a CLI client, a JSON API and a web interface.
 
 
 ## Installation
-### Download .deb packages (Version 0.8.0)
+### Download .deb packages (Version 0.8.1)
 
-* [amd64](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.8.0_amd64.deb)
-* [arm64](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.8.0_arm64.deb)
-* [armhf](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.8.0_armhf.deb)
-* [i386](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.8.0_i386.deb)
+* [amd64](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.8.1_amd64.deb)
+* [arm64](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.8.1_arm64.deb)
+* [armhf](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.8.1_armhf.deb)
+* [i386](http://deb.flupps.net/pool/main/d/dimmy/dimmy_0.8.1_i386.deb)
 
