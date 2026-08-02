@@ -26,6 +26,7 @@ type Dimmable struct {
 func (d *Dimmable) init() {
 	d.targetLock = new(sync.RWMutex)
 	d.stepLock = new(sync.RWMutex)
+	d.LastSent = -999
 }
 
 func (d *Dimmable) GetMin() int {

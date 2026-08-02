@@ -1,20 +1,20 @@
 package core
 
 type Zigbee2MqttMessageUpdate struct {
-	State string `json:"state"`
+	State string `json:"state,omitempty"`
 }
 
 type Zigbee2MqttMessage struct {
-	Battery         *int                     `json:"battery"`
-	LinkQuality     *int                     `json:"linkquality"`
-	UpdateAvailable *bool                    `json:""`
-	Update          Zigbee2MqttMessageUpdate `json:"update"`
+	Battery         *int                     `json:"battery,omitempty"`
+	LinkQuality     *int                     `json:"linkquality,omitempty"`
+	UpdateAvailable *bool                    `json:"-"`
+	Update          Zigbee2MqttMessageUpdate `json:"update,omitempty"`
 }
 
 type Zigbee2MqttLightMessage struct {
 	Zigbee2MqttMessage
-	State      *string `json:"state"`
-	Brightness *int    `json:"brightness"`
+	State      *string `json:"state,omitempty"`
+	Brightness *int    `json:"brightness,omitempty"`
 	Transition *int    `json:"transition,omitempty"`
 }
 

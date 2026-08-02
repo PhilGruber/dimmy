@@ -58,26 +58,40 @@ func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 	tt := time.Now()
 	newVal := l.PercentageToValue(l.GetCurrent())
 	var state string
-	if newVal != l.LastSent {
-		l.LastChanged = &tt
-		l.LastSent = newVal
+	if newVal == l.LastSent {
+		return
+	}
+	l.LastChanged = &tt
+	l.LastSent = newVal
 
-		if newVal > 0 {
-			state = "ON"
-		} else {
-			state = "OFF"
-		}
+	if newVal > 0 {
+		state = "ON"
+	} else {
+		state = "OFF"
+	}
 
-		msg := core.Zigbee2MqttLightMessage{
-			State:      &state,
-			Brightness: &newVal,
-		}
+	msg := core.Zigbee2MqttLightMessage{
+		State:      &state,
+		Brightness: &newVal,
+	}
 
-		if l.transition {
-			msg.Transition = &l.TransitionTime
-		}
+	if l.transition {
+		msg.Transition = &l.TransitionTime
+	}
 
-		s, _ := json.Marshal(msg)
+	s, _ := json.Marshal(msg)
+	mqtt.Publish(l.MqttTopic+"/set", 0, false, s)
+
+	if newVal == 0 {
+		// Hack for stupid lights
+		msg.Transition = nil
+		msg.Brightness = core.ToPtr(10)
+		msg.State = core.ToPtr("OFF")
+		s, _ = json.Marshal(msg)
+		mqtt.Publish(l.MqttTopic+"/set", 0, false, s)
+
+		msg.Brightness = core.ToPtr(0)
+		s, _ = json.Marshal(msg)
 		mqtt.Publish(l.MqttTopic+"/set", 0, false, s)
 	}
 }
@@ -102,6 +116,7 @@ func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 			return
 		}
 		if data.Brightness != nil {
+			l.LastSent = -999
 			l.SetCurrent(l.ValueToPercentage(*data.Brightness))
 		}
 		if data.State != nil {
