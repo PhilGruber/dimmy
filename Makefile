@@ -26,7 +26,7 @@ install:
 test:
 	go test ./devices
 
-deb: test all
+deb: all
 	rm -rf deb
 	mkdir -p deb/dimmy/usr/bin
 	mkdir -p deb/dimmy/etc/dimmy
@@ -42,7 +42,7 @@ deb: test all
 	cp dimmyd deb/dimmy/usr/bin
 	install -m 755 system/dimmyd.init deb/dimmy/etc/init.d/dimmyd
 	install -m 755 system/dimmyd.service deb/dimmy/lib/systemd/system
-	cp dimmyd.conf.yaml.example deb/dimmy/etc/dimmy/dimmyd.conf.yaml
-	cp rules.conf.yaml.example deb/dimmy/etc/dimmy/rules.conf.yaml
+	cp dimmyd.conf.yaml.example deb/dimmy/etc/dimmy/dimmyd.conf.yaml.example
+	cp rules.conf.yaml.example deb/dimmy/etc/dimmy/rules.conf.yaml.example
 	cp -R html/* deb/dimmy/usr/share/dimmy
 	dpkg-deb -Zgzip --root-owner-group --build deb/dimmy

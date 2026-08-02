@@ -45,16 +45,16 @@ type PanelConfig struct {
 type ConfigOptions struct {
 	Hidden           *bool              `yaml:"hidden,omitempty"`
 	Transition       *bool              `yaml:"transition,omitempty"`
-	Commands         *map[string]string `yaml:"commands,omitempty,flow"`
-	Sensors          *[]Sensor          `yaml:"sensors,omitempty,flow"`
-	Controls         *[]Control         `yaml:"controls,omitempty,flow"`
-	Devices          *[]string          `yaml:"devices,omitempty,flow"`
+	Commands         *map[string]string `yaml:"commands,omitempty"`
+	Sensors          *[]Sensor          `yaml:"sensors,omitempty"`
+	Controls         *[]Control         `yaml:"controls,omitempty"`
+	Devices          *[]string          `yaml:"devices,omitempty"`
 	PreventResending bool               `yaml:"prevent_resending,omitempty"`
 
 	History *bool `yaml:"history,omitempty"`
 
 	/* deprecated */
-	Fields *[]string `yaml:"fields,omitempty,flow"`
+	Fields *[]string `yaml:"fields,omitempty"`
 	/* deprecated */
 	Timeout *int `yaml:"timeout,omitempty"`
 	/* deprecated */
