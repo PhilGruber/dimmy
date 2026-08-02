@@ -23,8 +23,10 @@ install:
 	mkdir -p /usr/share/dimmy
 	cp -R html/* /usr/share/dimmy
 
-deb: all
+test:
 	go test ./devices
+
+deb: test all
 	rm -rf deb
 	mkdir -p deb/dimmy/usr/bin
 	mkdir -p deb/dimmy/etc/dimmy
