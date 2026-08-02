@@ -317,6 +317,9 @@ func (d *Device) likelySensor(name string) bool {
 	// Motion/tilt style sensor values
 	case "angle", "angle_x", "angle_y", "angle_z", "x_axis", "y_axis", "z_axis":
 		return true
+
+	case "battery_low":
+		return true
 	}
 	return false
 }
@@ -329,7 +332,7 @@ func (d *Device) likelyControl(name string) bool {
 		return true
 
 	// Cover/fan/lock controls
-	case "position", "motor_speed", "child_lock", "lock", "led_disabled":
+	case "position", "motor_speed", "child_lock", "lock", "led_disabled", "tilt":
 		return true
 
 	// Thermostat / advanced controls
