@@ -43,6 +43,7 @@ deb: all
 	cp dimmyd deb/dimmy/usr/bin
 	install -m 755 system/dimmyd.init deb/dimmy/etc/init.d/dimmyd
 	install -m 755 system/dimmyd.service deb/dimmy/lib/systemd/system
+	install -m 755 system/dimmy.postinst deb/dimmy/DEBIAN/postinst
 	cp dimmyd.conf.yaml.example deb/dimmy/etc/dimmy/dimmyd.conf.yaml.example
 	cp rules.conf.yaml.example deb/dimmy/etc/dimmy/rules.conf.yaml.example
 	cp -R html/* deb/dimmy/usr/share/dimmy

@@ -1,0 +1,19 @@
+#!/bin/bash
+set -e
+
+CFG_DIR="/etc/dimmy"
+
+CFG_FILES=(
+    "dimmyd.conf.yaml"
+    "rules.conf.yaml"
+)
+
+for CFG_FILE in "${CFG_FILES[@]}"; do
+    FULL_CFG_FILE="${CFG_DIR}/${CFG_FILE}"
+    EXAMPLE_FILE="${FULL_CFG_FILE}.example"
+    if [ ! -f "${FULL_CFG_FILE}" ] && [ -f "${EXAMPLE_FILE}" ]; then
+        echo cp "${EXAMPLE_FILE}" "${FULL_CFG_FILE}"
+    fi
+done
+
+exit 0
