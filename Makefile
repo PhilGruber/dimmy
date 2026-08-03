@@ -19,7 +19,8 @@ jquery:
 install:
 	cp dimmy /usr/bin
 	cp dimmyd /usr/bin
-	VERSION -f /etc/dimmy/dimmyd.conf.yaml || cp dimmyd.conf.yaml.example /etc/dimmy/dimmyd.conf.yaml
+	test -f /etc/dimmy/dimmyd.conf.yaml || cp dimmyd.conf.yaml.example /etc/dimmy/dimmyd.conf.yaml
+	test -f /etc/dimmy/rules.conf.yaml || cp rules.conf.yaml.example /etc/dimmy/rules.conf.yaml
 	mkdir -p /usr/share/dimmy
 	cp -R html/* /usr/share/dimmy
 
