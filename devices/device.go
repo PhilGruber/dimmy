@@ -300,7 +300,18 @@ func (d *Device) IsPseudoDevice() bool {
 	return false
 }
 
+func (d *Device) ignoreField(name string) bool {
+	switch name {
+	case "battery_low", "battery", "state", "linkquality":
+		return true
+	}
+	return false
+}
+
 func (d *Device) likelySensor(name string) bool {
+	if d.ignoreField(name) {
+		return false
+	}
 	switch name {
 	// Environmental / power telemetry
 	case "temperature", "humidity", "pressure", "illuminance", "soil_moisture",
@@ -325,6 +336,9 @@ func (d *Device) likelySensor(name string) bool {
 }
 
 func (d *Device) likelyControl(name string) bool {
+	if d.ignoreField(name) {
+		return false
+	}
 	switch name {
 	// Light controls
 	case "state", "brightness", "color", "color_temp", "color_mode", "color_xy",
