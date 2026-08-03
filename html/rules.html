@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Rules - Dimmy</title>
-        <link rel="stylesheet" type="text/css" href="/assets/devices.css">
+        <link rel="stylesheet" href="/assets/rules.css">
         <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
     </head>
     <body>
@@ -13,21 +13,26 @@
                 <div>
                     <p class="eyebrow">Dimmy</p>
                     <h1>Rules</h1>
-                    <p class="intro">Configured automation rules with triggers and receivers.</p>
+                    <p class="intro">Configure which sensor readings trigger which controls.</p>
                 </div>
-                <a class="back-link" href="/">Dashboard</a>
+                <div class="header-actions">
+                    <button class="primary-button" type="button" data-new-rule>Add rule</button>
+                    <a class="back-link" href="/">Dashboard</a>
+                </div>
             </header>
 
+            <p id="message" class="message" role="status" hidden></p>
             <section class="table-card">
                 <table>
                     <thead>
                         <tr>
-                            <th>Triggers</th>
-                            <th>Receivers</th>
+                            <th>Sensors</th>
+                            <th>Controls</th>
+                            <th><span class="visually-hidden">Actions</span></th>
                         </tr>
                     </thead>
                     <tbody>
-                        {{ range .Rules }}
+                        {{ range $index, $rule := .Rules }}
                         <tr>
                             <td>
                                 {{ $last := "" }}
@@ -35,7 +40,7 @@
                                 <div>
                                     {{ if ne .Device.GetName $last }}
                                         {{ $last = .Device.GetName }}
-                                        <span class="tag sensor">{{ .Device.GetIconHtml }} {{ .Device.GetName }}</span>
+                                        <span class="tag sensor">{{ .Device.GetIconHtml }} {{ .Device.GetLabel }}</span>
                                     {{ end }}
                                     <div class="muted">{{ .Key }} {{ .Condition.Operator }} {{ .Condition.Value }}</div>
                                 </div>
@@ -47,21 +52,48 @@
                                 <div>
                                     {{ if ne .Device.GetName $last }}
                                         {{ $last = .Device.GetName }}
-                                        <span class="tag control">{{ .Device.GetIconHtml }} {{ .Device.GetName }}</span>
+                                        <span class="tag control">{{ .Device.GetIconHtml }} {{ .Device.GetLabel }}</span>
                                     {{ end }}
                                     <div class="muted">{{ .Key }}: {{ .Value }}</div>
                                 </div>
                                 {{ end }}
                             </td>
+                            <td class="actions"><button class="edit-button" type="button" data-edit-rule="{{ $index }}">Edit</button></td>
                         </tr>
                         {{ else }}
-                        <tr>
-                            <td colspan="2" class="empty">No rules configured.</td>
-                        </tr>
+                        <tr id="empty-rules"><td colspan="3" class="empty">No rules configured. Add one to get started.</td></tr>
                         {{ end }}
                     </tbody>
                 </table>
             </section>
         </main>
+
+        <div id="rule-modal" class="modal" hidden aria-hidden="true">
+            <div class="modal-backdrop" data-close-modal></div>
+            <section class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="rule-modal-title">
+                <form id="rule-form">
+                    <div class="modal-header">
+                        <div><p class="eyebrow">Automation</p><h2 id="rule-modal-title">Add rule</h2></div>
+                        <button class="close-button" type="button" aria-label="Close" data-close-modal>&times;</button>
+                    </div>
+                    <div class="rule-columns">
+                        <section class="rule-column sensors-column">
+                            <div class="column-heading"><h3>Sensors</h3><button type="button" class="add-row" data-add-trigger>+ Add sensor</button></div>
+                            <p class="column-help">Every sensor condition must match.</p>
+                            <div id="trigger-rows" class="rule-rows"></div>
+                        </section>
+                        <section class="rule-column controls-column">
+                            <div class="column-heading"><h3>Controls</h3><button type="button" class="add-row" data-add-receiver>+ Add control</button></div>
+                            <p class="column-help">All controls run when the sensors match.</p>
+                            <div id="receiver-rows" class="rule-rows"></div>
+                        </section>
+                    </div>
+                    <p id="form-error" class="form-error" role="alert" hidden></p>
+                    <div class="modal-footer"><button type="button" class="secondary-button" data-close-modal>Cancel</button><button type="submit" class="primary-button">Save rule</button></div>
+                </form>
+            </section>
+        </div>
+        <script>window.ruleData = {{ .RulesJSON }}; window.ruleDevices = {{ .DevicesJSON }};</script>
+        <script src="/assets/rules.js"></script>
     </body>
 </html>

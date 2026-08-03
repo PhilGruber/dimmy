@@ -1,7 +1,7 @@
 
-mqtt_server: himbeere.fritz.box
+mqtt_server: localhost
 port: 8080
-webroot: html
+webroot: /usr/share/dimmy
 devices:
 - name: "Livingroom-Lamp1"
   type: zlight

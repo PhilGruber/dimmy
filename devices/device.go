@@ -397,11 +397,13 @@ func (d *Device) UpdateFromMessage(data map[string]any) {
 
 func (d *Device) GetConfig(name string) core.DeviceConfig {
 	config := core.DeviceConfig{
-		Name:    name,
-		Type:    "device",
-		Topic:   d.MqttTopic,
-		Icon:    d.Icon,
-		Options: &core.ConfigOptions{},
+		Name:  name,
+		Type:  "device",
+		Topic: d.MqttTopic,
+		Icon:  d.Icon,
+		Options: &core.ConfigOptions{
+			Hidden: core.ToPtr(false),
+		},
 	}
 	return config
 }

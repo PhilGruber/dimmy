@@ -266,7 +266,7 @@ func (s *Server) AddSingleUseRule(webroot string) http.HandlerFunc {
 			rule := dimmyDevices.NewRule(ruleConfig, s.deviceSnapshot())
 			rule.SingleUse = true
 
-			s.rules = append(s.rules, *rule)
+			s.rules = append(s.rules, rule)
 
 			return
 		}
@@ -329,13 +329,111 @@ func (s *Server) ShowDashboard(webroot string, name string) http.HandlerFunc {
 
 func (s *Server) EditRules(webroot string) http.HandlerFunc {
 	return func(output http.ResponseWriter, httpRequest *http.Request) {
-		templ, _ := template.ParseFiles(webroot + "/rules.html")
-		err := templ.Execute(output, struct {
-			Rules []dimmyDevices.Rule
-		}{s.rules})
+		templ, err := template.ParseFiles(webroot + "/rules.html")
+		if err != nil {
+			http.Error(output, "could not load rules page", http.StatusInternalServerError)
+			return
+		}
+		devices := make([]ruleDeviceView, 0)
+		for _, device := range s.deviceSnapshot() {
+			if device.GetHidden() {
+				continue
+			}
+			devices = append(devices, ruleDeviceView{
+				Name: device.GetName(), Label: device.GetLabel(), Icon: device.GetEmoji(),
+				Triggers: device.GetTriggers(), Receivers: device.GetReceivers(),
+			})
+		}
+		sort.Slice(devices, func(i, j int) bool { return devices[i].Label < devices[j].Label })
+		rulesJSON, err := json.Marshal(s.config.Rules)
+		if err != nil {
+			http.Error(output, "could not encode rules", http.StatusInternalServerError)
+			return
+		}
+		devicesJSON, err := json.Marshal(devices)
+		if err != nil {
+			http.Error(output, "could not encode devices", http.StatusInternalServerError)
+			return
+		}
+		err = templ.Execute(output, struct {
+			Rules       []*dimmyDevices.Rule
+			RulesJSON   template.JS
+			DevicesJSON template.JS
+		}{Rules: s.rules, RulesJSON: template.JS(rulesJSON), DevicesJSON: template.JS(devicesJSON)})
 		if err != nil {
 			log.Println(err)
 			return
 		}
 	}
+}
+
+type ruleDeviceView struct {
+	Name      string   `json:"name"`
+	Label     string   `json:"label"`
+	Icon      string   `json:"icon"`
+	Triggers  []string `json:"triggers"`
+	Receivers []string `json:"receivers"`
+}
+
+func (s *Server) SaveRules() http.HandlerFunc {
+	return func(output http.ResponseWriter, request *http.Request) {
+		if request.Method != http.MethodPut {
+			http.Error(output, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		var rules []core.RuleConfig
+		if err := json.NewDecoder(http.MaxBytesReader(output, request.Body, 1<<20)).Decode(&rules); err != nil {
+			http.Error(output, "invalid rules: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		devices := s.deviceSnapshot()
+		for _, rule := range rules {
+			if len(rule.Triggers) == 0 || len(rule.Receivers) == 0 {
+				http.Error(output, "each rule needs a sensor and a control", http.StatusBadRequest)
+				return
+			}
+			for _, trigger := range rule.Triggers {
+				device, ok := devices[trigger.DeviceName]
+				if !ok || !contains(device.GetTriggers(), trigger.Key) {
+					http.Error(output, "invalid sensor", http.StatusBadRequest)
+					return
+				}
+			}
+			for _, receiver := range rule.Receivers {
+				device, ok := devices[receiver.DeviceName]
+				if !ok || !contains(device.GetReceivers(), receiver.Key) {
+					http.Error(output, "invalid control", http.StatusBadRequest)
+					return
+				}
+			}
+		}
+
+		s.mutex.Lock()
+		defer s.mutex.Unlock()
+		if err := core.SaveRulesConfig(s.config.RulesFilename, rules); err != nil {
+			http.Error(output, "could not save rules: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		for _, rule := range s.rules {
+			for _, trigger := range rule.Triggers {
+				trigger.Device.RemoveRule(rule)
+			}
+		}
+		s.rules = nil
+		s.config.Rules = rules
+		for _, ruleConfig := range rules {
+			s.rules = append(s.rules, dimmyDevices.NewRule(ruleConfig, s.devices))
+		}
+		output.Header().Set("Content-Type", "application/json")
+		_, _ = output.Write([]byte(`{"ok":true}`))
+	}
+}
+
+func contains(values []string, value string) bool {
+	for _, candidate := range values {
+		if candidate == value {
+			return true
+		}
+	}
+	return false
 }

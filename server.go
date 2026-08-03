@@ -20,7 +20,7 @@ type Server struct {
 	dashboards     map[string][]dimmyDevices.Panel
 	devices        map[string]dimmyDevices.DeviceInterface
 	unknownDevices map[string]dimmyDevices.DeviceInterface
-	rules          []dimmyDevices.Rule
+	rules          []*dimmyDevices.Rule
 	channel        chan core.SwitchRequest
 	config         *core.ServerConfig
 	mqttClient     mqtt.Client
@@ -102,7 +102,7 @@ func (s *Server) initialize(config *core.ServerConfig) {
 	for _, ruleConfig := range config.Rules {
 		rule := dimmyDevices.NewRule(ruleConfig, s.devices)
 		if rule != nil {
-			s.rules = append(s.rules, *rule)
+			s.rules = append(s.rules, rule)
 		}
 	}
 
@@ -159,6 +159,7 @@ func (s *Server) Start(config *core.ServerConfig) {
 	http.Handle("/devices/new-devices/save", s.SaveUnknownDevice())
 	http.Handle("/rules/add-single-use", s.AddSingleUseRule(config.WebRoot))
 	http.Handle("/rules/edit", s.EditRules(config.WebRoot))
+	http.Handle("/api/rules", s.SaveRules())
 	http.Handle("/", s.ShowDashboard(config.WebRoot, "default"))
 
 	log.Printf("Listening on port %d", config.Port)
@@ -201,7 +202,7 @@ func (s *Server) eventLoop(mqttServer string) {
 		for _, idx := range firedRules {
 			if s.rules[idx].SingleUse {
 				for _, trigger := range s.rules[idx].Triggers {
-					trigger.Device.RemoveRule(&s.rules[idx])
+					trigger.Device.RemoveRule(s.rules[idx])
 				}
 				s.rules = append(s.rules[:idx], s.rules[idx+1:]...)
 				continue

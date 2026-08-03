@@ -14,27 +14,27 @@ type DeviceConfig struct {
 }
 
 type RuleConfig struct {
-	Triggers  []TriggerConfig  `yaml:"triggers"`
-	Receivers []ReceiverConfig `yaml:"receivers"`
+	Triggers  []TriggerConfig  `yaml:"triggers" json:"triggers"`
+	Receivers []ReceiverConfig `yaml:"receivers" json:"receivers"`
 }
 
 type TriggerConfig struct {
-	DeviceName string                  `yaml:"device"`
-	Key        string                  `yaml:"key"`
-	Active     bool                    `yaml:"active"`
-	Condition  ReceiverConditionConfig `yaml:"condition"`
+	DeviceName string                  `yaml:"device" json:"device"`
+	Key        string                  `yaml:"key" json:"key"`
+	Active     bool                    `yaml:"active" json:"active"`
+	Condition  ReceiverConditionConfig `yaml:"condition" json:"condition"`
 }
 
 type ReceiverConditionConfig struct {
-	Operator string `yaml:"operator"`
-	Value    any    `yaml:"value"`
-	Delay    *int   `yaml:"delay"`
+	Operator string `yaml:"operator" json:"operator"`
+	Value    any    `yaml:"value" json:"value"`
+	Delay    *int   `yaml:"delay" json:"delay"`
 }
 
 type ReceiverConfig struct {
-	DeviceName string `yaml:"device"`
-	Key        string `yaml:"key"`
-	Value      string `yaml:"value"`
+	DeviceName string `yaml:"device" json:"device"`
+	Key        string `yaml:"key" json:"key"`
+	Value      string `yaml:"value" json:"value"`
 }
 
 type PanelConfig struct {
@@ -122,15 +122,16 @@ func (s *Sensor) GetIconHtml() string {
 }
 
 type ServerConfig struct {
-	Port       int            `yaml:"port"`
-	MqttServer string         `yaml:"mqtt_server"`
-	WebRoot    string         `yaml:"webroot"`
-	Lat        float64        `yaml:"latitude"`
-	Lon        float64        `yaml:"longitude"`
-	Devices    []DeviceConfig `yaml:"devices"`
-	Rules      []RuleConfig   `yaml:"rules"`
-	Panels     []PanelConfig  `yaml:"panels"`
-	Filename   string         `yaml:"-"`
+	Port          int            `yaml:"port"`
+	MqttServer    string         `yaml:"mqtt_server"`
+	WebRoot       string         `yaml:"webroot"`
+	Lat           float64        `yaml:"latitude"`
+	Lon           float64        `yaml:"longitude"`
+	Devices       []DeviceConfig `yaml:"devices"`
+	Rules         []RuleConfig   `yaml:"rules"`
+	Panels        []PanelConfig  `yaml:"panels"`
+	Filename      string         `yaml:"-"`
+	RulesFilename string         `yaml:"-"`
 }
 
 func ToPtr[T any](v T) *T {

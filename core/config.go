@@ -56,8 +56,43 @@ func LoadConfig() (*ServerConfig, error) {
 		config.Port = 80
 	}
 	config.Filename = filename
+	config.RulesFilename = rulesFile
 
 	return &config, nil
+}
+
+// SaveRulesConfig replaces the rules document while retaining the file's permissions.
+func SaveRulesConfig(filename string, rules []RuleConfig) error {
+	info, statErr := os.Stat(filename)
+	if statErr != nil && !os.IsNotExist(statErr) {
+		return statErr
+	}
+	if err := os.MkdirAll(filepath.Dir(filename), 0o755); err != nil {
+		return err
+	}
+	temp, err := os.CreateTemp(filepath.Dir(filename), "."+filepath.Base(filename)+".*")
+	if err != nil {
+		return err
+	}
+	tempName := temp.Name()
+	defer os.Remove(tempName)
+	encoder := yaml.NewEncoder(temp)
+	encoder.SetIndent(2)
+	if err := encoder.Encode(rules); err != nil {
+		temp.Close()
+		return err
+	}
+	if err := encoder.Close(); err != nil {
+		return err
+	}
+	mode := os.FileMode(0o644)
+	if statErr == nil {
+		mode = info.Mode().Perm()
+	}
+	if err := os.Chmod(tempName, mode); err != nil {
+		return err
+	}
+	return os.Rename(tempName, filename)
 }
 
 func AddDeviceToConfig(filename string, device DeviceConfig) error {

@@ -124,7 +124,7 @@ func (d *GenericDevice) UpdateFromMessage(data map[string]any) {
 			sensor := core.Sensor{
 				Name:   key,
 				Icon:   getIcon(key),
-				Hidden: true,
+				Hidden: false,
 			}
 			if val, ok := value.(string); ok {
 				sensor.Values = make([]string, 1)
@@ -147,7 +147,7 @@ func (d *GenericDevice) UpdateFromMessage(data map[string]any) {
 				Name:         key,
 				Icon:         getIcon(key),
 				Type:         controlType,
-				Hidden:       true,
+				Hidden:       false,
 				Min:          minValue,
 				Max:          maxValue,
 				NeedsSending: false,
