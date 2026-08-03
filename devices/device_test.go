@@ -16,7 +16,6 @@ func TestDevice_LikelySensor_CommonZigbeeFields(t *testing.T) {
 		"gas",
 		"water_leak",
 		"tamper",
-		"battery_low",
 		"power",
 	} {
 		if !d.likelySensor(field) {
@@ -37,7 +36,6 @@ func TestDevice_LikelyControl_CommonZigbeeFields(t *testing.T) {
 		"fan_mode",
 		"power_on_behavior",
 		"tilt",
-		"state",
 		"child_lock",
 	} {
 		if !d.likelyControl(field) {

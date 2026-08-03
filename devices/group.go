@@ -86,7 +86,7 @@ func (g *Group) GetMin() int {
 }
 
 func (g *Group) ProcessRequest(request core.SwitchRequest) {
-	if request.Value[0] == '+' || request.Value[0] == '-' {
+	if len(request.Value) > 0 && (request.Value[0] == '+' || request.Value[0] == '-') {
 		value, err := strconv.ParseFloat(request.Value, 64)
 		if err == nil {
 			request.Value = fmt.Sprintf("%f", g.GetCurrent()+value)
