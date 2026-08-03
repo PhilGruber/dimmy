@@ -341,7 +341,7 @@ func (s *Server) EditRules(webroot string) http.HandlerFunc {
 			}
 			devices = append(devices, ruleDeviceView{
 				Name: device.GetName(), Label: device.GetLabel(), Icon: device.GetEmoji(),
-				Triggers: device.GetTriggers(), Receivers: device.GetReceivers(),
+				Triggers: nonNilStrings(device.GetTriggers()), Receivers: nonNilStrings(device.GetReceivers()),
 			})
 		}
 		sort.Slice(devices, func(i, j int) bool { return devices[i].Label < devices[j].Label })
@@ -365,6 +365,13 @@ func (s *Server) EditRules(webroot string) http.HandlerFunc {
 			return
 		}
 	}
+}
+
+func nonNilStrings(values []string) []string {
+	if values == nil {
+		return []string{}
+	}
+	return values
 }
 
 type ruleDeviceView struct {

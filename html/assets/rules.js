@@ -9,8 +9,10 @@
     const formError = document.getElementById("form-error");
     let editingIndex = null;
 
+    const fieldsFor = (device, kind) => Array.isArray(device?.[kind]) ? device[kind] : [];
+
     const optionsFor = (kind, selected = "") => {
-        const items = devices.filter(device => device[kind].length);
+        const items = devices.filter(device => fieldsFor(device, kind).length);
         return `<option value="">Choose a device</option>${items.map(device =>
             `<option value="${escapeHtml(device.name)}"${device.name === selected ? " selected" : ""}>${escapeHtml(`${device.icon} ${device.label}`.trim())}</option>`
         ).join("")}`;
@@ -21,7 +23,7 @@
 
     function setFields(row, kind, selected = "") {
         const device = deviceFor(row.querySelector(".device").value);
-        const fields = device ? device[kind] : [];
+        const fields = fieldsFor(device, kind);
         row.querySelector(".field").innerHTML = `<option value="">Choose a field</option>${fields.map(field => `<option value="${escapeHtml(field)}"${field === selected ? " selected" : ""}>${escapeHtml(field)}</option>`).join("")}`;
     }
 
