@@ -28,7 +28,9 @@ func NewIrControl(config core.DeviceConfig) *IRControl {
 	i.preventResending = config.Options.PreventResending
 
 	i.Type = "IRControl"
-	i.commands = *config.Options.Commands
+	if config.Options != nil && config.Options.Commands != nil {
+		i.commands = *config.Options.Commands
+	}
 
 	i.Receivers = []string{"command"}
 
