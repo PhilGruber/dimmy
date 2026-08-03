@@ -336,9 +336,6 @@ func (s *Server) EditRules(webroot string) http.HandlerFunc {
 		}
 		devices := make([]ruleDeviceView, 0)
 		for _, device := range s.deviceSnapshot() {
-			if device.GetHidden() {
-				continue
-			}
 			devices = append(devices, ruleDeviceView{
 				Name: device.GetName(), Label: device.GetLabel(), Icon: device.GetEmoji(),
 				Triggers: nonNilStrings(device.GetTriggers()), Receivers: nonNilStrings(device.GetReceivers()),
