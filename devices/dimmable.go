@@ -82,7 +82,7 @@ func (d *Dimmable) ProcessRequest(request core.SwitchRequest) {
 		request.Key = "brightness"
 	}
 	relativeValue := false
-	if request.Value[0] == '+' || request.Value[0] == '-' {
+	if len(request.Value) > 0 && (request.Value[0] == '+' || request.Value[0] == '-') {
 		relativeValue = true
 	}
 	value, _ := strconv.ParseFloat(request.Value, 64)
