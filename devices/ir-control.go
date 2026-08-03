@@ -91,6 +91,10 @@ func (i *IRControl) SetReceiverValue(key string, value interface{}) {
 	}
 }
 
+func (d *IRControl) GetMqttTopic() string {
+	return d.MqttTopic + "/set"
+}
+
 func (d *IRControl) GetConfig(name string) core.DeviceConfig {
 	config := core.DeviceConfig{
 		Name:  name,

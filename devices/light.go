@@ -29,7 +29,7 @@ func NewLight(config core.DeviceConfig) *Light {
 
 	d.persistentFields = []string{"brightness", "value"}
 
-	var re = regexp.MustCompile("^cmnd/(.+)/dimmer$")
+	var re = regexp.MustCompile("^cmnd/(.+)$")
 	d.MqttState = re.ReplaceAllString(d.MqttTopic, "tele/$1/STATE")
 
 	d.Target = 0
@@ -140,4 +140,8 @@ func (d *Light) GetConfig(name string) core.DeviceConfig {
 		},
 	}
 	return config
+}
+
+func (d *Light) GetMqttTopic() string {
+	return d.MqttTopic + "/dimmer"
 }
