@@ -277,7 +277,7 @@ func (s *Server) DetectDevice() mqtt.MessageHandler {
 		s.mutex.Lock()
 		defer s.mutex.Unlock()
 		for _, d := range s.devices {
-			if d.GetMqttTopic() == topic || d.GetMqttStateTopic() == topic {
+			if d.GetMqttTopic() == topic || d.GetMqttStateTopic() == topic || dimmyDevices.LikelyDeviceTopic(d.GetMqttTopic()) == topic {
 				// We know this device. Nothing to do.
 				return
 			}
@@ -301,7 +301,7 @@ func (s *Server) DetectDevice() mqtt.MessageHandler {
 
 func IsMetaTopic(topic string) bool {
 	r := strings.Split(topic, "/")
-	if len(r) > 1 && r[1] == "bridge" {
+	if len(r) > 1 && (r[1] == "bridge" || r[1] == "901" || r[1] == "Coordinator") {
 		return true
 	}
 	return false

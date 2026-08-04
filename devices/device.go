@@ -381,6 +381,9 @@ func LikelyDeviceTopic(topic string) string {
 	if strings.HasPrefix(topic, "stat/") {
 		return "cmnd/" + topic[5:]
 	}
+	if strings.HasPrefix(topic, "tele/") {
+		return "cmnd/" + topic[5:]
+	}
 	return topic
 }
 
