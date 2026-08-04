@@ -6,7 +6,7 @@ CFG_DIR="/etc/dimmy"
 CFG_FILES=(
     "dimmyd.conf.yaml"
     "rules.conf.yaml"
-    "dimmy.conf.example"
+    "dimmy.conf"
 )
 
 for CFG_FILE in "${CFG_FILES[@]}"; do
