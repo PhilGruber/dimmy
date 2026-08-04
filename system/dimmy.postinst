@@ -6,6 +6,7 @@ CFG_DIR="/etc/dimmy"
 CFG_FILES=(
     "dimmyd.conf.yaml"
     "rules.conf.yaml"
+    "dimmy.conf.example"
 )
 
 for CFG_FILE in "${CFG_FILES[@]}"; do
@@ -14,6 +15,7 @@ for CFG_FILE in "${CFG_FILES[@]}"; do
     if [ ! -f "${FULL_CFG_FILE}" ] && [ -f "${EXAMPLE_FILE}" ]; then
         cp "${EXAMPLE_FILE}" "${FULL_CFG_FILE}"
     fi
+    rm "${EXAMPLE_FILE}"
 done
 
 exit 0
