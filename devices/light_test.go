@@ -10,7 +10,7 @@ import (
 func TestNewLight_MqttStateTopicTransform(t *testing.T) {
 	l := NewLight(core.DeviceConfig{
 		Name:  "test",
-		Topic: "cmnd/living/dimmer",
+		Topic: "cmnd/living",
 	})
 	if l.MqttState != "tele/living/STATE" {
 		t.Errorf("expected tele/living/STATE, got %s", l.MqttState)

@@ -58,24 +58,16 @@ func (s *Server) initialize(config *core.ServerConfig) {
 	for _, deviceConfig := range config.Devices {
 		switch deviceConfig.Type {
 		case "motion-sensor":
-		case "device":
+		case "device", "sensor":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewDevice(deviceConfig)
-		case "sensor":
-			s.devices[deviceConfig.Name] = dimmyDevices.NewDevice(deviceConfig)
-		case "zsensor":
-			s.devices[deviceConfig.Name] = dimmyDevices.NewZSensor(deviceConfig)
 		case "switch":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewSwitch(deviceConfig)
 		case "light":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewLight(deviceConfig)
 		case "zlight":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewZLight(deviceConfig)
-		case "blind":
-			s.devices[deviceConfig.Name] = dimmyDevices.NewBlind(deviceConfig)
 		case "plug":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewPlug(deviceConfig)
-		case "zplug":
-			s.devices[deviceConfig.Name] = dimmyDevices.NewZPlug(deviceConfig)
 		case "ircontrol":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewIrControl(deviceConfig)
 		case "shell":
