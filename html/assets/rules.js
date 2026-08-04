@@ -51,10 +51,10 @@
         row.querySelector(".remove-row").addEventListener("click", () => row.remove());
     }
 
-    function openRule(index = null) {
-        editingIndex = index;
+    function openRule(index = null, cloning = false) {
+        editingIndex = cloning ? null : index;
         const rule = index === null ? { triggers: [{}], receivers: [{}] } : rules[index];
-        title.textContent = index === null ? "Add rule" : "Edit rule";
+        title.textContent = cloning ? "Clone rule" : index === null ? "Add rule" : "Edit rule";
         triggerRows.replaceChildren(); receiverRows.replaceChildren();
         (rule.triggers || []).forEach(addTrigger); (rule.receivers || []).forEach(addReceiver);
         formError.hidden = true;
@@ -76,6 +76,7 @@
 
     document.querySelector("[data-new-rule]").addEventListener("click", () => openRule());
     document.querySelectorAll("[data-edit-rule]").forEach(button => button.addEventListener("click", () => openRule(Number(button.dataset.editRule))));
+    document.querySelectorAll("[data-clone-rule]").forEach(button => button.addEventListener("click", () => openRule(Number(button.dataset.cloneRule), true)));
     document.querySelectorAll("[data-delete-rule]").forEach(button => button.addEventListener("click", async () => {
         const index = Number(button.dataset.deleteRule);
         if (!window.confirm("Delete this rule?")) return;
