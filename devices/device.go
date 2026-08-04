@@ -378,6 +378,9 @@ func LikelyDeviceTopic(topic string) string {
 	if strings.HasSuffix(topic, "/get") {
 		return topic[0 : len(topic)-4]
 	}
+	if strings.HasPrefix(topic, "stat/") {
+		return "cmnd/" + topic[5:]
+	}
 	return topic
 }
 

@@ -58,7 +58,7 @@ func (i *IRControl) PublishValue(mqtt mqtt.Client) {
 		return
 	}
 	s, _ := json.Marshal(i.nextRequest)
-	mqtt.Publish(i.MqttTopic, 0, false, s)
+	mqtt.Publish(i.GetMqttTopic(), 0, false, s)
 	i.lastCommand = i.nextRequest.IrCode
 	i.nextRequest = nil
 }
