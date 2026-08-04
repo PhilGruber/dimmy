@@ -63,6 +63,8 @@ func (c *condition) check() bool {
 		return value == target
 	case "=":
 		return value == target
+	default:
+		return value == target
 	case "!=":
 		return value != target
 	case ">":
@@ -116,7 +118,6 @@ func (c *condition) check() bool {
 			return false
 		}
 	}
-	return false
 }
 
 type Receiver struct {
