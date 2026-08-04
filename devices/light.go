@@ -76,7 +76,7 @@ func (l *Light) PublishValue(mqtt mqtt.Client) {
 	if newVal != l.LastSent {
 		l.LastChanged = &tt
 		l.LastSent = newVal
-		mqtt.Publish(l.MqttTopic, 0, false, strconv.Itoa(newVal))
+		mqtt.Publish(l.GetMqttTopic(), 0, false, strconv.Itoa(newVal))
 	}
 }
 

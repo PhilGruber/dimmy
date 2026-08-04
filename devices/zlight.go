@@ -64,7 +64,7 @@ func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 	l.LastChanged = &tt
 	l.LastSent = newVal
 
-	if newVal > 0 {
+	if newVal > 0 || l.transition == true {
 		state = "ON"
 	} else {
 		state = "OFF"
