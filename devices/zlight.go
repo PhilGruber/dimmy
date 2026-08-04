@@ -97,7 +97,9 @@ func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 }
 
 func (l *ZLight) PollValue(mqtt mqtt.Client) {
-	msg := core.Zigbee2MqttLightMessage{}
+	msg := core.Zigbee2MqttLightMessage{
+		Brightness: core.ToPtr(0),
+	}
 	s, _ := json.Marshal(msg)
 	log.Printf("[%32s] Polling %s\n", l.GetName(), l.MqttState)
 	t := mqtt.Publish(l.MqttState+"/get", 0, false, s)

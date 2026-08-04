@@ -363,25 +363,25 @@ func (d *Device) likelyControl(name string) bool {
 
 func LikelyDeviceTopic(topic string) string {
 	if strings.HasSuffix(topic, "/availability") {
-		return topic[0 : len(topic)-13]
+		topic = topic[0 : len(topic)-13]
 	}
 	if strings.HasSuffix(topic, "/STATE") {
-		return topic[0 : len(topic)-6]
+		topic = topic[0 : len(topic)-6]
 	}
 	if strings.HasSuffix(topic, "/RESULT") {
-		return topic[0 : len(topic)-7]
+		topic = topic[0 : len(topic)-7]
 	}
 	if strings.HasSuffix(topic, "/set") {
-		return topic[0 : len(topic)-4]
+		topic = topic[0 : len(topic)-4]
 	}
 	if strings.HasSuffix(topic, "/get") {
-		return topic[0 : len(topic)-4]
+		topic = topic[0 : len(topic)-4]
 	}
 	if strings.HasPrefix(topic, "stat/") {
-		return "cmnd/" + topic[5:]
+		topic = "cmnd/" + topic[5:]
 	}
 	if strings.HasPrefix(topic, "tele/") {
-		return "cmnd/" + topic[5:]
+		topic = "cmnd/" + topic[5:]
 	}
 	return topic
 }

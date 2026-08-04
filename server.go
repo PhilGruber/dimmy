@@ -278,7 +278,7 @@ func (s *Server) DetectDevice() mqtt.MessageHandler {
 		defer s.mutex.Unlock()
 		for _, d := range s.devices {
 			if d.GetMqttTopic() == topic || d.GetMqttStateTopic() == topic || dimmyDevices.LikelyDeviceTopic(d.GetMqttTopic()) == topic {
-				// We know this device. Nothing to do.
+				// We already know this device. Nothing to do.
 				return
 			}
 		}
