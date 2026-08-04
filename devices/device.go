@@ -302,7 +302,7 @@ func (d *Device) IsPseudoDevice() bool {
 
 func (d *Device) ignoreField(name string) bool {
 	switch name {
-	case "battery_low", "battery", "state", "linkquality":
+	case "battery_low", "battery", "state", "linkquality", "voltage":
 		return true
 	}
 	return false
@@ -316,8 +316,7 @@ func (d *Device) likelySensor(name string) bool {
 	// Environmental / power telemetry
 	case "temperature", "humidity", "pressure", "illuminance", "soil_moisture",
 		"co2", "voc", "pm25", "pm10", "formaldehyd", "device_temperature",
-		"current", "energy", "voltage", "power", "power_apparent", "power_factor",
-		"battery", "linkquality":
+		"current", "energy", "power", "power_apparent", "power_factor":
 		return true
 
 	// Binary / state-like readouts
