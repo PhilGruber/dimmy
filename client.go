@@ -31,9 +31,9 @@ func loadClientConfig() (*string, *int) {
 	var port = 8080
 	var host = "localhost"
 
-	if _, err := os.Stat("/etc/dimmy.conf"); err == nil {
-		filename = "/etc/dimmy.conf"
-	} else if _, err := os.Stat("dimmyd.conf"); err == nil {
+	if _, err := os.Stat("/etc/dimmy/dimmy.conf"); err == nil {
+		filename = "/etc/dimmy/dimmy.conf"
+	} else if _, err2 := os.Stat("dimmy.conf"); err2 == nil {
 		filename = "dimmy.conf"
 	} else {
 		return &host, &port
