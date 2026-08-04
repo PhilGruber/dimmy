@@ -399,7 +399,7 @@ func (s *Server) SaveRules() http.HandlerFunc {
 			for _, trigger := range rule.Triggers {
 				device, ok := devices[trigger.DeviceName]
 				if !ok || !contains(device.GetTriggers(), trigger.Key) {
-					http.Error(output, "invalid sensor", http.StatusBadRequest)
+					http.Error(output, "invalid sensor: "+trigger.Key, http.StatusBadRequest)
 					return
 				}
 			}

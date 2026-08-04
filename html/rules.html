@@ -58,7 +58,10 @@
                                 </div>
                                 {{ end }}
                             </td>
-                            <td class="actions"><button class="edit-button" type="button" data-edit-rule="{{ $index }}">Edit</button></td>
+                            <td class="actions">
+                                <button class="edit-button" type="button" data-edit-rule="{{ $index }}">Edit</button>
+                                <button class="delete-button" type="button" data-delete-rule="{{ $index }}">Delete</button>
+                            </td>
                         </tr>
                         {{ else }}
                         <tr id="empty-rules"><td colspan="3" class="empty">No rules configured. Add one to get started.</td></tr>

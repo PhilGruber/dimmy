@@ -7,6 +7,7 @@
     const receiverRows = document.getElementById("receiver-rows");
     const title = document.getElementById("rule-modal-title");
     const formError = document.getElementById("form-error");
+    const message = document.getElementById("message");
     let editingIndex = null;
 
     const fieldsFor = (device, kind) => Array.isArray(device?.[kind]) ? device[kind] : [];
@@ -64,8 +65,30 @@
     function closeModal() { modal.hidden = true; modal.setAttribute("aria-hidden", "true"); }
     function showError(message) { formError.textContent = message; formError.hidden = false; }
 
+    async function saveRules(updatedRules) {
+        const response = await fetch("/api/rules", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedRules)
+        });
+        if (!response.ok) throw new Error(await response.text());
+    }
+
     document.querySelector("[data-new-rule]").addEventListener("click", () => openRule());
     document.querySelectorAll("[data-edit-rule]").forEach(button => button.addEventListener("click", () => openRule(Number(button.dataset.editRule))));
+    document.querySelectorAll("[data-delete-rule]").forEach(button => button.addEventListener("click", async () => {
+        const index = Number(button.dataset.deleteRule);
+        if (!window.confirm("Delete this rule?")) return;
+        button.disabled = true;
+        try {
+            await saveRules(rules.filter((_, ruleIndex) => ruleIndex !== index));
+            window.location.reload();
+        } catch (error) {
+            message.textContent = error.message || "Could not delete the rule.";
+            message.hidden = false;
+            button.disabled = false;
+        }
+    }));
     document.querySelectorAll("[data-close-modal]").forEach(button => button.addEventListener("click", closeModal));
     document.querySelector("[data-add-trigger]").addEventListener("click", () => addTrigger());
     document.querySelector("[data-add-receiver]").addEventListener("click", () => addReceiver());
@@ -92,8 +115,7 @@
         const rule = { triggers, receivers };
         if (editingIndex === null) updatedRules.push(rule); else updatedRules[editingIndex] = rule;
         try {
-            const response = await fetch("/api/rules", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(updatedRules) });
-            if (!response.ok) throw new Error(await response.text());
+            await saveRules(updatedRules);
             window.location.reload();
         } catch (error) { showError(error.message || "Could not save the rule."); }
     });
