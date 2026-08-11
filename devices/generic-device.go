@@ -49,6 +49,7 @@ func NewDevice(config core.DeviceConfig) *GenericDevice {
 			for i, controlConfig := range *config.Options.Controls {
 				s.Controls[i] = controlConfig
 				s.Triggers = append(s.Triggers, controlConfig.Name)
+				s.Receivers = append(s.Receivers, controlConfig.Name)
 			}
 		}
 
@@ -350,6 +351,13 @@ func (d *GenericDevice) PublishValue(client mqtt.Client) {
 		return
 	}
 
+	for name := range values {
+		for _, control := range d.Controls {
+			if control.Name == name {
+				control.NeedsSending = false
+			}
+		}
+	}
 }
 
 func (d *GenericDevice) PollValue(client mqtt.Client) {

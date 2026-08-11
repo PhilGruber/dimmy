@@ -84,6 +84,7 @@ func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 
 	if newVal == 0 {
 		// Hack for stupid lights
+		log.Printf("Brightness is zero, activating stupid hack")
 		msg.Transition = nil
 		msg.Brightness = core.ToPtr(10)
 		msg.State = core.ToPtr("OFF")
