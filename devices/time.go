@@ -1,6 +1,7 @@
 package devices
 
 import (
+	"log"
 	"time"
 
 	"github.com/PhilGruber/dimmy/core"
@@ -35,6 +36,9 @@ func NewDimmyTime(config core.DeviceConfig, lat float64, lon float64) *DimmyTime
 	s.lat = lat
 
 	s.persistentFields = []string{"day", "month", "year", "hour", "weekday"}
+
+	s.updateEvents()
+	log.Printf("Sunrise today is %v. Sunset today is %v", s.events["sunrise"].Local(), s.events["sunset"].Local())
 
 	return &s
 }
