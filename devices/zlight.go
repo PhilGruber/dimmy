@@ -124,7 +124,6 @@ func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 			return
 		}
 		if data.Brightness != nil {
-			l.LastSent = -999
 			l.SetCurrent(l.ValueToPercentage(*data.Brightness))
 		}
 		if data.State != nil {
