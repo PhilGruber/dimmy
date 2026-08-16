@@ -50,6 +50,7 @@ type ConfigOptions struct {
 	Controls         *[]Control         `yaml:"controls,omitempty"`
 	Devices          *[]string          `yaml:"devices,omitempty"`
 	PreventResending bool               `yaml:"prevent_resending,omitempty"`
+	StupidHack       bool               `yaml:"stupid_hack,omitempty"`
 
 	History *bool `yaml:"history,omitempty"`
 

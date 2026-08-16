@@ -12,6 +12,7 @@ import (
 
 type ZLight struct {
 	Light
+	StupidHack bool
 }
 
 func NewZLight(config core.DeviceConfig) *ZLight {
@@ -42,6 +43,10 @@ func makeZLight(config core.DeviceConfig) ZLight {
 		}
 		if config.Options.Transition != nil {
 			d.transition = *config.Options.Transition
+		}
+
+		if config.Options.StupidHack {
+			d.StupidHack = config.Options.StupidHack
 		}
 	}
 
@@ -82,7 +87,7 @@ func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 	s, _ := json.Marshal(msg)
 	mqtt.Publish(l.MqttTopic+"/set", 0, false, s)
 
-	if newVal == 0 {
+	if newVal == 0 && l.StupidHack {
 		// Hack for stupid lights
 		log.Printf("Brightness is zero, activating stupid hack")
 		msg.Transition = nil
