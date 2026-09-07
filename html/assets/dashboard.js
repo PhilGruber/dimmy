@@ -50,6 +50,11 @@ $(document).ready(function() {
                             $("#" + name + "_" + key).removeClass('outdated');
                         }
 
+                        const historyLink = $("#history_link_" + name + "_" + key);
+                        if (historyLink.length > 0 && isHistoryEnabled(data[name], key)) {
+                            historyLink.removeClass("hidden");
+                        }
+
                         if (data[name].Values[key].History != null && key === "temperature") {
                             let previousTime = new Date(lastChange.getTime() - 25 * 60 * 1000);
                             let trend = 0;
@@ -99,3 +104,17 @@ function addRule() {
     }, "html");
 }
 
+function isHistoryEnabled(device, key) {
+    if (!device || !device.Sensors) {
+        return false;
+    }
+    const sensor = device.Sensors.find((s) => s.Name === key);
+    if (!sensor) {
+        return false;
+    }
+    if (sensor.History === true) {
+        return true;
+    }
+    const history = device.Values?.[key]?.History;
+    return Array.isArray(history) && history.length > 0;
+}

@@ -327,6 +327,19 @@ func (s *Server) ShowDashboard(webroot string, name string) http.HandlerFunc {
 	}
 }
 
+func (s *Server) ShowSensorHistory(webroot string) http.HandlerFunc {
+	return func(output http.ResponseWriter, request *http.Request) {
+		templ, err := template.ParseFiles(webroot + "/sensor-history.html")
+		if err != nil {
+			http.Error(output, "could not load history page: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if err := templ.Execute(output, nil); err != nil {
+			log.Println(err)
+		}
+	}
+}
+
 func (s *Server) EditRules(webroot string) http.HandlerFunc {
 	return func(output http.ResponseWriter, httpRequest *http.Request) {
 		templ, err := template.ParseFiles(webroot + "/rules.html")

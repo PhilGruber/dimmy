@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor History - Dimmy</title>
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: #eaf4fa;
+            color: #333;
+        }
+        .page {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 12px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .card {
+            background: #fff;
+            border: 1px solid #cfe3ef;
+            border-radius: 12px;
+            padding: 12px;
+            margin-top: 10px;
+        }
+        .controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        select, button {
+            font-size: 16px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #cfd8dc;
+            background: #fff;
+        }
+        .canvas-wrap {
+            width: 100%;
+            overflow: hidden;
+        }
+        canvas {
+            width: 100%;
+            height: 320px;
+            display: block;
+            background: #fff;
+            border-radius: 8px;
+        }
+        .muted {
+            color: #666;
+            font-size: 14px;
+        }
+        a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        @media (max-width: 640px) {
+            canvas { height: 240px; }
+        }
+    </style>
+</head>
+<body>
+<main class="page">
+    <div class="header">
+        <div>
+            <h2 id="title" style="margin:0;">Sensor history</h2>
+            <div id="subtitle" class="muted"></div>
+        </div>
+        <a href="/">← Dashboard</a>
+    </div>
+
+    <section class="card">
+        <div class="controls">
+            <label for="scale">Range:</label>
+            <select id="scale">
+                <option value="30m">30m</option>
+                <option value="1h">1h</option>
+                <option value="6h">6h</option>
+                <option value="24h">24h</option>
+            </select>
+            <button id="refresh-btn" type="button">Refresh</button>
+        </div>
+        <div class="canvas-wrap">
+            <canvas id="chart"></canvas>
+        </div>
+        <p class="muted" id="summary">Loading…</p>
+    </section>
+</main>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const device = params.get("device") || "";
+    const key = params.get("key") || "";
+    const defaultScale = params.get("scale") || "6h";
+
+    const scaleSelect = document.getElementById("scale");
+    const canvas = document.getElementById("chart");
+    const title = document.getElementById("title");
+    const subtitle = document.getElementById("subtitle");
+    const summary = document.getElementById("summary");
+
+    scaleSelect.value = defaultScale;
+    title.textContent = `${device} / ${key}`;
+    subtitle.textContent = `History from API status`;
+
+    function parseScaleMs(scale) {
+        const m = /^(\d+)(m|h|d)$/.exec(scale);
+        if (!m) return 6 * 60 * 60 * 1000;
+        const n = Number(m[1]);
+        if (m[2] === "m") return n * 60 * 1000;
+        if (m[2] === "h") return n * 60 * 60 * 1000;
+        return n * 24 * 60 * 60 * 1000;
+    }
+
+    function toNumeric(v) {
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+    }
+
+    function draw(points) {
+        const dpr = window.devicePixelRatio || 1;
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        const ctx = canvas.getContext("2d");
+        ctx.scale(dpr, dpr);
+
+        ctx.clearRect(0, 0, w, h);
+
+        const pad = { left: 42, right: 14, top: 12, bottom: 30 };
+        const innerW = w - pad.left - pad.right;
+        const innerH = h - pad.top - pad.bottom;
+
+        if (points.length < 2) {
+            ctx.fillStyle = "#666";
+            ctx.fillText("Not enough history data yet.", pad.left, pad.top + 20);
+            return;
+        }
+
+        const xs = points.map(p => p.t.getTime());
+        const ys = points.map(p => p.v);
+        const minX = Math.min(...xs);
+        const maxX = Math.max(...xs);
+        let minY = Math.min(...ys);
+        let maxY = Math.max(...ys);
+        if (minY === maxY) {
+            minY -= 1;
+            maxY += 1;
+        }
+
+        ctx.strokeStyle = "#e5e7eb";
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= 4; i++) {
+            const y = pad.top + (innerH * i / 4);
+            ctx.beginPath();
+            ctx.moveTo(pad.left, y);
+            ctx.lineTo(pad.left + innerW, y);
+            ctx.stroke();
+        }
+
+        ctx.strokeStyle = "#2563eb";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        points.forEach((p, i) => {
+            const x = pad.left + ((p.t.getTime() - minX) / (maxX - minX)) * innerW;
+            const y = pad.top + (1 - (p.v - minY) / (maxY - minY)) * innerH;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        ctx.fillStyle = "#333";
+        ctx.font = "12px Segoe UI";
+        ctx.fillText(minY.toFixed(1), 4, pad.top + innerH);
+        ctx.fillText(maxY.toFixed(1), 4, pad.top + 12);
+
+        const minTime = new Date(minX).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        const maxTime = new Date(maxX).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        ctx.fillText(minTime, pad.left, h - 8);
+        ctx.fillText(maxTime, pad.left + innerW - 44, h - 8);
+    }
+
+    async function loadAndRender() {
+        if (!device || !key) {
+            summary.textContent = "Missing device or key.";
+            return;
+        }
+        const response = await fetch("/api/status");
+        if (!response.ok) {
+            summary.textContent = "Could not load API data.";
+            return;
+        }
+        const data = await response.json();
+        const item = data[device];
+        if (!item || !item.Values || !item.Values[key]) {
+            summary.textContent = "Sensor not found.";
+            draw([]);
+            return;
+        }
+
+        const history = item.Values[key].History || [];
+        const now = Date.now();
+        const rangeMs = parseScaleMs(scaleSelect.value);
+
+        const points = history
+            .map(h => ({ t: new Date(h.Time), v: toNumeric(h.Value) }))
+            .filter(p => p.v !== null && !Number.isNaN(p.t.getTime()))
+            .filter(p => p.t.getTime() >= now - rangeMs);
+
+        const currentValue = toNumeric(item.Values[key].value);
+        const lastChanged = new Date(item.Values[key].LastChanged);
+        if (currentValue !== null && !Number.isNaN(lastChanged.getTime()) && lastChanged.getTime() >= now - rangeMs) {
+            points.push({ t: lastChanged, v: currentValue });
+        }
+
+        points.sort((a, b) => a.t - b.t);
+        draw(points);
+        summary.textContent = `${points.length} points in ${scaleSelect.value}`;
+    }
+
+    scaleSelect.addEventListener("change", loadAndRender);
+    document.getElementById("refresh-btn").addEventListener("click", loadAndRender);
+    window.addEventListener("resize", loadAndRender);
+
+    loadAndRender();
+</script>
+</body>
+</html>

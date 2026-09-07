@@ -146,6 +146,7 @@ func (s *Server) Start(config *core.ServerConfig) {
 	http.Handle("/assets/", http.StripPrefix("/assets/", assets))
 	http.Handle("/api/switch", s.ReceiveRequest())
 	http.Handle("/api/status", s.ShowStatus(&s.devices))
+	http.Handle("/sensor-history", s.ShowSensorHistory(config.WebRoot))
 	http.Handle("/dashboard/all", s.ShowDashboard(config.WebRoot, "all"))
 	http.Handle("/devices/new-devices", s.ShowUnknownDevices(config.WebRoot))
 	http.Handle("/devices/new-devices/save", s.SaveUnknownDevice())

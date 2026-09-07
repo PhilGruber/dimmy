@@ -58,6 +58,9 @@ func NewDevice(config core.DeviceConfig) *GenericDevice {
 			for i, sensorConfig := range *config.Options.Sensors {
 				s.Sensors[i] = sensorConfig
 				s.Triggers = append(s.Triggers, sensorConfig.Name)
+				if sensorConfig.Name == "temperature" || sensorConfig.Name == "humidity" || sensorConfig.Name == "illuminance" {
+					s.hasHistory = true
+				}
 			}
 		} else {
 			// deprecated

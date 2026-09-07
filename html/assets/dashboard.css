@@ -51,7 +51,7 @@ body {
 }
 
 /* Buttons */
-.buttons a {
+.buttons a.button {
   font-size: 12pt;
   font-weight: 600;
   height: 30px;
@@ -89,6 +89,14 @@ body {
   padding: 2px 12px 12px 8px;
   border-radius: 15px;
   background-color: #eceff4;
+}
+
+.sensor-history-link {
+  display: inline-block;
+  margin-left: 4px;
+  text-decoration: none;
+  font-size: 14pt;
+  line-height: 1;
 }
 
 .panel-sensor .value {
