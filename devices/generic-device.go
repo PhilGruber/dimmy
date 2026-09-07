@@ -282,7 +282,7 @@ func (d *GenericDevice) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInt
 func (d *GenericDevice) addHistory(field string, value any) {
 	d.mutex.Lock()
 	d.Values[field].History = append(d.Values[field].History, SensorHistory{Time: time.Now(), Value: value})
-	if len(d.Values[field].History) > 10 {
+	if len(d.Values[field].History) > 256 {
 		d.Values[field].History = d.Values[field].History[len(d.Values[field].History)-10:]
 	}
 	d.mutex.Unlock()
