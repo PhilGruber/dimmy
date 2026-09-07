@@ -233,6 +233,7 @@
     document.getElementById("refresh-btn").addEventListener("click", loadAndRender);
     window.addEventListener("resize", loadAndRender);
 
+    setInterval(loadAndRender, 30 * 1000);
     loadAndRender();
 </script>
 </body>
