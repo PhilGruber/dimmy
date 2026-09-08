@@ -15,7 +15,9 @@ for CFG_FILE in "${CFG_FILES[@]}"; do
     if [ ! -f "${FULL_CFG_FILE}" ] && [ -f "${EXAMPLE_FILE}" ]; then
         cp "${EXAMPLE_FILE}" "${FULL_CFG_FILE}"
     fi
-    rm "${EXAMPLE_FILE}"
+    if [ -f "${EXAMPLE_FILE}" ]; then
+        rm "${EXAMPLE_FILE}"
+    fi
 done
 
 exit 0
