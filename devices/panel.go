@@ -1,8 +1,9 @@
 package devices
 
 import (
-	"github.com/PhilGruber/dimmy/core"
 	"log"
+
+	"github.com/PhilGruber/dimmy/core"
 )
 
 type Panel struct {
@@ -35,19 +36,6 @@ func NewPanelFromDevice(device DeviceInterface) Panel {
 
 func (p Panel) GetLabel() string {
 	return p.Label
-}
-
-func (p Panel) GetTemperatureDevice() *DeviceInterface {
-	for _, d := range p.Devices {
-		if d.GetType() == "temperature" {
-			return &d
-		}
-	}
-	return nil
-}
-
-func (p Panel) HasTemperatureDevice() bool {
-	return p.GetTemperatureDevice() != nil
 }
 
 func (p Panel) GetDevices() []DeviceInterface {
