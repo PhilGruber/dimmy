@@ -86,6 +86,7 @@
                 <option value="30m">30m</option>
                 <option value="1h">1h</option>
                 <option value="6h">6h</option>
+                <option value="12h">12h</option>
                 <option value="24h">24h</option>
             </select>
             <button id="refresh-btn" type="button">Refresh</button>
@@ -185,8 +186,8 @@
         ctx.fillText(minY.toFixed(1), 4, pad.top + innerH);
         ctx.fillText(maxY.toFixed(1), 4, pad.top + 12);
 
-        const minTime = new Date(minX).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        const maxTime = new Date(maxX).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        const minTime = new Date(minX).toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit" });
+        const maxTime = new Date(maxX).toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit" });
         ctx.fillText(minTime, pad.left, h - 8);
         ctx.fillText(maxTime, pad.left + innerW - 44, h - 8);
     }
