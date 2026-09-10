@@ -58,6 +58,7 @@ func (s *Server) initialize(config *core.ServerConfig) {
 	for _, deviceConfig := range config.Devices {
 		switch deviceConfig.Type {
 		case "motion-sensor":
+			s.devices[deviceConfig.Name] = dimmyDevices.NewMotionSensor(deviceConfig)
 		case "device", "sensor":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewDevice(deviceConfig)
 		case "switch":

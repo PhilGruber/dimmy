@@ -2,10 +2,11 @@ package devices
 
 import (
 	"encoding/json"
-	"github.com/PhilGruber/dimmy/core"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"log"
 	"time"
+
+	"github.com/PhilGruber/dimmy/core"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 type MotionSensor struct {
@@ -14,19 +15,18 @@ type MotionSensor struct {
 	Active bool
 }
 
-func MakeMotionSensor(config core.DeviceConfig) MotionSensor {
+func (s *MotionSensor) UpdateValue() (float64, bool) {
+	return 0, false
+}
+
+func NewMotionSensor(config core.DeviceConfig) *MotionSensor {
 	s := MotionSensor{}
 	s.setBaseConfig(config)
 	s.MqttState = config.Topic
 
 	s.Active = false
-
 	s.Type = "motion-sensor"
-	return s
-}
 
-func NewMotionSensor(config core.DeviceConfig) *MotionSensor {
-	s := MakeMotionSensor(config)
 	return &s
 }
 
