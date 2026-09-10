@@ -151,6 +151,7 @@ func (s *Server) Start(config *core.ServerConfig) {
 	http.Handle("/rules/add-single-use", s.AddSingleUseRule(config.WebRoot))
 	http.Handle("/rules/edit", s.EditRules(config.WebRoot))
 	http.Handle("/api/rules", s.SaveRules())
+	http.Handle("/sensor-history", s.ShowSensorHistory(config.WebRoot))
 	http.Handle("/", s.ShowDashboard(config.WebRoot, "default"))
 
 	log.Printf("Listening on port %d", config.Port)
