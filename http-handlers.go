@@ -152,7 +152,7 @@ func (s *Server) SaveUnknownDevice() http.HandlerFunc {
 		ok := true
 		switch deviceType {
 		case "generic-device":
-			device = dimmyDevices.NewDevice(bareDevice.GetConfig(name))
+			device = s.newGenericDevice(bareDevice.GetConfig(name))
 		case "zlight":
 			device = dimmyDevices.NewZLight(bareDevice.GetConfig(name))
 		case "light":
@@ -443,6 +443,25 @@ func (s *Server) SaveRules() http.HandlerFunc {
 		}
 		output.Header().Set("Content-Type", "application/json")
 		_, _ = output.Write([]byte(`{"ok":true}`))
+	}
+}
+
+func (s *Server) LoadSensorHistory(db *core.HistoryDatabase) http.HandlerFunc {
+	return func(output http.ResponseWriter, request *http.Request) {
+		device := request.PathValue("device")
+		sensor := request.PathValue("sensor")
+		result, err := db.GetSensorHistory(device, sensor)
+		if err != nil {
+			http.Error(output, "could not load sensor history: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		output.Header().Set("Content-Type", "application/json")
+		blob, err := json.Marshal(result)
+		if err != nil {
+			http.Error(output, "could not load sensor history: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		_, _ = output.Write(blob)
 	}
 }
 

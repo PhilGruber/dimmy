@@ -55,6 +55,9 @@ func LoadConfig() (*ServerConfig, error) {
 	if config.Port == 0 {
 		config.Port = 80
 	}
+	if config.DatabasePath == "" {
+		config.DatabasePath = DefaultDatabasePath
+	}
 	config.Filename = filename
 	config.RulesFilename = rulesFile
 

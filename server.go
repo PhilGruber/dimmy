@@ -23,6 +23,7 @@ type Server struct {
 	rules          []*dimmyDevices.Rule
 	channel        chan core.SwitchRequest
 	config         *core.ServerConfig
+	historyDB      *core.HistoryDatabase
 	mqttClient     mqtt.Client
 	mutex          sync.RWMutex
 }
@@ -44,7 +45,13 @@ func main() {
 		return
 	}
 
-	server := &Server{}
+	historyDB, err := core.OpenHistoryDatabase(config.DatabasePath)
+	if err != nil {
+		log.Printf("Could not open history database: %v", err)
+	}
+	defer historyDB.Close()
+
+	server := &Server{historyDB: historyDB}
 	server.initialize(config)
 	server.Start(config)
 }
@@ -60,7 +67,7 @@ func (s *Server) initialize(config *core.ServerConfig) {
 		case "motion-sensor":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewMotionSensor(deviceConfig)
 		case "device", "sensor":
-			s.devices[deviceConfig.Name] = dimmyDevices.NewDevice(deviceConfig)
+			s.devices[deviceConfig.Name] = s.newGenericDevice(deviceConfig)
 		case "switch":
 			s.devices[deviceConfig.Name] = dimmyDevices.NewSwitch(deviceConfig)
 		case "light":
@@ -136,6 +143,13 @@ func (s *Server) initialize(config *core.ServerConfig) {
 	s.channel = make(chan core.SwitchRequest, len(s.devices))
 }
 
+func (s *Server) newGenericDevice(config core.DeviceConfig) *dimmyDevices.GenericDevice {
+	if s.historyDB == nil {
+		return dimmyDevices.NewDevice(config)
+	}
+	return dimmyDevices.NewDevice(config, s.historyDB)
+}
+
 func (s *Server) Start(config *core.ServerConfig) {
 
 	go s.processRequests()
@@ -151,6 +165,7 @@ func (s *Server) Start(config *core.ServerConfig) {
 	http.Handle("/rules/add-single-use", s.AddSingleUseRule(config.WebRoot))
 	http.Handle("/rules/edit", s.EditRules(config.WebRoot))
 	http.Handle("/api/rules", s.SaveRules())
+	http.Handle("/api/sensor-history/{device}/{sensor}", s.LoadSensorHistory(s.historyDB))
 	http.Handle("/sensor-history", s.ShowSensorHistory(config.WebRoot))
 	http.Handle("/", s.ShowDashboard(config.WebRoot, "default"))
 

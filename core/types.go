@@ -126,6 +126,7 @@ type ServerConfig struct {
 	Port          int            `yaml:"port"`
 	MqttServer    string         `yaml:"mqtt_server"`
 	WebRoot       string         `yaml:"webroot"`
+	DatabasePath  string         `yaml:"database_path"`
 	Lat           float64        `yaml:"latitude"`
 	Lon           float64        `yaml:"longitude"`
 	Devices       []DeviceConfig `yaml:"devices"`

@@ -31,11 +31,15 @@ type GenericDevice struct {
 	Controls   []core.Control          `json:"Controls"`
 	Values     map[string]*SensorValue `json:"Values"`
 	hasHistory bool
+	historyDB  core.SensorHistoryStore
 	valueMutex *sync.RWMutex
 }
 
-func NewDevice(config core.DeviceConfig) *GenericDevice {
+func NewDevice(config core.DeviceConfig, historyDB ...core.SensorHistoryStore) *GenericDevice {
 	s := GenericDevice{}
+	if len(historyDB) > 0 {
+		s.historyDB = historyDB[0]
+	}
 	s.setBaseConfig(config)
 	s.MqttState = config.Topic
 
@@ -237,7 +241,7 @@ func (d *GenericDevice) setSensorValue(key string, value any) {
 
 	d.valueMutex.Unlock()
 	if d.hasHistory {
-		d.addHistory(key, value)
+		d.AddHistory(key, value)
 	}
 
 	d.UpdateRules(key, value)
@@ -279,13 +283,22 @@ func (d *GenericDevice) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInt
 	}
 }
 
-func (d *GenericDevice) addHistory(field string, value any) {
+// AddHistory retains a recent reading in memory and persists it when a history
+// database has been configured.
+func (d *GenericDevice) AddHistory(field string, value any) {
+	now := time.Now()
 	d.mutex.Lock()
-	d.Values[field].History = append(d.Values[field].History, SensorHistory{Time: time.Now(), Value: value})
-	if len(d.Values[field].History) > 256 {
+	d.Values[field].History = append(d.Values[field].History, SensorHistory{Time: now, Value: value})
+	if len(d.Values[field].History) > 10 {
 		d.Values[field].History = d.Values[field].History[len(d.Values[field].History)-10:]
 	}
 	d.mutex.Unlock()
+
+	if d.historyDB != nil {
+		if err := d.historyDB.AddSensorHistory(d.Name, field, value, now); err != nil {
+			log.Printf("[%32s] Could not save %s history: %v\n", d.Name, field, err)
+		}
+	}
 }
 
 func (d *GenericDevice) UpdateValue() (float64, bool) {

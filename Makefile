@@ -34,6 +34,7 @@ deb: all
 	mkdir -p deb/dimmy/etc/init.d
 	mkdir -p deb/dimmy/usr/share/dimmy
 	mkdir -p deb/dimmy/lib/systemd/system
+	mkdir -p deb/dimmy/var/lib/dimmy
 	mkdir deb/dimmy/DEBIAN
 	cp deb.control deb/dimmy/DEBIAN/control
 	sed -i'' "s/__version__/$(VERSION)/" deb/dimmy/DEBIAN/control

@@ -197,20 +197,13 @@
             summary.textContent = "Missing device or key.";
             return;
         }
-        const response = await fetch("/api/status");
+        const response = await fetch("/api/sensor-history/" + device + "/" + key);
         if (!response.ok) {
             summary.textContent = "Could not load API data.";
             return;
         }
-        const data = await response.json();
-        const item = data[device];
-        if (!item || !item.Values || !item.Values[key]) {
-            summary.textContent = "Sensor not found.";
-            draw([]);
-            return;
-        }
+        const history = await response.json();
 
-        const history = item.Values[key].History || [];
         const now = Date.now();
         const rangeMs = parseScaleMs(scaleSelect.value);
 
@@ -218,12 +211,6 @@
             .map(h => ({ t: new Date(h.Time), v: toNumeric(h.Value) }))
             .filter(p => p.v !== null && !Number.isNaN(p.t.getTime()))
             .filter(p => p.t.getTime() >= now - rangeMs);
-
-        const currentValue = toNumeric(item.Values[key].value);
-        const lastChanged = new Date(item.Values[key].LastChanged);
-        if (currentValue !== null && !Number.isNaN(lastChanged.getTime()) && lastChanged.getTime() >= now - rangeMs) {
-            points.push({ t: lastChanged, v: currentValue });
-        }
 
         points.sort((a, b) => a.t - b.t);
         draw(points);
