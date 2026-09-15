@@ -78,6 +78,18 @@ func (d *HistoryDatabase) AddSensorHistory(device, sensor string, value any, tim
 	return nil
 }
 
+func (d *HistoryDatabase) DeleteSensorHistoryOlderThan(cutoff time.Time) (int64, error) {
+	result, err := d.DB.Exec(`DELETE FROM sensor_history WHERE timestamp < ?`, cutoff)
+	if err != nil {
+		return 0, fmt.Errorf("delete old sensor history: %w", err)
+	}
+	rowsDeleted, err := result.RowsAffected()
+	if err != nil {
+		return 0, fmt.Errorf("read deleted rows count: %w", err)
+	}
+	return rowsDeleted, nil
+}
+
 func (d *HistoryDatabase) GetSensorHistory(device string, sensor string) ([]TimeValue, error) {
 	rows, err := d.DB.QueryContext(
 		context.Background(),

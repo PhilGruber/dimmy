@@ -16,6 +16,11 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
+const (
+	sensorHistoryRetention    = 14 * 24 * time.Hour
+	sensorHistoryCleanupEvery = 24 * time.Hour
+)
+
 type Server struct {
 	dashboards     map[string][]dimmyDevices.Panel
 	devices        map[string]dimmyDevices.DeviceInterface
@@ -304,6 +309,36 @@ func (s *Server) DetectDevice() mqtt.MessageHandler {
 
 		s.unknownDevices[newDevice.GetName()] = newDevice
 	}
+}
+
+func (s *Server) startSensorHistoryCleanup() {
+	if s.historyDB == nil {
+		return
+	}
+
+	runCleanup := func() {
+		cutoff := time.Now().Add(-sensorHistoryRetention)
+		deleted, err := s.historyDB.DeleteSensorHistoryOlderThan(cutoff)
+		if err != nil {
+			log.Printf("Could not clean old sensor history: %v", err)
+			return
+		}
+		if deleted > 0 {
+			log.Printf("Deleted %d sensor_history records older than %s", deleted, cutoff.Format(time.RFC3339))
+		}
+	}
+
+	// Run once during startup.
+	runCleanup()
+
+	// Run periodically every 24 hours.
+	go func() {
+		ticker := time.NewTicker(sensorHistoryCleanupEvery)
+		defer ticker.Stop()
+		for range ticker.C {
+			runCleanup()
+		}
+	}()
 }
 
 func IsMetaTopic(topic string) bool {
