@@ -1,6 +1,22 @@
 #!/bin/bash
 set -e
 
+# Other maintainer-script actions must not change the installation.
+case "${1:-configure}" in
+    configure) ;;
+    *) exit 0 ;;
+esac
+
+if ! getent group dimmy >/dev/null; then
+    addgroup --system dimmy
+fi
+if ! getent passwd dimmy >/dev/null; then
+    adduser --system --ingroup dimmy --home /var/lib/dimmy \
+        --no-create-home --shell /usr/sbin/nologin dimmy
+fi
+
+mkdir -p /etc/dimmy /usr/share/dimmy /var/lib/dimmy
+
 CFG_DIR="/etc/dimmy"
 
 CFG_FILES=(
@@ -19,5 +35,7 @@ for CFG_FILE in "${CFG_FILES[@]}"; do
         rm "${EXAMPLE_FILE}"
     fi
 done
+
+chown -R dimmy:dimmy /etc/dimmy /usr/share/dimmy /var/lib/dimmy
 
 exit 0

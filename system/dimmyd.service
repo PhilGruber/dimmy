@@ -5,6 +5,8 @@ Wants=network-online.target mosquitto.service
 
 [Service]
 Type=simple
+User=dimmy
+Group=dimmy
 ExecStart=/usr/bin/dimmyd
 Restart=on-failure
 RestartSec=5s

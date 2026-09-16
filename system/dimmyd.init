@@ -25,7 +25,7 @@ SCRIPTNAME=/etc/init.d/$NAME
 
 do_start() {
 	start-stop-daemon --start --quiet --background --make-pidfile \
-		--pidfile "$PIDFILE" --exec "$DAEMON" -- \
+		--pidfile "$PIDFILE" --chuid dimmy:dimmy --exec "$DAEMON" -- \
 		>>"$LOGFILE" 2>&1
 }
 

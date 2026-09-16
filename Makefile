@@ -17,17 +17,19 @@ jquery:
 	wget https://code.jquery.com/jquery-3.4.1.min.js -O html/assets/jquery.js
 
 install:
-	cp dimmy /usr/bin
-	cp dimmyd /usr/bin
-	test -f /etc/dimmy/dimmyd.conf.yaml || cp dimmyd.conf.yaml.example /etc/dimmy/dimmyd.conf.yaml
-	test -f /etc/dimmy/rules.conf.yaml || cp rules.conf.yaml.example /etc/dimmy/rules.conf.yaml
-	mkdir -p /usr/share/dimmy
+	install -m 755 dimmy dimmyd /usr/bin/
+	mkdir -p /etc/dimmy /usr/share/dimmy /var/lib/dimmy
+	cp dimmyd.conf.yaml.example rules.conf.yaml.example dimmy.conf.example /etc/dimmy/
 	cp -R html/* /usr/share/dimmy
+	install -D -m 755 system/dimmyd.init /etc/init.d/dimmyd
+	install -D -m 644 system/dimmyd.service /lib/systemd/system/dimmyd.service
+	bash system/dimmy.postinst configure
 
 test:
 	go test ./devices
 	go test ./core
 
+ARCH := $(if $(ARCH),$(ARCH),$(shell dpkg --print-architecture))
 deb: all
 	rm -rf deb
 	mkdir -p deb/dimmy/usr/bin
@@ -44,9 +46,10 @@ deb: all
 	cp dimmy deb/dimmy/usr/bin
 	cp dimmyd deb/dimmy/usr/bin
 	install -m 755 system/dimmyd.init deb/dimmy/etc/init.d/dimmyd
-	install -m 755 system/dimmyd.service deb/dimmy/lib/systemd/system
+	install -m 644 system/dimmyd.service deb/dimmy/lib/systemd/system
 	install -m 755 system/dimmy.postinst deb/dimmy/DEBIAN/postinst
 	cp dimmyd.conf.yaml.example deb/dimmy/etc/dimmy/dimmyd.conf.yaml.example
 	cp rules.conf.yaml.example deb/dimmy/etc/dimmy/rules.conf.yaml.example
+	cp dimmy.conf.example deb/dimmy/etc/dimmy/dimmy.conf.example
 	cp -R html/* deb/dimmy/usr/share/dimmy
 	dpkg-deb -Zgzip --root-owner-group --build deb/dimmy
