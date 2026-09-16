@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/PhilGruber/dimmy/core"
 	dimmyDevices "github.com/PhilGruber/dimmy/devices"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 func (s *Server) ReceiveRequest() http.HandlerFunc {
@@ -28,13 +30,16 @@ func (s *Server) ReceiveRequest() http.HandlerFunc {
 			return string(jsonData)
 		}
 
-		body, err := io.ReadAll(httpRequest.Body)
+		body, err := io.ReadAll(http.MaxBytesReader(output, httpRequest.Body, maxRequestBodyBytes))
 		if err != nil {
-			log.Println("Error: ", err)
-			_, _ = fmt.Fprintf(output, "Invalid JSON data")
+			var tooLarge *http.MaxBytesError
+			if errors.As(err, &tooLarge) {
+				http.Error(output, "request body too large", http.StatusRequestEntityTooLarge)
+			} else {
+				http.Error(output, "could not read request body", http.StatusBadRequest)
+			}
 			return
 		}
-		log.Println("Received payload from api: " + string(body[:]))
 
 		var request core.SwitchRequest
 
@@ -42,9 +47,7 @@ func (s *Server) ReceiveRequest() http.HandlerFunc {
 		request.Force = true
 
 		if err != nil {
-			log.Println("Error: ", err)
-			log.Println(string(body[:]))
-			_, _ = fmt.Fprintf(output, "Invalid JSON data")
+			http.Error(output, "invalid JSON data", http.StatusBadRequest)
 			return
 		}
 		s.channel <- request
@@ -134,53 +137,55 @@ func (s *Server) SaveUnknownDevice() http.HandlerFunc {
 
 		log.Printf("Saving device %s of type %s (topic=%s)\n", name, deviceType, topic)
 
-		s.mutex.Lock()
-
-		if _, exists := s.devices[name]; exists {
-			s.mutex.Unlock()
-			http.Error(output, "a device with that name already exists", http.StatusConflict)
-			return
-		}
-		bareDevice, exists := s.unknownDevices[topic]
-		if !exists {
-			s.mutex.Unlock()
-			http.Error(output, "unknown device was not found", http.StatusNotFound)
-			return
-		}
 		var device dimmyDevices.DeviceInterface
-		var deviceConfig core.DeviceConfig
-		ok := true
-		switch deviceType {
-		case "generic-device":
-			device = s.newGenericDevice(bareDevice.GetConfig(name))
-		case "zlight":
-			device = dimmyDevices.NewZLight(bareDevice.GetConfig(name))
-		case "light":
-			device = dimmyDevices.NewLight(bareDevice.GetConfig(name))
-		case "ir-control":
-			device = dimmyDevices.NewIrControl(bareDevice.GetConfig(name))
-		}
-		if !ok {
-			s.mutex.Unlock()
-			http.Error(output, "unknown device of type "+deviceType+" cannot be saved", http.StatusUnprocessableEntity)
+		var mqttClient mqtt.Client
+		saved := func() bool {
+			s.mutex.Lock()
+			defer s.mutex.Unlock()
+
+			if _, exists := s.devices[name]; exists {
+				http.Error(output, "a device with that name already exists", http.StatusConflict)
+				return false
+			}
+			bareDevice, exists := s.unknownDevices[topic]
+			if !exists {
+				http.Error(output, "unknown device was not found", http.StatusNotFound)
+				return false
+			}
+			var deviceConfig core.DeviceConfig
+			switch deviceType {
+			case "generic-device":
+				device = s.newGenericDevice(bareDevice.GetConfig(name))
+			case "zlight":
+				device = dimmyDevices.NewZLight(bareDevice.GetConfig(name))
+			case "light":
+				device = dimmyDevices.NewLight(bareDevice.GetConfig(name))
+			case "ir-control":
+				device = dimmyDevices.NewIrControl(bareDevice.GetConfig(name))
+			default:
+				http.Error(output, "unknown device of type "+deviceType+" cannot be saved", http.StatusUnprocessableEntity)
+				return false
+			}
+			deviceConfig = device.GetConfig(name)
+
+			if err := core.AddDeviceToConfig(s.config.Filename, deviceConfig); err != nil {
+				log.Printf("Could not save device %s: %s", topic, err)
+				http.Error(output, "could not update config: "+err.Error(), http.StatusInternalServerError)
+				return false
+			}
+
+			device.SetName(name)
+			device.SetLabel(name)
+			s.devices[name] = device
+			delete(s.unknownDevices, topic)
+			s.config.Devices = append(s.config.Devices, deviceConfig)
+			mqttClient = s.mqttClient
+
+			return true
+		}()
+		if !saved {
 			return
 		}
-		deviceConfig = device.GetConfig(name)
-
-		if err := core.AddDeviceToConfig(s.config.Filename, deviceConfig); err != nil {
-			s.mutex.Unlock()
-			log.Printf("Could not save device %s: %s", topic, err)
-			http.Error(output, "could not update config: "+err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		device.SetName(name)
-		device.SetLabel(name)
-		s.devices[name] = device
-		delete(s.unknownDevices, topic)
-		s.config.Devices = append(s.config.Devices, deviceConfig)
-		mqttClient := s.mqttClient
-		s.mutex.Unlock()
 
 		if mqttClient != nil && device.GetMqttStateTopic() != "" {
 			token := mqttClient.Subscribe(device.GetMqttStateTopic(), 0, device.GetMessageHandler(s.channel, device))

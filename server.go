@@ -17,6 +17,7 @@ import (
 )
 
 const (
+	maxRequestBodyBytes       = 1 << 20 // 1 MiB
 	sensorHistoryRetention    = 14 * 24 * time.Hour
 	sensorHistoryCleanupEvery = 24 * time.Hour
 )
@@ -175,7 +176,18 @@ func (s *Server) Start(config *core.ServerConfig) {
 	http.Handle("/", s.ShowDashboard(config.WebRoot, "default"))
 
 	log.Printf("Listening on port %d", config.Port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
+	log.Fatal(newHTTPServer(fmt.Sprintf(":%d", config.Port), http.DefaultServeMux).ListenAndServe())
+}
+
+func newHTTPServer(addr string, handler http.Handler) *http.Server {
+	return &http.Server{
+		Addr:              addr,
+		Handler:           http.MaxBytesHandler(handler, maxRequestBodyBytes),
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
 }
 
 func (s *Server) eventLoop(mqttServer string) {
