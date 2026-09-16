@@ -162,3 +162,7 @@ func (d *Dimmable) Unlock() {
 	d.targetLock.RUnlock()
 	d.stepLock.RUnlock()
 }
+
+func (d *Dimmable) CanAggregateCommands() bool {
+	return true
+}

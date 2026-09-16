@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/PhilGruber/dimmy/core"
+	"github.com/google/uuid"
 )
 
 type Rule struct {
@@ -188,10 +189,18 @@ func (r *Rule) Fire(channel chan core.SwitchRequest) []Receiver {
 	requests := make(map[string]core.SwitchRequest)
 	var firedReceivers []Receiver
 	for _, receiver := range r.Receivers {
-		request, ok := requests[receiver.Device.GetName()]
-		if !ok {
+
+		// TODO: check if device needs aggregating - only for light
+
+		key := receiver.Device.GetName()
+		request, ok := requests[key]
+		if !ok || !receiver.Device.CanAggregateCommands() {
 			request = core.SwitchRequest{Device: receiver.Device.GetName()}
+			if ok {
+				key = receiver.Device.GetName() + uuid.New().String()
+			}
 		}
+
 		switch receiver.Key {
 		case "duration":
 			duration, err := strconv.Atoi(receiver.Value)

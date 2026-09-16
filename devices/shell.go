@@ -50,9 +50,9 @@ func (s *Shell) ProcessRequest(request core.SwitchRequest) {
 func (s *Shell) execCommand(command string) {
 	cmd := exec.Command("sh", "-c", command)
 	output, err := cmd.CombinedOutput()
-	fmt.Printf("executed command '%s': %v, output: %s", command, err, output)
+	fmt.Printf("executed command '%s': %v, output: %s\n", command, err, output)
 	if err != nil {
-		fmt.Printf("error executing command '%s': %v, output: %s", command, err, output)
+		fmt.Printf("error executing command '%s': %v, output: %s\n", command, err, output)
 	}
 }
 

@@ -49,6 +49,7 @@ type DeviceInterface interface {
 	GetConfig(string) core.DeviceConfig
 	SetName(string)
 	SetLabel(string)
+	CanAggregateCommands() bool
 
 	PublishValue(mqtt.Client)
 	PollValue(mqtt.Client)
@@ -438,4 +439,8 @@ func (d *Device) SetName(name string) {
 
 func (d *Device) SetLabel(label string) {
 	d.Label = label
+}
+
+func (d *Device) CanAggregateCommands() bool {
+	return false
 }
