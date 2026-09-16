@@ -269,7 +269,12 @@ func (d *Device) AddRule(rule *Rule) {
 func (d *Device) RemoveRule(rule *Rule) {
 	for i, r := range d.rules {
 		if r == rule {
+			if i == len(d.rules)-1 {
+				d.rules = d.rules[:i]
+				return
+			}
 			d.rules = append(d.rules[:i], d.rules[i+1:]...)
+			return
 		}
 	}
 }
