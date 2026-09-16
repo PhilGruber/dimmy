@@ -416,7 +416,7 @@ func (d *GenericDevice) DisplaySince(field string) string {
 func getIcon(deviceType string) string {
 	switch deviceType {
 	case "humidity":
-		return "💧"
+		return "☁️"
 	case "temperature":
 		return "🌡️"
 	case "illuminance":
@@ -425,7 +425,7 @@ func getIcon(deviceType string) string {
 		return "🔘"
 	case "action":
 		return "⚙️"
-	case "presence":
+	case "presence", "occupancy":
 		return "🧍"
 	case "vibration":
 		return "📳"
@@ -437,12 +437,14 @@ func getIcon(deviceType string) string {
 		return "⚡"
 	case "light", "zlight":
 		return "💡"
-	case "occupancy":
-		return "🧍"
 	case "motor_speed":
 		return "🌀"
 	case "position":
 		return "🪟"
+	case "water_leak":
+		return "🌊"
+	case "tamper":
+		return "🛡️"
 	}
 	return " "
 }

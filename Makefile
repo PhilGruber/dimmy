@@ -26,6 +26,7 @@ install:
 
 test:
 	go test ./devices
+	go test ./core
 
 deb: all
 	rm -rf deb
