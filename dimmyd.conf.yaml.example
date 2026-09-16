@@ -1,5 +1,8 @@
 
 mqtt_server: localhost
+# Optional broker credentials; omit for anonymous connections.
+# mqtt_username: "dimmy"
+# mqtt_password: "your-password"
 port: 8080
 webroot: /usr/share/dimmy
 database_path: /var/lib/dimmy/dimmy.db

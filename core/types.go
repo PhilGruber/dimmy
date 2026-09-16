@@ -125,6 +125,8 @@ func (s *Sensor) GetIconHtml() string {
 type ServerConfig struct {
 	Port          int            `yaml:"port"`
 	MqttServer    string         `yaml:"mqtt_server"`
+	MqttUsername  string         `yaml:"mqtt_username,omitempty"`
+	MqttPassword  string         `yaml:"mqtt_password,omitempty"`
 	WebRoot       string         `yaml:"webroot"`
 	DatabasePath  string         `yaml:"database_path"`
 	Lat           float64        `yaml:"latitude"`

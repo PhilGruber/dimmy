@@ -43,3 +43,17 @@ func TestAddDeviceToConfig(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, os.FileMode(0o640), info.Mode().Perm())
 }
+
+func TestMQTTCredentialsConfig(t *testing.T) {
+	for _, tc := range []struct{ name, document, username, password string }{
+		{"anonymous", "mqtt_server: localhost\n", "", ""},
+		{"authenticated", "mqtt_server: localhost\nmqtt_username: dimmy\nmqtt_password: 'secret:# with spaces'\n", "dimmy", "secret:# with spaces"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var config ServerConfig
+			require.NoError(t, yaml.Unmarshal([]byte(tc.document), &config))
+			require.Equal(t, tc.username, config.MqttUsername)
+			require.Equal(t, tc.password, config.MqttPassword)
+		})
+	}
+}

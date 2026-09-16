@@ -273,6 +273,8 @@ func (s *Server) initMqtt(hostname string, clientId string) mqtt.Client {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s:1883", hostname))
 	opts.SetClientID(clientId)
+	opts.SetUsername(s.config.MqttUsername)
+	opts.SetPassword(s.config.MqttPassword)
 	client := mqtt.NewClient(opts)
 	token := client.Connect()
 	for !token.WaitTimeout(5 * time.Second) {
