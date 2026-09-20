@@ -54,6 +54,8 @@ func main() {
 	historyDB, err := core.OpenHistoryDatabase(config.DatabasePath)
 	if err != nil {
 		log.Printf("Could not open history database: %v", err)
+	} else {
+		log.Printf("Opened history database at %s", config.DatabasePath)
 	}
 	defer historyDB.Close()
 

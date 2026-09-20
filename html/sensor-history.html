@@ -185,13 +185,23 @@
 
         ctx.fillStyle = "#333";
         ctx.font = "12px Segoe UI";
-        ctx.fillText(minY.toFixed(1), 4, pad.top + innerH);
-        ctx.fillText(maxY.toFixed(1), 4, pad.top + 12);
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        for (let i = 0; i <= 4; i++) {
+            const value = maxY - (maxY - minY) * i / 4;
+            const y = pad.top + innerH * i / 4;
+            ctx.fillText(value.toFixed(1), pad.left - 6, y);
+        }
 
-        const minTime = new Date(minX).toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit" });
-        const maxTime = new Date(maxX).toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit" });
-        ctx.fillText(minTime, pad.left, h - 8);
-        ctx.fillText(maxTime, pad.left + innerW - 44, h - 8);
+        const timeIntervals = Math.max(2, Math.min(8, Math.floor(innerW / 80)));
+        ctx.textBaseline = "alphabetic";
+        for (let i = 0; i <= timeIntervals; i++) {
+            const x = pad.left + innerW * i / timeIntervals;
+            const time = new Date(minX + (maxX - minX) * i / timeIntervals)
+                .toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit" });
+            ctx.textAlign = i === 0 ? "left" : i === timeIntervals ? "right" : "center";
+            ctx.fillText(time, x, h - 8);
+        }
     }
 
     async function loadAndRender() {
