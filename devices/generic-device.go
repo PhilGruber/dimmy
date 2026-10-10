@@ -367,11 +367,9 @@ func (d *GenericDevice) PublishValue(client mqtt.Client) {
 		return
 	}
 
-	for name := range values {
-		for _, control := range d.Controls {
-			if control.Name == name {
-				control.NeedsSending = false
-			}
+	for i := range d.Controls {
+		if _, sent := values[d.Controls[i].Name]; sent {
+			d.Controls[i].NeedsSending = false
 		}
 	}
 }

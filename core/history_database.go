@@ -48,7 +48,7 @@ func OpenHistoryDatabase(path string) (*HistoryDatabase, error) {
 		value ANY,
 		timestamp DATETIME NOT NULL
 	)`); err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("create sensor_history table: %w", err)
 	}
 	return &HistoryDatabase{DB: db}, nil
@@ -95,10 +95,10 @@ func (d *HistoryDatabase) GetSensorHistory(device string, sensor string) ([]Time
 		context.Background(),
 		`SELECT timestamp, value FROM sensor_history WHERE device=? AND sensor=? ORDER BY timestamp DESC`,
 		device, sensor)
-	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	result := make([]TimeValue, 0)
 	for rows.Next() {
 		var timestamp time.Time
