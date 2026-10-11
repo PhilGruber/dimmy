@@ -289,8 +289,12 @@ func (s *Server) AddSingleUseRule(webroot string) http.HandlerFunc {
 	}
 }
 
-func (s *Server) ShowDashboard(webroot string, name string) http.HandlerFunc {
+func (s *Server) ShowDashboard(webroot string) http.HandlerFunc {
 	return func(output http.ResponseWriter, request *http.Request) {
+		name := request.PathValue("dashboard")
+		if name == "" {
+			name = "default"
+		}
 		if request.Method == "POST" {
 			err := request.ParseForm()
 			if err == nil {

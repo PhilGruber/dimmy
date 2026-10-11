@@ -18,6 +18,45 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+func TestInitializeRoomDashboards(t *testing.T) {
+	config := &core.ServerConfig{
+		Devices: []core.DeviceConfig{
+			{Name: "kitchen-light", Type: "device", Room: "Kitchen"},
+			{Name: "kitchen-sensor", Type: "device", Room: "Kitchen"},
+			{Name: "bedroom-light", Type: "device", Room: "Bedroom"},
+			{Name: "unassigned", Type: "device"},
+			{Name: "reserved-default", Type: "device", Room: "default"},
+			{Name: "reserved-all", Type: "device", Room: "all"},
+		},
+		Panels: []core.PanelConfig{{Label: "Configured", Devices: []string{"kitchen-light"}}},
+	}
+	s := &Server{}
+	s.initialize(config)
+
+	require.Len(t, s.dashboards, 4)
+	require.NotContains(t, s.dashboards, "")
+	for room, names := range map[string][]string{
+		"Kitchen": {"kitchen-light", "kitchen-sensor"},
+		"Bedroom": {"bedroom-light"},
+	} {
+		require.Len(t, s.dashboards[room], 1)
+		panel := s.dashboards[room][0]
+		require.Equal(t, room, panel.GetLabel())
+		var actual []string
+		for _, device := range panel.GetDevices() {
+			actual = append(actual, device.GetName())
+		}
+		require.ElementsMatch(t, names, actual)
+	}
+	for _, name := range []string{"default", "all"} {
+		require.Len(t, s.dashboards[name], 6)
+		require.Equal(t, "Configured", s.dashboards[name][0].GetLabel())
+		for _, panel := range s.dashboards[name] {
+			require.NotContains(t, []string{"Kitchen", "Bedroom"}, panel.GetLabel())
+		}
+	}
+}
+
 func TestSaveUnknownDevice(t *testing.T) {
 	filename := filepath.Join(t.TempDir(), "dimmyd.conf.yaml")
 	require.NoError(t, os.WriteFile(filename, []byte("mqtt_server: localhost\ndevices: []\n"), 0o600))

@@ -148,6 +148,21 @@ func (s *Server) initialize(config *core.ServerConfig) {
 	s.dashboards["default"] = s.dashboards["default"][:j]
 	s.dashboards["all"] = s.dashboards["all"][:i]
 
+	roomPanels := make(map[string]dimmyDevices.Panel)
+	for _, device := range s.devices {
+		room := device.GetRoom()
+		if room == "" || room == "default" || room == "all" || device.IsPseudoDevice() {
+			continue
+		}
+		panel := roomPanels[room]
+		panel.Label = room
+		panel.Devices = append(panel.Devices, device)
+		roomPanels[room] = panel
+	}
+	for room, panel := range roomPanels {
+		s.dashboards[room] = []dimmyDevices.Panel{panel}
+	}
+
 	s.channel = make(chan core.SwitchRequest, len(s.devices))
 }
 
@@ -167,7 +182,7 @@ func (s *Server) Start(config *core.ServerConfig) {
 	http.Handle("/assets/", http.StripPrefix("/assets/", assets))
 	http.Handle("/api/switch", s.ReceiveRequest())
 	http.Handle("/api/status", s.ShowStatus(&s.devices))
-	http.Handle("/dashboard/all", s.ShowDashboard(config.WebRoot, "all"))
+	http.Handle("/dashboard/{dashboard}", s.ShowDashboard(config.WebRoot))
 	http.Handle("/devices/new-devices", s.ShowUnknownDevices(config.WebRoot))
 	http.Handle("/devices/new-devices/save", s.SaveUnknownDevice())
 	http.Handle("/rules/add-single-use", s.AddSingleUseRule(config.WebRoot))
@@ -175,7 +190,7 @@ func (s *Server) Start(config *core.ServerConfig) {
 	http.Handle("/api/rules", s.SaveRules())
 	http.Handle("/api/sensor-history/{device}/{sensor}", s.LoadSensorHistory(s.historyDB))
 	http.Handle("/sensor-history", s.ShowSensorHistory(config.WebRoot))
-	http.Handle("/", s.ShowDashboard(config.WebRoot, "default"))
+	http.Handle("/", s.ShowDashboard(config.WebRoot))
 
 	log.Printf("Listening on port %d", config.Port)
 	log.Fatal(newHTTPServer(fmt.Sprintf(":%d", config.Port), http.DefaultServeMux).ListenAndServe())
