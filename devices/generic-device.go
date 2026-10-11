@@ -26,12 +26,13 @@ type SensorHistory struct {
 type GenericDevice struct {
 	Device
 
-	Sensors    []core.Sensor           `json:"Sensors"`
-	Controls   []core.Control          `json:"Controls"`
-	Values     map[string]*SensorValue `json:"Values"`
-	hasHistory bool
-	historyDB  core.SensorHistoryStore
-	valueMutex *sync.RWMutex
+	Sensors         []core.Sensor           `json:"Sensors"`
+	Controls        []core.Control          `json:"Controls"`
+	Values          map[string]*SensorValue `json:"Values"`
+	hasHistory      bool
+	historyDB       core.SensorHistoryStore
+	commandDuration int
+	valueMutex      *sync.RWMutex
 }
 
 func NewDevice(config core.DeviceConfig, historyDB ...core.SensorHistoryStore) *GenericDevice {
@@ -337,6 +338,9 @@ func (d *GenericDevice) ProcessRequest(request core.SwitchRequest) {
 		}
 		request.Value = fmt.Sprintf("%d", int(currentValue+value))
 	}
+	if d.transformerName == "cbus" && (request.Key == "brightness" || request.Key == "value") {
+		d.commandDuration = request.Duration
+	}
 	d.setControlValue(request.Key, request.Value, true)
 }
 
@@ -356,6 +360,13 @@ func (d *GenericDevice) PublishValue(client mqtt.Client) {
 	}
 	if len(values) == 0 {
 		return
+	}
+	if d.transformerName == "cbus" {
+		_, brightness := values["brightness"]
+		_, value := values["value"]
+		if brightness || value {
+			values["transition"] = d.commandDuration
+		}
 	}
 	topic, message, err := d.transformer.Encode(d.MqttTopic, values)
 	if err != nil {

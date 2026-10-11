@@ -50,6 +50,13 @@ func NewLight(config core.DeviceConfig) *Light {
 		}
 	}
 
+	if config.Transformer == "cbus" {
+		d.Min = 0
+		d.Max = 255
+		d.transition = true
+		d.MqttState = config.Topic
+	}
+
 	tt := time.Now()
 	d.LastChanged = &tt
 	d.Type = "light"
@@ -80,6 +87,9 @@ func (l *Light) PublishValue(mqtt mqtt.Client) {
 		l.LastSent = newVal
 		data := make(map[string]any)
 		data["value"] = newVal
+		if l.transition {
+			data["transition"] = l.TransitionTime
+		}
 		topic, value, err := l.transformer.Encode(l.GetMqttTopic(), data)
 		if err != nil {
 			log.Println("Error: " + err.Error())
@@ -102,7 +112,7 @@ func (l *Light) GetMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt
 		if !state {
 			data["value"] = 0
 		}
-		if l.GetTarget() != math.Round(l.GetCurrent()) {
+		if !l.transition && l.GetTarget() != math.Round(l.GetCurrent()) {
 			return
 		}
 		value, ok := transform.IntValue(data["value"])

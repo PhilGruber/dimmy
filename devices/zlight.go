@@ -50,6 +50,12 @@ func makeZLight(config core.DeviceConfig) ZLight {
 		}
 	}
 
+	if config.Transformer == "cbus" {
+		d.Min = 0
+		d.Max = 255
+		d.transition = true
+	}
+
 	d.Triggers = []string{"brightness"}
 	d.persistentFields = []string{"brightness"}
 

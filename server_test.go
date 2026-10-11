@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -158,4 +159,26 @@ func TestHTTPServerLimitsBodies(t *testing.T) {
 	require.Positive(t, srv.ReadTimeout)
 	require.Positive(t, srv.WriteTimeout)
 	require.Positive(t, srv.IdleTimeout)
+}
+
+func TestDashboardCbusLightValue(t *testing.T) {
+	name := "CBUS Light"
+	light := dimmyDevices.NewLight(core.DeviceConfig{Name: name, Topic: "cbus/JERV/backyard/ceiling", Transformer: "cbus"})
+	light.SetCurrent(50)
+	server := &Server{
+		devices:    map[string]dimmyDevices.DeviceInterface{name: light},
+		dashboards: map[string][]dimmyDevices.Panel{"default": {dimmyDevices.NewPanelFromDevice(light)}},
+	}
+	response := httptest.NewRecorder()
+	server.ShowDashboard("html")(response, httptest.NewRequest(http.MethodGet, "/", nil))
+	require.Equal(t, http.StatusOK, response.Code)
+	require.Contains(t, response.Body.String(), "id='value_"+name+"'>50%</span>")
+	require.NotContains(t, response.Body.String(), "parseInt(")
+	status := httptest.NewRecorder()
+	server.ShowStatus(&server.devices)(status, httptest.NewRequest(http.MethodGet, "/api/status", nil))
+	var state map[string]struct {
+		Value float64 `json:"value"`
+	}
+	require.NoError(t, json.Unmarshal(status.Body.Bytes(), &state))
+	require.Equal(t, float64(50), state[name].Value)
 }

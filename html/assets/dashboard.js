@@ -1,3 +1,8 @@
+// Device names are literal IDs and may contain CSS selector characters.
+function dashboardElement(id) {
+    return $(document.getElementById(id));
+}
+
 function timeToAge(time) {
     const now = new Date();
     let age = (now - time) / 1000;
@@ -24,7 +29,7 @@ $(document).ready(function() {
             for (const name in data) {
 
                 if (data[name].Type === 'plug') {
-                    $("#value_" + name).text(data[name].value ? "on" : "off");
+                    dashboardElement("value_" + name).text(data[name].value ? "on" : "off");
                 } else if (data[name].Type === 'sensor') {
                     for (let key in data[name].Values) {
                         const prec = (key === "temperature" ? 10 : 1);
@@ -42,15 +47,15 @@ $(document).ready(function() {
                             value = Math.round(value * prec) / prec;
                         }
 
-                        $(`#${name}_${key}`).text(value);
+                        dashboardElement(`${name}_${key}`).text(value);
 
                         if (age > 60) {
-                            $("#" + name + "_" + key).addClass('outdated');
+                            dashboardElement(name + "_" + key).addClass('outdated');
                         } else {
-                            $("#" + name + "_" + key).removeClass('outdated');
+                            dashboardElement(name + "_" + key).removeClass('outdated');
                         }
 
-                        const historyLink = $("#history_link_" + name + "_" + key);
+                        const historyLink = dashboardElement("history_link_" + name + "_" + key);
                         if (historyLink.length > 0 && isHistoryEnabled(data[name], key)) {
                             historyLink.removeClass("hidden");
                         }
@@ -72,12 +77,12 @@ $(document).ready(function() {
                                 icon = "🔻";
                             }
 
-                            $("#trend_" + name + "_" + key).text(icon);
+                            dashboardElement("trend_" + name + "_" + key).text(icon);
                         }
 
                     }
                 } else {
-                    $("#value_" + name).text(Math.round(data[name].value) + '%');
+                    dashboardElement("value_" + name).text(Math.round(data[name].value) + '%');
                 }
             }
         }, "json");
