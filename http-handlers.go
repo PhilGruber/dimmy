@@ -98,7 +98,18 @@ func (s *Server) ShowUnknownDevices(webroot string) http.HandlerFunc {
 			}
 			devices = append(devices, view)
 		}
+		roomSet := make(map[string]bool)
+		for _, device := range s.devices {
+			if room := device.GetRoom(); room != "" {
+				roomSet[room] = true
+			}
+		}
 		s.mutex.RUnlock()
+		rooms := make([]string, 0, len(roomSet))
+		for room := range roomSet {
+			rooms = append(rooms, room)
+		}
+		sort.Strings(rooms)
 		sort.Slice(devices, func(i, j int) bool {
 			return devices[i].Topic < devices[j].Topic
 		})
@@ -110,7 +121,8 @@ func (s *Server) ShowUnknownDevices(webroot string) http.HandlerFunc {
 		}
 		if err := templ.Execute(output, struct {
 			Devices []unknownDeviceView
-		}{devices}); err != nil {
+			Rooms   []string
+		}{Devices: devices, Rooms: rooms}); err != nil {
 			log.Println(err)
 		}
 	}
@@ -135,6 +147,15 @@ func (s *Server) SaveUnknownDevice() http.HandlerFunc {
 			return
 		}
 
+		room := strings.TrimSpace(request.FormValue("room"))
+		protocol := strings.TrimSpace(request.FormValue("protocol"))
+		switch protocol {
+		case "", "zigbee", "cbus", "tasmota":
+		default:
+			http.Error(output, "unsupported device protocol", http.StatusBadRequest)
+			return
+		}
+
 		log.Printf("Saving device %s of type %s (topic=%s)\n", name, deviceType, topic)
 
 		var device dimmyDevices.DeviceInterface
@@ -152,16 +173,20 @@ func (s *Server) SaveUnknownDevice() http.HandlerFunc {
 				http.Error(output, "unknown device was not found", http.StatusNotFound)
 				return false
 			}
-			var deviceConfig core.DeviceConfig
+			deviceConfig := bareDevice.GetConfig(name)
+			deviceConfig.Room = room
+			if protocol != "" {
+				deviceConfig.Protocol = protocol
+			}
 			switch deviceType {
 			case "generic-device":
-				device = s.newGenericDevice(bareDevice.GetConfig(name))
+				device = s.newGenericDevice(deviceConfig)
 			case "zlight":
-				device = dimmyDevices.NewZLight(bareDevice.GetConfig(name))
+				device = dimmyDevices.NewZLight(deviceConfig)
 			case "light":
-				device = dimmyDevices.NewLight(bareDevice.GetConfig(name))
+				device = dimmyDevices.NewLight(deviceConfig)
 			case "ir-control":
-				device = dimmyDevices.NewIrControl(bareDevice.GetConfig(name))
+				device = dimmyDevices.NewIrControl(deviceConfig)
 			default:
 				http.Error(output, "unknown device of type "+deviceType+" cannot be saved", http.StatusUnprocessableEntity)
 				return false

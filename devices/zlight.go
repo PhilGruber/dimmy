@@ -50,7 +50,7 @@ func makeZLight(config core.DeviceConfig) ZLight {
 		}
 	}
 
-	if config.Transformer == "cbus" {
+	if config.Protocol == "cbus" {
 		d.Min = 0
 		d.Max = 255
 		d.transition = true
@@ -87,7 +87,7 @@ func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 	if l.transition {
 		msg["transition"] = l.TransitionTime
 	}
-	topic, s, err := l.transformer.Encode(l.GetMqttTopic(), msg)
+	topic, s, err := l.protocol.Encode(l.GetMqttTopic(), msg)
 	if err != nil {
 		log.Println("Error: " + err.Error())
 		return
@@ -100,7 +100,7 @@ func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 func (l *ZLight) PollValue(mqtt mqtt.Client) {
 	pollFields := make(map[string]any)
 	pollFields["brightness"] = 0
-	topic, s, err := l.transformer.PollMessage(l.MqttState, pollFields)
+	topic, s, err := l.protocol.PollMessage(l.MqttState, pollFields)
 	if err != nil {
 		log.Printf("[%32s] Error: %s", l.Name, err)
 		return
@@ -118,7 +118,7 @@ func (l *ZLight) PollValue(mqtt mqtt.Client) {
 func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
-		data, err := l.transformer.Decode(payload)
+		data, err := l.protocol.Decode(payload)
 		if err != nil {
 			log.Printf("[%32s] Error: %s\n", l.Name, err.Error())
 			return
@@ -145,12 +145,12 @@ func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 
 func (d *ZLight) GetConfig(name string) core.DeviceConfig {
 	config := core.DeviceConfig{
-		Name:        name,
-		Transformer: d.transformerName,
-		Room:        d.Room,
-		Type:        "zlight",
-		Icon:        d.Icon,
-		Topic:       d.MqttTopic,
+		Name:     name,
+		Protocol: d.protocolName,
+		Room:     d.Room,
+		Type:     "zlight",
+		Icon:     d.Icon,
+		Topic:    d.MqttTopic,
 		Options: &core.ConfigOptions{
 			Transition: &d.transition,
 			Hidden:     &d.Hidden,

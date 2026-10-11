@@ -58,22 +58,22 @@ type DeviceInterface interface {
 }
 
 type Device struct {
-	Name            string
-	MqttTopic       string     `json:"-"`
-	MqttState       string     `json:"-"`
-	Current         float64    `json:"value"`
-	LastChanged     *time.Time `json:"lastUpdate"`
-	Type            string
-	Hidden          bool
-	Label           string
-	Room            string
-	Icon            string
-	Triggers        []string
-	Receivers       []string
-	mutex           *sync.RWMutex
-	rules           []*Rule
-	transformer     transform.Transformer
-	transformerName string
+	Name         string
+	MqttTopic    string     `json:"-"`
+	MqttState    string     `json:"-"`
+	Current      float64    `json:"value"`
+	LastChanged  *time.Time `json:"lastUpdate"`
+	Type         string
+	Hidden       bool
+	Label        string
+	Room         string
+	Icon         string
+	Triggers     []string
+	Receivers    []string
+	mutex        *sync.RWMutex
+	rules        []*Rule
+	protocol     transform.Protocol
+	protocolName string
 
 	persistentFields []string
 
@@ -86,22 +86,22 @@ func (d *Device) setBaseConfig(config core.DeviceConfig) {
 	d.Room = config.Room
 	d.Current = 0
 
-	if config.Transformer == "" {
-		config.Transformer = "zigbee"
+	if config.Protocol == "" {
+		config.Protocol = "zigbee"
 		if config.Type == "light" {
-			config.Transformer = "tasmota"
+			config.Protocol = "tasmota"
 		}
 	}
-	d.transformerName = config.Transformer
-	switch config.Transformer {
+	d.protocolName = config.Protocol
+	switch config.Protocol {
 	case "tasmota":
-		d.transformer = transform.TasmotaTransformer{}
+		d.protocol = transform.TasmotaProtocol{}
 	case "cbus":
-		d.transformer = transform.CbusTransformer{}
+		d.protocol = transform.CbusProtocol{}
 	case "zigbee":
-		d.transformer = transform.ZigbeeTransformer{}
+		d.protocol = transform.ZigbeeProtocol{}
 	default:
-		d.transformer = transform.ZigbeeTransformer{}
+		d.protocol = transform.ZigbeeProtocol{}
 	}
 
 	if config.Icon != "" {
@@ -451,12 +451,12 @@ func (d *Device) UpdateFromMessage(data map[string]any) {
 
 func (d *Device) GetConfig(name string) core.DeviceConfig {
 	config := core.DeviceConfig{
-		Name:        name,
-		Transformer: d.transformerName,
-		Room:        d.Room,
-		Type:        "device",
-		Topic:       d.MqttTopic,
-		Icon:        d.Icon,
+		Name:     name,
+		Protocol: d.protocolName,
+		Room:     d.Room,
+		Type:     "device",
+		Topic:    d.MqttTopic,
+		Icon:     d.Icon,
 		Options: &core.ConfigOptions{
 			Hidden: core.ToPtr(false),
 		},

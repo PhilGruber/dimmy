@@ -12,9 +12,9 @@ import (
 // testing Dimmable behaviour without needing a real MQTT connection.
 func newTestLight() *Light {
 	return NewLight(core.DeviceConfig{
-		Name:        "test-light",
-		Transformer: "tasmota",
-		Topic:       "cmnd/test/dimmer",
+		Name:     "test-light",
+		Protocol: "tasmota",
+		Topic:    "cmnd/test/dimmer",
 	})
 }
 

@@ -22,8 +22,8 @@ type lightStateMessage struct {
 }
 
 func NewLight(config core.DeviceConfig) *Light {
-	if config.Transformer == "" {
-		config.Transformer = "tasmota"
+	if config.Protocol == "" {
+		config.Protocol = "tasmota"
 	}
 	d := Light{}
 	d.Icon = "💡"
@@ -50,7 +50,7 @@ func NewLight(config core.DeviceConfig) *Light {
 		}
 	}
 
-	if config.Transformer == "cbus" {
+	if config.Protocol == "cbus" {
 		d.Min = 0
 		d.Max = 255
 		d.transition = true
@@ -90,7 +90,7 @@ func (l *Light) PublishValue(mqtt mqtt.Client) {
 		if l.transition {
 			data["transition"] = l.TransitionTime
 		}
-		topic, value, err := l.transformer.Encode(l.GetMqttTopic(), data)
+		topic, value, err := l.protocol.Encode(l.GetMqttTopic(), data)
 		if err != nil {
 			log.Println("Error: " + err.Error())
 			return
@@ -102,7 +102,7 @@ func (l *Light) PublishValue(mqtt mqtt.Client) {
 func (l *Light) GetMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
-		data, err := l.transformer.Decode(payload)
+		data, err := l.protocol.Decode(payload)
 		if err != nil {
 			log.Printf("[%32s] Error: %s\n", l.Name, err.Error())
 			return
@@ -148,12 +148,12 @@ func (l *Light) ValueToPercentage(value int) float64 {
 
 func (d *Light) GetConfig(name string) core.DeviceConfig {
 	config := core.DeviceConfig{
-		Name:        name,
-		Transformer: d.transformerName,
-		Room:        d.Room,
-		Type:        "light",
-		Icon:        d.Icon,
-		Topic:       d.MqttTopic,
+		Name:     name,
+		Protocol: d.protocolName,
+		Room:     d.Room,
+		Type:     "light",
+		Icon:     d.Icon,
+		Topic:    d.MqttTopic,
 		Options: &core.ConfigOptions{
 			Transition: &d.transition,
 			Hidden:     &d.Hidden,

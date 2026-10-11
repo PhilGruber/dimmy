@@ -1,18 +1,39 @@
 package core
 
-import "os"
+import (
+	"os"
+
+	"gopkg.in/yaml.v3"
+)
 
 const CycleLength = 200 // ms
 
 type DeviceConfig struct {
-	Type        string         `yaml:"type"`
-	Topic       string         `yaml:"topic"`
-	Name        string         `yaml:"name"`
-	Label       string         `yaml:"label,omitempty"`
-	Room        string         `yaml:"room,omitempty"`
-	Icon        string         `yaml:"icon,omitempty"`
-	Transformer string         `yaml:"transformer,omitempty"`
-	Options     *ConfigOptions `yaml:"options,omitempty"`
+	Type     string         `yaml:"type"`
+	Topic    string         `yaml:"topic"`
+	Name     string         `yaml:"name"`
+	Label    string         `yaml:"label,omitempty"`
+	Room     string         `yaml:"room,omitempty"`
+	Icon     string         `yaml:"icon,omitempty"`
+	Protocol string         `yaml:"protocol,omitempty"`
+	Options  *ConfigOptions `yaml:"options,omitempty"`
+}
+
+// UnmarshalYAML accepts the legacy transformer key; new configs use protocol.
+func (c *DeviceConfig) UnmarshalYAML(node *yaml.Node) error {
+	type plainDeviceConfig DeviceConfig
+	var decoded struct {
+		plainDeviceConfig `yaml:",inline"`
+		LegacyTransformer string `yaml:"transformer"`
+	}
+	if err := node.Decode(&decoded); err != nil {
+		return err
+	}
+	*c = DeviceConfig(decoded.plainDeviceConfig)
+	if c.Protocol == "" {
+		c.Protocol = decoded.LegacyTransformer
+	}
+	return nil
 }
 
 type RuleConfig struct {

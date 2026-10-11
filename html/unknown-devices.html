@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Unknown Devices - Dimmy</title>
+        <title>Detected Devices - Dimmy</title>
         <link rel="stylesheet" type="text/css" href="/assets/devices.css">
         <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
     </head>
@@ -69,6 +69,19 @@
                     <option value="zlight">Zigbee Light</option>
                 </select>
 
+                <label for="device-room-input">Room</label>
+                <input id="device-room-input" name="room" type="text" list="device-rooms">
+                <datalist id="device-rooms">
+                    {{ range .Rooms }}<option value="{{ . }}"></option>{{ end }}
+                </datalist>
+
+                <label for="device-protocol-input">Protocol</label>
+                <select id="device-protocol-input" name="protocol" required>
+                    <option value="zigbee">Zigbee</option>
+                    <option value="cbus">C-Bus</option>
+                    <option value="tasmota">Tasmota</option>
+                </select>
+
                 <div class="save-modal-actions">
                     <button type="button" id="cancel-save-btn" class="secondary-btn">Cancel</button>
                     <button type="submit" id="confirm-save-btn" class="primary-btn">Save</button>
@@ -83,6 +96,9 @@
             const saveTopicText = document.getElementById("save-device-topic");
             const nameInput = document.getElementById("device-name-input");
             const typeInput = document.getElementById("device-type-input");
+            const roomInput = document.getElementById("device-room-input");
+            const protocolInput = document.getElementById("device-protocol-input");
+            const roomOptions = document.getElementById("device-rooms");
             const cancelSaveBtn = document.getElementById("cancel-save-btn");
             let activeSave = null;
 
@@ -96,7 +112,12 @@
                 activeSave = { link, topic };
                 saveTopicText.textContent = topic;
                 nameInput.value = topic.split("/").pop() || "";
-                typeInput.value = type;
+                typeInput.value = type || "generic-device";
+                roomInput.value = "";
+                const prefix = topic.toLowerCase();
+                protocolInput.value = prefix.startsWith("cbus") ? "cbus"
+                    : prefix.startsWith("tele") || prefix.startsWith("stat") ? "tasmota"
+                    : "zigbee";
                 saveModal.showModal();
                 nameInput.focus();
                 nameInput.select();
@@ -120,6 +141,8 @@
 
                 const name = nameInput.value.trim();
                 const deviceType = typeInput.value;
+                const room = roomInput.value.trim();
+                const protocol = protocolInput.value;
                 if (name === "" || deviceType === "") {
                     return;
                 }
@@ -133,12 +156,17 @@
                     const response = await fetch("/devices/new-devices/save", {
                         method: "POST",
                         headers: {"Content-Type": "application/x-www-form-urlencoded"},
-                        body: new URLSearchParams({topic: topic, name: name, type: deviceType})
+                        body: new URLSearchParams({topic: topic, name: name, type: deviceType, room: room, protocol: protocol})
                     });
                     if (!response.ok) {
                         throw new Error((await response.text()).trim() || "Could not save device");
                     }
 
+                    if (room && !Array.from(roomOptions.options).some(option => option.value === room)) {
+                        const option = document.createElement("option");
+                        option.value = room;
+                        roomOptions.appendChild(option);
+                    }
                     link.closest("tr").remove();
                     showMessage(`Saved ${name}.`, false);
                     if (!document.querySelector("#device-rows tr")) {

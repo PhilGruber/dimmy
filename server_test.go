@@ -73,7 +73,7 @@ func TestSaveUnknownDevice(t *testing.T) {
 		config:         &core.ServerConfig{Filename: filename},
 	}
 
-	form := url.Values{"topic": {topic}, "name": {"Kitchen Sensor"}, "type": {"generic-device"}}
+	form := url.Values{"topic": {topic}, "name": {"Kitchen Sensor"}, "type": {"generic-device"}, "room": {" Kitchen "}, "protocol": {"cbus"}}
 	request := httptest.NewRequest(http.MethodPost, "/devices/save", strings.NewReader(form.Encode()))
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	response := httptest.NewRecorder()
@@ -93,7 +93,9 @@ func TestSaveUnknownDevice(t *testing.T) {
 	require.Equal(t, "Kitchen Sensor", config.Devices[0].Name)
 	require.Equal(t, "device", config.Devices[0].Type)
 	require.Equal(t, topic, config.Devices[0].Topic)
-	require.Equal(t, "zigbee", config.Devices[0].Transformer)
+	require.Equal(t, "cbus", config.Devices[0].Protocol)
+	require.Equal(t, "Kitchen", config.Devices[0].Room)
+	require.Equal(t, "Kitchen", server.devices["Kitchen Sensor"].GetRoom())
 	require.Len(t, *config.Devices[0].Options.Sensors, 2)
 }
 
@@ -163,7 +165,7 @@ func TestHTTPServerLimitsBodies(t *testing.T) {
 
 func TestDashboardCbusLightValue(t *testing.T) {
 	name := "CBUS Light"
-	light := dimmyDevices.NewLight(core.DeviceConfig{Name: name, Topic: "cbus/JERV/backyard/ceiling", Transformer: "cbus"})
+	light := dimmyDevices.NewLight(core.DeviceConfig{Name: name, Topic: "cbus/JERV/backyard/ceiling", Protocol: "cbus"})
 	light.SetCurrent(50)
 	server := &Server{
 		devices:    map[string]dimmyDevices.DeviceInterface{name: light},
@@ -181,4 +183,21 @@ func TestDashboardCbusLightValue(t *testing.T) {
 	}
 	require.NoError(t, json.Unmarshal(status.Body.Bytes(), &state))
 	require.Equal(t, float64(50), state[name].Value)
+}
+
+func TestUnknownDevicesRoomOptions(t *testing.T) {
+	s := &Server{
+		devices: map[string]dimmyDevices.DeviceInterface{
+			"one":   dimmyDevices.NewDevice(core.DeviceConfig{Name: "one", Room: "Kitchen"}),
+			"two":   dimmyDevices.NewDevice(core.DeviceConfig{Name: "two", Room: "Kitchen"}),
+			"three": dimmyDevices.NewDevice(core.DeviceConfig{Name: "three", Room: "Bedroom"}),
+		},
+	}
+	res := httptest.NewRecorder()
+	s.ShowUnknownDevices("html").ServeHTTP(res, httptest.NewRequest(http.MethodGet, "/devices/new-devices", nil))
+	require.Equal(t, http.StatusOK, res.Code)
+	body := res.Body.String()
+	require.Equal(t, 1, strings.Count(body, `<option value="Kitchen">`))
+	require.Contains(t, body, `<option value="Bedroom">`)
+	require.Less(t, strings.Index(body, `<option value="Bedroom">`), strings.Index(body, `<option value="Kitchen">`))
 }

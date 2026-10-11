@@ -109,11 +109,11 @@ func NewDevice(config core.DeviceConfig, historyDB ...core.SensorHistoryStore) *
 
 func NewDeviceFromMessage(topic string, data map[string]any) *GenericDevice {
 	d := GenericDevice{}
-	transformer := "zigbee"
+	protocol := "zigbee"
 	if LikelyDeviceType(topic, data) == "light" {
-		transformer = "tasmota"
+		protocol = "tasmota"
 	}
-	d.setBaseConfig(core.DeviceConfig{Name: topic, Topic: topic, Transformer: transformer})
+	d.setBaseConfig(core.DeviceConfig{Name: topic, Topic: topic, Protocol: protocol})
 	d.MqttState = topic
 	d.Type = LikelyDeviceType(topic, data)
 	d.valueMutex = new(sync.RWMutex)
@@ -260,7 +260,7 @@ func (d *GenericDevice) GetValue(field string) any {
 func (d *GenericDevice) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
-		data, err := d.transformer.Decode(payload)
+		data, err := d.protocol.Decode(payload)
 		if err != nil {
 			log.Printf("[%32s] Error: %s\n", d.Name, err.Error())
 			return
@@ -338,7 +338,7 @@ func (d *GenericDevice) ProcessRequest(request core.SwitchRequest) {
 		}
 		request.Value = fmt.Sprintf("%d", int(currentValue+value))
 	}
-	if d.transformerName == "cbus" && (request.Key == "brightness" || request.Key == "value") {
+	if d.protocolName == "cbus" && (request.Key == "brightness" || request.Key == "value") {
 		d.commandDuration = request.Duration
 	}
 	d.setControlValue(request.Key, request.Value, true)
@@ -361,14 +361,14 @@ func (d *GenericDevice) PublishValue(client mqtt.Client) {
 	if len(values) == 0 {
 		return
 	}
-	if d.transformerName == "cbus" {
+	if d.protocolName == "cbus" {
 		_, brightness := values["brightness"]
 		_, value := values["value"]
 		if brightness || value {
 			values["transition"] = d.commandDuration
 		}
 	}
-	topic, message, err := d.transformer.Encode(d.MqttTopic, values)
+	topic, message, err := d.protocol.Encode(d.MqttTopic, values)
 	if err != nil {
 		log.Printf("[%32s] Error: %s\n", d.Name, err.Error())
 		return
@@ -395,7 +395,7 @@ func (d *GenericDevice) PollValue(client mqtt.Client) {
 		return
 	}
 
-	topic, s, err := d.transformer.PollMessage(d.MqttState, values)
+	topic, s, err := d.protocol.PollMessage(d.MqttState, values)
 	if err != nil {
 		log.Printf("[%32s] Error: %s\n", d.Name, err.Error())
 		return
@@ -470,12 +470,12 @@ func (d *GenericDevice) GetConfig(name string) core.DeviceConfig {
 	controls := append([]core.Control(nil), d.Controls...)
 	sensors := append([]core.Sensor(nil), d.Sensors...)
 	config := core.DeviceConfig{
-		Name:        name,
-		Transformer: d.transformerName,
-		Room:        d.Room,
-		Type:        "device",
-		Topic:       d.MqttTopic,
-		Icon:        d.Icon,
+		Name:     name,
+		Protocol: d.protocolName,
+		Room:     d.Room,
+		Type:     "device",
+		Topic:    d.MqttTopic,
+		Icon:     d.Icon,
 		Options: &core.ConfigOptions{
 			Controls: &controls,
 			Sensors:  &sensors,

@@ -57,3 +57,19 @@ func TestMQTTCredentialsConfig(t *testing.T) {
 		})
 	}
 }
+
+func TestDeviceProtocolConfig(t *testing.T) {
+	for _, input := range []string{
+		"protocol: cbus\n",
+		"transformer: cbus\n",
+		"protocol: cbus\ntransformer: zigbee\n",
+	} {
+		var config DeviceConfig
+		require.NoError(t, yaml.Unmarshal([]byte(input), &config))
+		require.Equal(t, "cbus", config.Protocol)
+		data, err := yaml.Marshal(config)
+		require.NoError(t, err)
+		require.Contains(t, string(data), "protocol: cbus")
+		require.NotContains(t, string(data), "transformer:")
+	}
+}
