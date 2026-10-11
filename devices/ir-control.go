@@ -98,6 +98,7 @@ func (d *IRControl) GetMqttTopic() string {
 func (d *IRControl) GetConfig(name string) core.DeviceConfig {
 	config := core.DeviceConfig{
 		Name:  name,
+		Room:  d.Room,
 		Type:  "device",
 		Topic: d.MqttTopic,
 		Icon:  d.Icon,

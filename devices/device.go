@@ -24,6 +24,7 @@ type DeviceInterface interface {
 	GetType() string
 	GetName() string
 	GetLabel() string
+	GetRoom() string
 	GetMax() int
 	GetMin() int
 	GetHidden() bool
@@ -64,6 +65,7 @@ type Device struct {
 	Type        string
 	Hidden      bool
 	Label       string
+	Room        string
 	Icon        string
 	Triggers    []string
 	Receivers   []string
@@ -78,6 +80,7 @@ type Device struct {
 
 func (d *Device) setBaseConfig(config core.DeviceConfig) {
 	d.MqttTopic = config.Topic
+	d.Room = config.Room
 	d.Current = 0
 	if config.Icon != "" {
 		d.Icon = config.Icon
@@ -148,6 +151,10 @@ func (d *Device) GetLabel() string {
 		return d.Label
 	}
 	return d.Name
+}
+
+func (d *Device) GetRoom() string {
+	return d.Room
 }
 
 func (d *Device) Lock() {
@@ -423,6 +430,7 @@ func (d *Device) UpdateFromMessage(data map[string]any) {
 func (d *Device) GetConfig(name string) core.DeviceConfig {
 	config := core.DeviceConfig{
 		Name:  name,
+		Room:  d.Room,
 		Type:  "device",
 		Topic: d.MqttTopic,
 		Icon:  d.Icon,

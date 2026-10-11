@@ -146,6 +146,7 @@ func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 func (d *ZLight) GetConfig(name string) core.DeviceConfig {
 	config := core.DeviceConfig{
 		Name:  name,
+		Room:  d.Room,
 		Type:  "zlight",
 		Icon:  d.Icon,
 		Topic: d.MqttTopic,

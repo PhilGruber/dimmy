@@ -452,6 +452,7 @@ func (d *GenericDevice) GetConfig(name string) core.DeviceConfig {
 	sensors := append([]core.Sensor(nil), d.Sensors...)
 	config := core.DeviceConfig{
 		Name:  name,
+		Room:  d.Room,
 		Type:  "device",
 		Topic: d.MqttTopic,
 		Icon:  d.Icon,

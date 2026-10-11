@@ -131,6 +131,7 @@ func (l *Light) ValueToPercentage(value int) float64 {
 func (d *Light) GetConfig(name string) core.DeviceConfig {
 	config := core.DeviceConfig{
 		Name:  name,
+		Room:  d.Room,
 		Type:  "light",
 		Icon:  d.Icon,
 		Topic: d.MqttTopic,

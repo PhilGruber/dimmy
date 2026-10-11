@@ -9,6 +9,7 @@ type DeviceConfig struct {
 	Topic   string         `yaml:"topic"`
 	Name    string         `yaml:"name"`
 	Label   string         `yaml:"label,omitempty"`
+	Room    string         `yaml:"room,omitempty"`
 	Icon    string         `yaml:"icon,omitempty"`
 	Options *ConfigOptions `yaml:"options,omitempty"`
 }

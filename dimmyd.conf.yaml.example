@@ -8,6 +8,7 @@ webroot: /usr/share/dimmy
 database_path: /var/lib/dimmy/dimmy.db
 devices:
 - name: "Livingroom-Lamp1"
+  room: "Livingroom" # Optional string; defaults to "" when omitted.
   type: zlight
   topic: zigbee/Livingroom-1
   options:
