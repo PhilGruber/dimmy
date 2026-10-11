@@ -5,13 +5,14 @@ import "os"
 const CycleLength = 200 // ms
 
 type DeviceConfig struct {
-	Type    string         `yaml:"type"`
-	Topic   string         `yaml:"topic"`
-	Name    string         `yaml:"name"`
-	Label   string         `yaml:"label,omitempty"`
-	Room    string         `yaml:"room,omitempty"`
-	Icon    string         `yaml:"icon,omitempty"`
-	Options *ConfigOptions `yaml:"options,omitempty"`
+	Type        string         `yaml:"type"`
+	Topic       string         `yaml:"topic"`
+	Name        string         `yaml:"name"`
+	Label       string         `yaml:"label,omitempty"`
+	Room        string         `yaml:"room,omitempty"`
+	Icon        string         `yaml:"icon,omitempty"`
+	Transformer string         `yaml:"transformer,omitempty"`
+	Options     *ConfigOptions `yaml:"options,omitempty"`
 }
 
 type RuleConfig struct {

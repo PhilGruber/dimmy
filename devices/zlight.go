@@ -1,11 +1,11 @@
 package devices
 
 import (
-	"encoding/json"
 	"log"
 	"time"
 
 	"github.com/PhilGruber/dimmy/core"
+	"github.com/PhilGruber/dimmy/transform"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -75,40 +75,35 @@ func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 		state = "OFF"
 	}
 
-	msg := core.Zigbee2MqttLightMessage{
-		State:      &state,
-		Brightness: &newVal,
-	}
-
+	msg := make(map[string]any)
+	msg["state"] = state
+	msg["brightness"] = newVal
 	if l.transition {
-		msg.Transition = &l.TransitionTime
+		msg["transition"] = l.TransitionTime
+	}
+	topic, s, err := l.transformer.Encode(l.GetMqttTopic(), msg)
+	if err != nil {
+		log.Println("Error: " + err.Error())
+		return
 	}
 
-	s, _ := json.Marshal(msg)
-	mqtt.Publish(l.MqttTopic+"/set", 0, false, s)
+	mqtt.Publish(topic, 0, false, s)
 
-	if newVal == 0 && l.StupidHack {
-		// Hack for stupid lights
-		log.Printf("Brightness is zero, activating stupid hack")
-		msg.Transition = nil
-		msg.Brightness = core.ToPtr(10)
-		msg.State = core.ToPtr("OFF")
-		s, _ = json.Marshal(msg)
-		mqtt.Publish(l.MqttTopic+"/set", 0, false, s)
-
-		msg.Brightness = core.ToPtr(0)
-		s, _ = json.Marshal(msg)
-		mqtt.Publish(l.MqttTopic+"/set", 0, false, s)
-	}
 }
 
 func (l *ZLight) PollValue(mqtt mqtt.Client) {
-	msg := core.Zigbee2MqttLightMessage{
-		Brightness: core.ToPtr(0),
+	pollFields := make(map[string]any)
+	pollFields["brightness"] = 0
+	topic, s, err := l.transformer.PollMessage(l.MqttState, pollFields)
+	if err != nil {
+		log.Printf("[%32s] Error: %s", l.Name, err)
+		return
 	}
-	s, _ := json.Marshal(msg)
+	if topic == "" {
+		return
+	}
 	log.Printf("[%32s] Polling %s\n", l.GetName(), l.MqttState)
-	t := mqtt.Publish(l.MqttState+"/get", 0, false, s)
+	t := mqtt.Publish(topic, 0, false, s)
 	if t.Wait() && t.Error() != nil {
 		log.Println(t.Error())
 	}
@@ -117,26 +112,25 @@ func (l *ZLight) PollValue(mqtt mqtt.Client) {
 func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
-		var data core.Zigbee2MqttLightMessage
-		err := json.Unmarshal(payload, &data)
+		data, err := l.transformer.Decode(payload)
 		if err != nil {
-			log.Println("Error: " + err.Error())
+			log.Printf("[%32s] Error: %s\n", l.Name, err.Error())
 			return
 		}
-		if data.Brightness != nil {
-			l.SetCurrent(l.ValueToPercentage(*data.Brightness))
+		if data["brightness"] != nil {
+			brightness, ok := transform.IntValue(data["brightness"])
+			if !ok {
+				log.Printf("[%32s] Invalid brightness: %v", l.Name, data["brightness"])
+				return
+			}
+			l.SetCurrent(l.ValueToPercentage(brightness))
 		}
-		if data.State != nil {
-			if *data.State == "OFF" {
+		if data["state"] != nil {
+			if data["state"] == "OFF" {
 				l.SetCurrent(0)
 			}
 		}
-		if data.Battery != nil {
-			l.setBatteryLevel(data.Battery)
-		}
-		if data.LinkQuality != nil {
-			l.setLinkQuality(data.LinkQuality)
-		}
+		l.parseDefaultValues(data)
 		if l.transition {
 			l.setTarget(l.GetCurrent())
 		}
@@ -145,11 +139,12 @@ func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInt
 
 func (d *ZLight) GetConfig(name string) core.DeviceConfig {
 	config := core.DeviceConfig{
-		Name:  name,
-		Room:  d.Room,
-		Type:  "zlight",
-		Icon:  d.Icon,
-		Topic: d.MqttTopic,
+		Name:        name,
+		Transformer: d.transformerName,
+		Room:        d.Room,
+		Type:        "zlight",
+		Icon:        d.Icon,
+		Topic:       d.MqttTopic,
 		Options: &core.ConfigOptions{
 			Transition: &d.transition,
 			Hidden:     &d.Hidden,

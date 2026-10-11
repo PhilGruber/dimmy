@@ -1,7 +1,6 @@
 package devices
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
@@ -109,7 +108,11 @@ func NewDevice(config core.DeviceConfig, historyDB ...core.SensorHistoryStore) *
 
 func NewDeviceFromMessage(topic string, data map[string]any) *GenericDevice {
 	d := GenericDevice{}
-	d.setBaseConfig(core.DeviceConfig{Name: topic, Topic: topic})
+	transformer := "zigbee"
+	if LikelyDeviceType(topic, data) == "light" {
+		transformer = "tasmota"
+	}
+	d.setBaseConfig(core.DeviceConfig{Name: topic, Topic: topic, Transformer: transformer})
 	d.MqttState = topic
 	d.Type = LikelyDeviceType(topic, data)
 	d.valueMutex = new(sync.RWMutex)
@@ -256,8 +259,7 @@ func (d *GenericDevice) GetValue(field string) any {
 func (d *GenericDevice) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
-		var data map[string]any
-		err := json.Unmarshal(payload, &data)
+		data, err := d.transformer.Decode(payload)
 		if err != nil {
 			log.Printf("[%32s] Error: %s\n", d.Name, err.Error())
 			return
@@ -355,13 +357,12 @@ func (d *GenericDevice) PublishValue(client mqtt.Client) {
 	if len(values) == 0 {
 		return
 	}
-
-	message, err := json.Marshal(values)
+	topic, message, err := d.transformer.Encode(d.MqttTopic, values)
 	if err != nil {
 		log.Printf("[%32s] Error: %s\n", d.Name, err.Error())
 		return
 	}
-	t := client.Publish(d.MqttTopic+"/set", 0, false, message)
+	t := client.Publish(topic, 0, false, message)
 	if t.Wait() && t.Error() != nil {
 		log.Println(t.Error())
 		return
@@ -383,9 +384,16 @@ func (d *GenericDevice) PollValue(client mqtt.Client) {
 		return
 	}
 
-	s, _ := json.Marshal(values)
+	topic, s, err := d.transformer.PollMessage(d.MqttState, values)
+	if err != nil {
+		log.Printf("[%32s] Error: %s\n", d.Name, err.Error())
+		return
+	}
+	if topic == "" {
+		return
+	}
 	log.Printf("[%32s] Polling value for %s\n", d.GetName(), d.MqttState)
-	t := client.Publish(d.MqttState+"/get", 0, false, s)
+	t := client.Publish(topic, 0, false, s)
 	if t.Wait() && t.Error() != nil {
 		log.Println(t.Error())
 	}
@@ -451,11 +459,12 @@ func (d *GenericDevice) GetConfig(name string) core.DeviceConfig {
 	controls := append([]core.Control(nil), d.Controls...)
 	sensors := append([]core.Sensor(nil), d.Sensors...)
 	config := core.DeviceConfig{
-		Name:  name,
-		Room:  d.Room,
-		Type:  "device",
-		Topic: d.MqttTopic,
-		Icon:  d.Icon,
+		Name:        name,
+		Transformer: d.transformerName,
+		Room:        d.Room,
+		Type:        "device",
+		Topic:       d.MqttTopic,
+		Icon:        d.Icon,
 		Options: &core.ConfigOptions{
 			Controls: &controls,
 			Sensors:  &sensors,

@@ -1,14 +1,13 @@
 package devices
 
 import (
-	"encoding/json"
 	"log"
 	"math"
 	"regexp"
-	"strconv"
 	"time"
 
 	"github.com/PhilGruber/dimmy/core"
+	"github.com/PhilGruber/dimmy/transform"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -23,6 +22,9 @@ type lightStateMessage struct {
 }
 
 func NewLight(config core.DeviceConfig) *Light {
+	if config.Transformer == "" {
+		config.Transformer = "tasmota"
+	}
 	d := Light{}
 	d.Icon = "💡"
 	d.setBaseConfig(config)
@@ -76,30 +78,36 @@ func (l *Light) PublishValue(mqtt mqtt.Client) {
 	if newVal != l.LastSent {
 		l.LastChanged = &tt
 		l.LastSent = newVal
-		mqtt.Publish(l.GetMqttWriteTopic(), 0, false, strconv.Itoa(newVal))
+		data := make(map[string]any)
+		data["value"] = newVal
+		topic, value, err := l.transformer.Encode(l.GetMqttTopic(), data)
+		if err != nil {
+			log.Println("Error: " + err.Error())
+			return
+		}
+		mqtt.Publish(topic, 0, false, value)
 	}
 }
 
 func (l *Light) GetMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
 		payload := mqttMessage.Payload()
-		value, err := strconv.Atoi(string(payload))
-		state := value > 0
+		data, err := l.transformer.Decode(payload)
 		if err != nil {
-			var data lightStateMessage
-			err := json.Unmarshal(payload, &data)
-			if err != nil {
-				log.Println("Error: " + err.Error())
-				return
-			}
-			value = data.Value
-			state = data.State == "ON"
+			log.Printf("[%32s] Error: %s\n", l.Name, err.Error())
+			return
 		}
+
+		state := data["state"] == "ON"
 		if !state {
-			value = 0
+			data["value"] = 0
 		}
 		if l.GetTarget() != math.Round(l.GetCurrent()) {
-			//			log.Printf("Ignoring Value %d from %s because light is moving", value, l.MqttState)
+			return
+		}
+		value, ok := transform.IntValue(data["value"])
+		if !ok {
+			log.Printf("[%32s] Invalid light value: %v", l.Name, data["value"])
 			return
 		}
 		percentage := l.ValueToPercentage(value)
@@ -130,11 +138,12 @@ func (l *Light) ValueToPercentage(value int) float64 {
 
 func (d *Light) GetConfig(name string) core.DeviceConfig {
 	config := core.DeviceConfig{
-		Name:  name,
-		Room:  d.Room,
-		Type:  "light",
-		Icon:  d.Icon,
-		Topic: d.MqttTopic,
+		Name:        name,
+		Transformer: d.transformerName,
+		Room:        d.Room,
+		Type:        "light",
+		Icon:        d.Icon,
+		Topic:       d.MqttTopic,
 		Options: &core.ConfigOptions{
 			Transition: &d.transition,
 			Hidden:     &d.Hidden,
@@ -145,8 +154,4 @@ func (d *Light) GetConfig(name string) core.DeviceConfig {
 
 func (d *Light) GetMqttTopic() string {
 	return d.MqttTopic
-}
-
-func (d *Light) GetMqttWriteTopic() string {
-	return d.MqttTopic + "/dimmer"
 }

@@ -92,6 +92,7 @@ func TestSaveUnknownDevice(t *testing.T) {
 	require.Equal(t, "Kitchen Sensor", config.Devices[0].Name)
 	require.Equal(t, "device", config.Devices[0].Type)
 	require.Equal(t, topic, config.Devices[0].Topic)
+	require.Equal(t, "zigbee", config.Devices[0].Transformer)
 	require.Len(t, *config.Devices[0].Options.Sensors, 2)
 }
 

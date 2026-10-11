@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/PhilGruber/dimmy/core"
+	"github.com/PhilGruber/dimmy/transform"
 	"github.com/google/uuid"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -57,20 +58,22 @@ type DeviceInterface interface {
 }
 
 type Device struct {
-	Name        string
-	MqttTopic   string     `json:"-"`
-	MqttState   string     `json:"-"`
-	Current     float64    `json:"value"`
-	LastChanged *time.Time `json:"lastUpdate"`
-	Type        string
-	Hidden      bool
-	Label       string
-	Room        string
-	Icon        string
-	Triggers    []string
-	Receivers   []string
-	mutex       *sync.RWMutex
-	rules       []*Rule
+	Name            string
+	MqttTopic       string     `json:"-"`
+	MqttState       string     `json:"-"`
+	Current         float64    `json:"value"`
+	LastChanged     *time.Time `json:"lastUpdate"`
+	Type            string
+	Hidden          bool
+	Label           string
+	Room            string
+	Icon            string
+	Triggers        []string
+	Receivers       []string
+	mutex           *sync.RWMutex
+	rules           []*Rule
+	transformer     transform.Transformer
+	transformerName string
 
 	persistentFields []string
 
@@ -82,6 +85,25 @@ func (d *Device) setBaseConfig(config core.DeviceConfig) {
 	d.MqttTopic = config.Topic
 	d.Room = config.Room
 	d.Current = 0
+
+	if config.Transformer == "" {
+		config.Transformer = "zigbee"
+		if config.Type == "light" {
+			config.Transformer = "tasmota"
+		}
+	}
+	d.transformerName = config.Transformer
+	switch config.Transformer {
+	case "tasmota":
+		d.transformer = transform.TasmotaTransformer{}
+	case "cbus":
+		d.transformer = transform.CbusTransformer{}
+	case "zigbee":
+		d.transformer = transform.ZigbeeTransformer{}
+	default:
+		d.transformer = transform.ZigbeeTransformer{}
+	}
+
 	if config.Icon != "" {
 		d.Icon = config.Icon
 	} else {
@@ -243,12 +265,12 @@ func (d *Device) setLinkQuality(linkQuality *int) {
 
 func (d *Device) parseDefaultValues(data map[string]any) {
 	if battery, ok := data["battery"]; ok {
-		if batteryInt, ok := battery.(int); ok {
+		if batteryInt, ok := transform.IntValue(battery); ok {
 			d.setBatteryLevel(&batteryInt)
 		}
 	}
 	if linkQuality, ok := data["linkquality"]; ok {
-		if linkQualityInt, ok := linkQuality.(int); ok {
+		if linkQualityInt, ok := transform.IntValue(linkQuality); ok {
 			d.setLinkQuality(&linkQualityInt)
 		}
 	}
@@ -429,11 +451,12 @@ func (d *Device) UpdateFromMessage(data map[string]any) {
 
 func (d *Device) GetConfig(name string) core.DeviceConfig {
 	config := core.DeviceConfig{
-		Name:  name,
-		Room:  d.Room,
-		Type:  "device",
-		Topic: d.MqttTopic,
-		Icon:  d.Icon,
+		Name:        name,
+		Transformer: d.transformerName,
+		Room:        d.Room,
+		Type:        "device",
+		Topic:       d.MqttTopic,
+		Icon:        d.Icon,
 		Options: &core.ConfigOptions{
 			Hidden: core.ToPtr(false),
 		},
