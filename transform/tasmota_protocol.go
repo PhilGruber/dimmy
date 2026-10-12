@@ -2,6 +2,7 @@ package transform
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 )
 
@@ -10,7 +11,11 @@ type TasmotaProtocol struct {
 }
 
 func (t TasmotaProtocol) Encode(topic string, data map[string]any) (string, []byte, error) {
-	result := strconv.Itoa(data["value"].(int))
+	value, ok := IntValue(data["value"])
+	if !ok {
+		return "", nil, fmt.Errorf("invalid Tasmota value: %v", data["value"])
+	}
+	result := strconv.Itoa(value)
 	return topic + "/dimmer", []byte(result), nil
 }
 

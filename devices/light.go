@@ -70,11 +70,19 @@ func NewLight(config core.DeviceConfig) *Light {
 func (l *Light) SetReceiverValue(key string, value interface{}) {
 	switch key {
 	case "brightness":
-		brightness := value.(float64)
+		brightness, ok := value.(float64)
+		if !ok {
+			log.Printf("[%32s] Invalid brightness: %v", l.Name, value)
+			return
+		}
 		l.setTarget(brightness)
 		log.Printf("[%32s] Setting brightness to %f\n", l.GetName(), brightness)
 	case "duration":
-		duration := value.(int)
+		duration, ok := transform.IntValue(value)
+		if !ok {
+			log.Printf("[%32s] Invalid duration: %v", l.Name, value)
+			return
+		}
 		log.Printf("[%32s] Setting duration to %d seconds\n", l.GetName(), duration)
 	}
 }

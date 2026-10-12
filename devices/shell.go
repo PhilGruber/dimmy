@@ -21,7 +21,7 @@ func NewShell(config core.DeviceConfig) *Shell {
 	s.Hidden = true
 	s.Type = "shell"
 
-	if config.Options != nil {
+	if config.Options != nil && config.Options.Commands != nil {
 		s.commands = *config.Options.Commands
 	}
 

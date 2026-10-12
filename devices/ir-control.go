@@ -25,7 +25,9 @@ func NewIrControl(config core.DeviceConfig) *IRControl {
 	i := IRControl{}
 	i.Icon = "📡"
 	i.setBaseConfig(config)
-	i.preventResending = config.Options.PreventResending
+	if config.Options != nil {
+		i.preventResending = config.Options.PreventResending
+	}
 
 	i.Type = "IRControl"
 	if config.Options != nil && config.Options.Commands != nil {
@@ -85,7 +87,12 @@ func (i *IRControl) GetCommands() []string {
 func (i *IRControl) SetReceiverValue(key string, value interface{}) {
 	switch key {
 	case "command":
-		command := i.commands[value.(string)]
+		commandName, ok := value.(string)
+		if !ok {
+			log.Printf("[%32s] Invalid IR command: %v", i.Name, value)
+			return
+		}
+		command := i.commands[commandName]
 		req := IrControlMessage{IrCode: command}
 		i.nextRequest = &req
 	}

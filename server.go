@@ -240,18 +240,24 @@ func (s *Server) eventLoop(mqttServer string) {
 			}
 		}
 
-		for _, idx := range firedRules {
-			if s.rules[idx].SingleUse {
-				for _, trigger := range s.rules[idx].Triggers {
-					trigger.Device.RemoveRule(s.rules[idx])
-				}
-				s.rules = append(s.rules[:idx], s.rules[idx+1:]...)
-				continue
-			}
-			s.rules[idx].ClearTriggers()
-		}
+		s.clearFiredRules(firedRules)
 
 		time.Sleep(core.CycleLength * time.Millisecond)
+	}
+}
+
+// Remove fired rules from the end so earlier indices remain valid.
+func (s *Server) clearFiredRules(firedRules []int) {
+	for i := len(firedRules) - 1; i >= 0; i-- {
+		idx := firedRules[i]
+		if s.rules[idx].SingleUse {
+			for _, trigger := range s.rules[idx].Triggers {
+				trigger.Device.RemoveRule(s.rules[idx])
+			}
+			s.rules = append(s.rules[:idx], s.rules[idx+1:]...)
+			continue
+		}
+		s.rules[idx].ClearTriggers()
 	}
 }
 

@@ -41,3 +41,12 @@ func TestTasmotaDecode(t *testing.T) {
 		}
 	}
 }
+
+func TestTasmotaInvalidEncodeDoesNotPanic(t *testing.T) {
+	for _, value := range []any{nil, "invalid", true, 1.5} {
+		_, _, err := (TasmotaProtocol{}).Encode("cmnd/light", map[string]any{"value": value})
+		if err == nil {
+			t.Fatalf("expected error for value %v", value)
+		}
+	}
+}

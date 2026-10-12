@@ -201,3 +201,12 @@ func TestUnknownDevicesRoomOptions(t *testing.T) {
 	require.Contains(t, body, `<option value="Bedroom">`)
 	require.Less(t, strings.Index(body, `<option value="Bedroom">`), strings.Index(body, `<option value="Kitchen">`))
 }
+
+func TestClearMultipleFiredRules(t *testing.T) {
+	first := &dimmyDevices.Rule{SingleUse: true}
+	retained := &dimmyDevices.Rule{}
+	last := &dimmyDevices.Rule{SingleUse: true}
+	s := &Server{rules: []*dimmyDevices.Rule{first, retained, last}}
+	require.NotPanics(t, func() { s.clearFiredRules([]int{0, 1, 2}) })
+	require.Equal(t, []*dimmyDevices.Rule{retained}, s.rules)
+}

@@ -321,7 +321,7 @@ func (d *GenericDevice) ProcessRequest(request core.SwitchRequest) {
 		log.Printf("[%32s] Warning: No key specified in request. Defaulting to %s\n", d.Name, request.Key)
 	}
 
-	if request.Value[0] == '+' || request.Value[0] == '-' {
+	if len(request.Value) > 0 && (request.Value[0] == '+' || request.Value[0] == '-') {
 		value, err := strconv.ParseFloat(request.Value, 64)
 		if err != nil {
 			log.Printf("[%32s] Can't convert %s to number: %s\n", d.Name, request.Value, err.Error())

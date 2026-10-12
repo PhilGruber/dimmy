@@ -59,6 +59,11 @@ func (c *condition) check() bool {
 		return false
 	}
 
+	if reflect.TypeOf(value) != reflect.TypeOf(target) || !reflect.TypeOf(value).Comparable() {
+		log.Printf("Can't compare %v [%T] and %v [%T]", value, value, target, target)
+		return false
+	}
+
 	switch c.Operator {
 	case "==":
 		return value == target
@@ -232,11 +237,13 @@ func makeComparable(value any, target any, numeric bool) (any, any, error) {
 	if value == nil || target == nil {
 		return value, target, nil
 	}
-	if numeric && reflect.TypeOf(value).Kind() == reflect.String {
-		var err error
-		value, err = strconv.ParseFloat(value.(string), 64)
-		if err != nil {
-			return nil, nil, fmt.Errorf("can't convert %v [%s] to number: %s", value, reflect.TypeOf(value), err.Error())
+	if numeric {
+		if text, ok := value.(string); ok {
+			var err error
+			value, err = strconv.ParseFloat(text, 64)
+			if err != nil {
+				return nil, nil, fmt.Errorf("can't convert %v [%s] to number: %s", value, reflect.TypeOf(value), err.Error())
+			}
 		}
 	}
 	switch value.(type) {

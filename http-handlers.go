@@ -250,7 +250,11 @@ func (s *Server) AddSingleUseRule(webroot string) http.HandlerFunc {
 				http.Error(output, "time device is unavailable", http.StatusInternalServerError)
 				return
 			}
-			dimmyTime = timeDevice.(*dimmyDevices.DimmyTime)
+			dimmyTime, ok = timeDevice.(*dimmyDevices.DimmyTime)
+			if !ok || dimmyTime == nil {
+				http.Error(output, "time device is unavailable", http.StatusInternalServerError)
+				return
+			}
 
 			var unit time.Duration
 			switch form["unit"] {
