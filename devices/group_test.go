@@ -25,10 +25,10 @@ func newMockDevice(name, deviceType string, current float64) *mockDevice {
 	return d
 }
 
-func (m *mockDevice) GetType() string                      { return m.deviceType }
-func (m *mockDevice) GetCurrent() float64                  { return m.current }
-func (m *mockDevice) UpdateValue() (float64, bool)         { return m.current, false }
-func (m *mockDevice) ProcessRequest(r core.SwitchRequest)  { m.requests = append(m.requests, r) }
+func (m *mockDevice) GetType() string                     { return m.deviceType }
+func (m *mockDevice) GetCurrent() float64                 { return m.current }
+func (m *mockDevice) UpdateValue() (float64, bool)        { return m.current, false }
+func (m *mockDevice) ProcessRequest(r core.SwitchRequest) { m.requests = append(m.requests, r) }
 
 // groupConfig builds a DeviceConfig that lists the given device names under options.devices.
 func groupConfig(t *testing.T, deviceNames []string) core.DeviceConfig {
@@ -142,5 +142,33 @@ func TestGroup_ProcessRequest_RelativeResolvesBeforeDelegating(t *testing.T) {
 	}
 	if val != 85 {
 		t.Errorf("expected resolved value=85, got %f", val)
+	}
+}
+
+func TestGroupMissingMembers(t *testing.T) {
+	dev := newMockDevice("available", "light", 50)
+	g := NewGroup(groupConfig(t, []string{"missing-first", "available", "missing-last", "nil-member"}), map[string]DeviceInterface{
+		"available":  dev,
+		"nil-member": nil,
+	})
+	if g == nil || len(g.devices) != 1 {
+		t.Fatal("expected group containing only the available member")
+	}
+	if current := g.GetCurrent(); current != 50 {
+		t.Fatalf("expected current 50, got %f", current)
+	}
+	g.ProcessRequest(core.SwitchRequest{Value: "60"})
+	g.ProcessRequest(core.SwitchRequest{Value: "+10"})
+	if len(dev.requests) != 2 {
+		t.Fatalf("expected two requests, got %d", len(dev.requests))
+	}
+}
+
+func TestGroupWithoutAvailableMembers(t *testing.T) {
+	for _, names := range [][]string{{}, {"missing"}} {
+		cfg := core.DeviceConfig{Name: "empty", Options: &core.ConfigOptions{Devices: &names}}
+		if g := NewGroup(cfg, map[string]DeviceInterface{}); g != nil {
+			t.Fatal("expected group with no available members to be skipped")
+		}
 	}
 }

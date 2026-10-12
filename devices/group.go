@@ -30,35 +30,32 @@ func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *
 		return nil
 	}
 
-	if config.Options == nil || config.Options.Devices == nil {
+	if config.Options.Devices == nil {
 		log.Println("Group " + config.Name + " has no devices")
 		return nil
 	}
 
-	g.devices = make([]DeviceInterface, len(*config.Options.Devices))
-
-	i := 0
+	g.devices = make([]DeviceInterface, 0, len(*config.Options.Devices))
 	for _, key := range *config.Options.Devices {
-		_, ok := allDevices[key]
-		if ok {
-			dev, ok := allDevices[key]
-			if ok {
-				if g.Type == "" {
-					g.Type = dev.GetType()
-					g.Icon = dev.GetEmoji()
-					g.MqttState = dev.GetMqttStateTopic()
-					g.Receivers = dev.GetReceivers()
-				} else if g.Type != dev.GetType() {
-					log.Println("Can't add Device " + key + " to group, as it is of a different type than the other devices in the group")
-					fmt.Printf("%s != %s", g.Type, dev.GetType())
-					return nil
-				}
-				g.devices[i] = dev
-				i++
-			}
-		} else {
-			fmt.Println("Could not find Device " + key + ", as part of a group")
+		dev, ok := allDevices[key]
+		if !ok || dev == nil {
+			log.Printf("Could not find device %s, as part of group %s", key, config.Name)
+			continue
 		}
+		if len(g.devices) == 0 {
+			g.Type = dev.GetType()
+			g.Icon = dev.GetEmoji()
+			g.MqttState = dev.GetMqttStateTopic()
+			g.Receivers = dev.GetReceivers()
+		} else if g.Type != dev.GetType() {
+			log.Printf("Can't add device %s to group %s: type %s differs from %s", key, config.Name, dev.GetType(), g.Type)
+			return nil
+		}
+		g.devices = append(g.devices, dev)
+	}
+	if len(g.devices) == 0 {
+		log.Printf("Group %s has no available devices", config.Name)
+		return nil
 	}
 
 	g.init()
