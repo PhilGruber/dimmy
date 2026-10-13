@@ -210,3 +210,65 @@ func TestClearMultipleFiredRules(t *testing.T) {
 	require.NotPanics(t, func() { s.clearFiredRules([]int{0, 1, 2}) })
 	require.Equal(t, []*dimmyDevices.Rule{retained}, s.rules)
 }
+
+func TestSaveRulesWithInvalidExistingControls(t *testing.T) {
+	controls := []core.Control{{Name: "power"}}
+	sensors := []core.Sensor{{Name: "temperature"}}
+	device := dimmyDevices.NewDevice(core.DeviceConfig{Name: "sensor", Options: &core.ConfigOptions{Controls: &controls, Sensors: &sensors}})
+	valid := core.RuleConfig{
+		Triggers:  []core.TriggerConfig{{DeviceName: "sensor", Key: "temperature", Active: true, Condition: core.ReceiverConditionConfig{Operator: "==", Value: "20"}}},
+		Receivers: []core.ReceiverConfig{{DeviceName: "sensor", Key: "power", Value: "on"}},
+	}
+	broken := valid
+	broken.Receivers = []core.ReceiverConfig{{DeviceName: "sensor", Key: "removed", Value: "on"}}
+	broken.Triggers = append([]core.TriggerConfig(nil), valid.Triggers...)
+	broken.Triggers[0].Condition.Value = 20
+	otherBroken := valid
+	otherBroken.Receivers = []core.ReceiverConfig{{DeviceName: "missing-device", Key: "power", Value: "on"}}
+	for _, tc := range []struct {
+		name    string
+		updated []core.RuleConfig
+		status  int
+	}{
+		{"delete broken rule while another remains", []core.RuleConfig{otherBroken}, http.StatusOK},
+		{"repair broken rule while another remains", []core.RuleConfig{valid, otherBroken}, http.StatusOK},
+		{"delete all rules", []core.RuleConfig{}, http.StatusOK},
+		{"reject newly introduced broken rule", []core.RuleConfig{broken, otherBroken, broken}, http.StatusBadRequest},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			filename := filepath.Join(t.TempDir(), "rules.yaml")
+			original := []core.RuleConfig{broken, otherBroken}
+			require.NoError(t, core.SaveRulesConfig(filename, original))
+			s := &Server{devices: map[string]dimmyDevices.DeviceInterface{"sensor": device}, config: &core.ServerConfig{Rules: original, RulesFilename: filename}}
+			body, err := json.Marshal(tc.updated)
+			require.NoError(t, err)
+			req := httptest.NewRequest(http.MethodPut, "/api/rules", bytes.NewReader(body))
+			res := httptest.NewRecorder()
+			s.SaveRules().ServeHTTP(res, req)
+			require.Equal(t, tc.status, res.Code, res.Body.String())
+			if tc.status == http.StatusOK {
+				var persisted []core.RuleConfig
+				data, err := os.ReadFile(filename)
+				require.NoError(t, err)
+				require.NoError(t, yaml.Unmarshal(data, &persisted))
+				require.Equal(t, tc.updated, persisted)
+			} else {
+				require.Equal(t, original, s.config.Rules)
+			}
+		})
+	}
+}
+
+func TestEditRulesShowsConfiguredMissingDevices(t *testing.T) {
+	s := &Server{devices: map[string]dimmyDevices.DeviceInterface{}, config: &core.ServerConfig{Rules: []core.RuleConfig{
+		{Receivers: []core.ReceiverConfig{{DeviceName: "missing-lamp", Key: "old-control", Value: "on"}}},
+		{Receivers: []core.ReceiverConfig{{DeviceName: "second-missing-lamp", Key: "other-control", Value: "on"}}},
+	}}}
+	res := httptest.NewRecorder()
+	s.EditRules("html").ServeHTTP(res, httptest.NewRequest(http.MethodGet, "/rules", nil))
+	require.Equal(t, http.StatusOK, res.Code)
+	require.Contains(t, res.Body.String(), "missing-lamp (unavailable)")
+	require.Contains(t, res.Body.String(), "old-control: on")
+	require.Contains(t, res.Body.String(), `data-edit-rule="0"`)
+	require.Contains(t, res.Body.String(), `data-delete-rule="1"`)
+}

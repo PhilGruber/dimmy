@@ -14,7 +14,9 @@
 
     const optionsFor = (kind, selected = "") => {
         const items = devices.filter(device => fieldsFor(device, kind).length);
-        return `<option value="">Choose a device</option>${items.map(device =>
+        const unavailable = selected && !items.some(device => device.name === selected)
+            ? `<option value="${escapeHtml(selected)}" selected>${escapeHtml(selected)} (unavailable)</option>` : "";
+        return `<option value="">Choose a device</option>${unavailable}${items.map(device =>
             `<option value="${escapeHtml(device.name)}"${device.name === selected ? " selected" : ""}>${escapeHtml(`${device.icon} ${device.label}`.trim())}</option>`
         ).join("")}`;
     };
@@ -25,7 +27,9 @@
     function setFields(row, kind, selected = "") {
         const device = deviceFor(row.querySelector(".device").value);
         const fields = fieldsFor(device, kind);
-        row.querySelector(".field").innerHTML = `<option value="">Choose a field</option>${fields.map(field => `<option value="${escapeHtml(field)}"${field === selected ? " selected" : ""}>${escapeHtml(field)}</option>`).join("")}`;
+        const unavailable = selected && !fields.includes(selected)
+            ? `<option value="${escapeHtml(selected)}" selected>${escapeHtml(selected)} (unavailable)</option>` : "";
+        row.querySelector(".field").innerHTML = `<option value="">Choose a field</option>${unavailable}${fields.map(field => `<option value="${escapeHtml(field)}"${field === selected ? " selected" : ""}>${escapeHtml(field)}</option>`).join("")}`;
     }
 
     function addTrigger(trigger = {}) {
@@ -110,6 +114,12 @@
         }));
         if (!triggers.length || !receivers.length || [...triggers, ...receivers].some(item => !item.device || !item.key) || triggers.some(item => item.condition.value === "") || receivers.some(item => item.value === "")) {
             showError("Choose a device and field, and enter a value for every row.");
+            return;
+        }
+        const invalid = triggers.some(item => !fieldsFor(deviceFor(item.device), "triggers").includes(item.key))
+            || receivers.some(item => !fieldsFor(deviceFor(item.device), "receivers").includes(item.key));
+        if (invalid) {
+            showError("Replace or remove unavailable sensors and controls before saving this rule.");
             return;
         }
         const updatedRules = [...rules];

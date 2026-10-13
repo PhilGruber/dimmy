@@ -38,9 +38,9 @@
                                 {{ $last := "" }}
                                 {{ range .Triggers }}
                                 <div>
-                                    {{ if ne .Device.GetName $last }}
-                                        {{ $last = .Device.GetName }}
-                                        <span class="tag sensor">{{ .Device.GetIconHtml }} {{ .Device.GetLabel }}</span>
+                                    {{ if ne .DeviceName $last }}
+                                        {{ $last = .DeviceName }}
+                                        <span class="tag sensor">{{ (deviceView .DeviceName).Icon }} {{ (deviceView .DeviceName).Label }}</span>
                                     {{ end }}
                                     <div class="muted">{{ .Key }} {{ .Condition.Operator }} {{ .Condition.Value }}</div>
                                 </div>
@@ -50,9 +50,9 @@
                                 {{ $last := "" }}
                                 {{ range .Receivers }}
                                 <div>
-                                    {{ if ne .Device.GetName $last }}
-                                        {{ $last = .Device.GetName }}
-                                        <span class="tag control">{{ .Device.GetIconHtml }} {{ .Device.GetLabel }}</span>
+                                    {{ if ne .DeviceName $last }}
+                                        {{ $last = .DeviceName }}
+                                        <span class="tag control">{{ (deviceView .DeviceName).Icon }} {{ (deviceView .DeviceName).Label }}</span>
                                     {{ end }}
                                     <div class="muted">{{ .Key }}: {{ .Value }}</div>
                                 </div>

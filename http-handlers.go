@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -380,7 +381,14 @@ func (s *Server) ShowSensorHistory(webroot string) http.HandlerFunc {
 
 func (s *Server) EditRules(webroot string) http.HandlerFunc {
 	return func(output http.ResponseWriter, httpRequest *http.Request) {
-		templ, err := template.ParseFiles(webroot + "/rules.html")
+		templ, err := template.New("rules.html").Funcs(template.FuncMap{
+			"deviceView": func(name string) ruleDeviceView {
+				if device, ok := s.getDevice(name); ok {
+					return ruleDeviceView{Name: name, Label: device.GetLabel(), Icon: device.GetEmoji()}
+				}
+				return ruleDeviceView{Name: name, Label: name + " (unavailable)"}
+			},
+		}).ParseFiles(webroot + "/rules.html")
 		if err != nil {
 			http.Error(output, "could not load rules page", http.StatusInternalServerError)
 			return
@@ -393,7 +401,10 @@ func (s *Server) EditRules(webroot string) http.HandlerFunc {
 			})
 		}
 		sort.Slice(devices, func(i, j int) bool { return devices[i].Label < devices[j].Label })
-		rulesJSON, err := json.Marshal(s.config.Rules)
+		s.mutex.RLock()
+		configuredRules := append([]core.RuleConfig(nil), s.config.Rules...)
+		s.mutex.RUnlock()
+		rulesJSON, err := json.Marshal(configuredRules)
 		if err != nil {
 			http.Error(output, "could not encode rules", http.StatusInternalServerError)
 			return
@@ -404,10 +415,10 @@ func (s *Server) EditRules(webroot string) http.HandlerFunc {
 			return
 		}
 		err = templ.Execute(output, struct {
-			Rules       []*dimmyDevices.Rule
+			Rules       []core.RuleConfig
 			RulesJSON   template.JS
 			DevicesJSON template.JS
-		}{Rules: s.rules, RulesJSON: template.JS(rulesJSON), DevicesJSON: template.JS(devicesJSON)})
+		}{Rules: configuredRules, RulesJSON: template.JS(rulesJSON), DevicesJSON: template.JS(devicesJSON)})
 		if err != nil {
 			log.Println(err)
 			return
@@ -441,8 +452,26 @@ func (s *Server) SaveRules() http.HandlerFunc {
 			http.Error(output, "invalid rules: "+err.Error(), http.StatusBadRequest)
 			return
 		}
-		devices := s.deviceSnapshot()
+		s.mutex.Lock()
+		defer s.mutex.Unlock()
+		devices := s.devices
+		// Existing rules can be retained unchanged while other broken rules are
+		// repaired or deleted. New and modified rules still require valid fields.
+		retained := make([]bool, len(s.config.Rules))
 		for _, rule := range rules {
+			unchanged := false
+			ruleJSON, _ := json.Marshal(rule)
+			for i, existing := range s.config.Rules {
+				existingJSON, err := json.Marshal(existing)
+				if !retained[i] && err == nil && bytes.Equal(ruleJSON, existingJSON) {
+					retained[i] = true
+					unchanged = true
+					break
+				}
+			}
+			if unchanged {
+				continue
+			}
 			if len(rule.Triggers) == 0 || len(rule.Receivers) == 0 {
 				http.Error(output, "each rule needs a sensor and a control", http.StatusBadRequest)
 				return
@@ -463,8 +492,6 @@ func (s *Server) SaveRules() http.HandlerFunc {
 			}
 		}
 
-		s.mutex.Lock()
-		defer s.mutex.Unlock()
 		if err := core.SaveRulesConfig(s.config.RulesFilename, rules); err != nil {
 			http.Error(output, "could not save rules: "+err.Error(), http.StatusInternalServerError)
 			return
