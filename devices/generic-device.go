@@ -109,10 +109,7 @@ func NewDevice(config core.DeviceConfig, historyDB ...core.SensorHistoryStore) *
 
 func NewDeviceFromMessage(topic string, data map[string]any) *GenericDevice {
 	d := GenericDevice{}
-	protocol := "zigbee"
-	if LikelyDeviceType(topic, data) == "light" {
-		protocol = "tasmota"
-	}
+	protocol := LikelyProtocol(topic, data)
 	d.setBaseConfig(core.DeviceConfig{Name: topic, Topic: topic, Protocol: protocol})
 	d.MqttState = topic
 	d.Type = LikelyDeviceType(topic, data)

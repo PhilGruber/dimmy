@@ -447,6 +447,19 @@ func LikelyDeviceType(topic string, data map[string]any) string {
 	return "device"
 }
 
+func LikelyProtocol(topic string, data map[string]any) string {
+	if strings.HasPrefix(topic, "zigbee") {
+		return "zigbee"
+	}
+	if strings.HasPrefix(topic, "cmnd/") || strings.HasPrefix(topic, "stat/") {
+		return "tasmota"
+	}
+	if strings.HasPrefix(topic, "cbus") {
+		return "cbus"
+	}
+	return "unknown"
+}
+
 func (d *Device) UpdateFromMessage(data map[string]any) {
 	d.Type = LikelyDeviceType("", data)
 }

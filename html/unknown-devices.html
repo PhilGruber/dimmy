@@ -26,6 +26,7 @@
                         <tr>
                             <th>MQTT topic</th>
                             <th>Type</th>
+                            <th>Protocol</th>
                             <th>Sensors</th>
                             <th>Controls</th>
                             <th><span class="visually-hidden">Actions</span></th>
@@ -36,17 +37,18 @@
                         <tr data-topic="{{ .Topic }}">
                             <td class="topic">{{ .Topic }}</td>
                             <td>{{ .Type }}</td>
+                            <td>{{ if eq .Protocol "cbus" }}C-Bus{{ else if eq .Protocol "tasmota" }}Tasmota{{ else }}Zigbee{{ end }}</td>
                             <td>
                                 {{ range .Sensors }}<span class="tag sensor">{{ . }}</span>{{ else }}<span class="muted">None</span>{{ end }}
                             </td>
                             <td>
                                 {{ range .Controls }}<span class="tag control">{{ . }}</span>{{ else }}<span class="muted">None</span>{{ end }}
                             </td>
-                            <td class="actions"><a href="#" class="save-link" data-topic="{{ .Topic }}">save</a></td>
+                            <td class="actions"><a href="#" class="save-link" data-topic="{{ .Topic }}" data-protocol="{{ .Protocol }}">save</a></td>
                         </tr>
                     {{ else }}
                         <tr id="empty-row">
-                            <td colspan="5" class="empty">No new devices detected.</td>
+                            <td colspan="6" class="empty">No new devices detected.</td>
                         </tr>
                     {{ end }}
                     </tbody>
@@ -114,10 +116,7 @@
                 nameInput.value = topic.split("/").pop() || "";
                 typeInput.value = type || "generic-device";
                 roomInput.value = "";
-                const prefix = topic.toLowerCase();
-                protocolInput.value = prefix.startsWith("cbus") ? "cbus"
-                    : prefix.startsWith("tele") || prefix.startsWith("stat") ? "tasmota"
-                    : "zigbee";
+                protocolInput.value = link.dataset.protocol;
                 saveModal.showModal();
                 nameInput.focus();
                 nameInput.select();
@@ -171,7 +170,7 @@
                     showMessage(`Saved ${name}.`, false);
                     if (!document.querySelector("#device-rows tr")) {
                         document.getElementById("device-rows").innerHTML =
-                            '<tr id="empty-row"><td colspan="5" class="empty">No unknown devices detected.</td></tr>';
+                            '<tr id="empty-row"><td colspan="6" class="empty">No unknown devices detected.</td></tr>';
                     }
                 } catch (error) {
                     link.classList.remove("busy");

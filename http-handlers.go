@@ -72,6 +72,7 @@ func (s *Server) ShowStatus(devices *map[string]dimmyDevices.DeviceInterface) ht
 }
 
 type unknownDeviceView struct {
+	Protocol string
 	Name     string
 	Topic    string
 	Type     string
@@ -88,6 +89,13 @@ func (s *Server) ShowUnknownDevices(webroot string) http.HandlerFunc {
 				Name:  device.GetName(),
 				Topic: device.GetMqttTopic(),
 				Type:  device.GetType(),
+			}
+			view.Protocol = "zigbee"
+			prefix := strings.ToLower(view.Topic)
+			if strings.HasPrefix(prefix, "cbus") {
+				view.Protocol = "cbus"
+			} else if strings.HasPrefix(prefix, "tele") || strings.HasPrefix(prefix, "stat") {
+				view.Protocol = "tasmota"
 			}
 			if generic, ok := device.(*dimmyDevices.GenericDevice); ok {
 				for _, sensor := range generic.GetSensors() {
