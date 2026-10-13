@@ -266,11 +266,13 @@ func (d *Device) setLinkQuality(linkQuality *int) {
 func (d *Device) parseDefaultValues(data map[string]any) {
 	if battery, ok := data["battery"]; ok {
 		if batteryInt, ok := transform.IntValue(battery); ok {
+			log.Printf("[%32s] Received new battery: %v (%T)\n", d.Name, batteryInt, batteryInt)
 			d.setBatteryLevel(&batteryInt)
 		}
 	}
 	if linkQuality, ok := data["linkquality"]; ok {
 		if linkQualityInt, ok := transform.IntValue(linkQuality); ok {
+			log.Printf("[%32s] Received new linkquality: %v (%T)\n", d.Name, linkQualityInt, linkQualityInt)
 			d.setLinkQuality(&linkQualityInt)
 		}
 	}

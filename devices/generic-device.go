@@ -244,11 +244,12 @@ func (d *GenericDevice) setSensorValue(key string, value any) {
 	}
 
 	d.valueMutex.Unlock()
+	d.UpdateRules(key, value)
+
 	if d.hasHistory {
 		d.AddHistory(key, value)
 	}
 
-	d.UpdateRules(key, value)
 }
 
 func (d *GenericDevice) GetValue(field string) any {
@@ -259,6 +260,7 @@ func (d *GenericDevice) GetValue(field string) any {
 
 func (d *GenericDevice) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInterface) mqtt.MessageHandler {
 	return func(client mqtt.Client, mqttMessage mqtt.Message) {
+		log.Printf("[%32s] Received message: %s\n", d.Name, mqttMessage.Payload())
 		payload := mqttMessage.Payload()
 		data, err := d.protocol.Decode(payload)
 		if err != nil {
@@ -271,6 +273,7 @@ func (d *GenericDevice) GetMessageHandler(_ chan core.SwitchRequest, _ DeviceInt
 		for key, value := range data {
 			for _, control := range d.Controls {
 				if control.Name == key {
+					log.Printf("[%32s] Received new %s: %v (%T)\n", d.Name, key, value, value)
 					d.setControlValue(key, value, false)
 					continue
 				}
