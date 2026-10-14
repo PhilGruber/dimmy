@@ -209,20 +209,10 @@ func newHTTPServer(addr string, handler http.Handler) *http.Server {
 
 func (s *Server) eventLoop(mqttServer string) {
 	hostname, _ := os.Hostname()
-	client := s.initMqtt(mqttServer, "goserver-"+hostname)
+	client := s.initMqtt(mqttServer, "dimmyd-"+hostname)
 	s.mutex.Lock()
 	s.mqttClient = client
 	s.mutex.Unlock()
-
-	client.Subscribe("#", 0, s.DetectDevice())
-
-	for name, device := range s.deviceSnapshot() {
-		if device.GetMqttStateTopic() != "" {
-			log.Printf("[%32s] Subscribing to %s\n", name, device.GetMqttStateTopic())
-			client.Subscribe(device.GetMqttStateTopic(), 0, device.GetMessageHandler(s.channel, device))
-			device.PollValue(client)
-		}
-	}
 
 	for {
 
@@ -292,12 +282,61 @@ func (s *Server) getDevice(name string) (dimmyDevices.DeviceInterface, bool) {
 	return device, ok
 }
 
-func (s *Server) initMqtt(hostname string, clientId string) mqtt.Client {
+func (s *Server) mqttOptions(hostname string, clientId string) *mqtt.ClientOptions {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s:1883", hostname))
 	opts.SetClientID(clientId)
 	opts.SetUsername(s.config.MqttUsername)
 	opts.SetPassword(s.config.MqttPassword)
+	// A clean session discards broker subscriptions after a disconnect.
+	// OnConnect runs on both the initial connection and automatic reconnects.
+	opts.SetOnConnectHandler(func(client mqtt.Client) {
+		log.Printf("Connected to MQTT at %s; restoring subscriptions", hostname)
+		s.subscribeMqtt(client)
+	})
+	opts.SetConnectionLostHandler(func(_ mqtt.Client, err error) {
+		log.Printf("MQTT connection lost: %v", err)
+	})
+	opts.SetReconnectingHandler(func(_ mqtt.Client, _ *mqtt.ClientOptions) {
+		log.Printf("Reconnecting to MQTT at %s", hostname)
+	})
+	return opts
+}
+
+func (s *Server) subscribeMqtt(client mqtt.Client) {
+	handlers := map[string][]mqtt.MessageHandler{"#": {s.DetectDevice()}}
+	devices := s.deviceSnapshot()
+	for _, device := range devices {
+		// Groups mirror their members; they must not replace a member's handler.
+		if _, group := device.(*dimmyDevices.Group); group {
+			continue
+		}
+		if topic := device.GetMqttStateTopic(); topic != "" {
+			handlers[topic] = append(handlers[topic], device.GetMessageHandler(s.channel, device))
+		}
+	}
+	for topic, callbacks := range handlers {
+		log.Printf("Subscribing to MQTT topic %s", topic)
+		token := client.Subscribe(topic, 0, func(client mqtt.Client, message mqtt.Message) {
+			for _, callback := range callbacks {
+				callback(client, message)
+			}
+		})
+		if !token.WaitTimeout(10 * time.Second) {
+			log.Printf("MQTT subscription timed out: %s", topic)
+		} else if err := token.Error(); err != nil {
+			log.Printf("MQTT subscription failed for %s: %v", topic, err)
+		}
+	}
+	for _, device := range devices {
+		if _, group := device.(*dimmyDevices.Group); !group && device.GetMqttStateTopic() != "" {
+			device.PollValue(client)
+		}
+	}
+}
+
+func (s *Server) initMqtt(hostname string, clientId string) mqtt.Client {
+	opts := s.mqttOptions(hostname, clientId)
 	client := mqtt.NewClient(opts)
 	token := client.Connect()
 	for !token.WaitTimeout(5 * time.Second) {

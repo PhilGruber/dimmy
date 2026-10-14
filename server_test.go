@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"io"
 	"log"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/PhilGruber/dimmy/core"
 	dimmyDevices "github.com/PhilGruber/dimmy/devices"
@@ -271,4 +273,72 @@ func TestEditRulesShowsConfiguredMissingDevices(t *testing.T) {
 	require.Contains(t, res.Body.String(), "old-control: on")
 	require.Contains(t, res.Body.String(), `data-edit-rule="0"`)
 	require.Contains(t, res.Body.String(), `data-delete-rule="1"`)
+}
+
+// Embedded interfaces make unexpected MQTT operations fail the test.
+type subscriptionClient struct {
+	mqtt.Client
+	handlers      map[string]mqtt.MessageHandler
+	subscriptions []string
+}
+
+func (c *subscriptionClient) Subscribe(topic string, qos byte, handler mqtt.MessageHandler) mqtt.Token {
+	c.handlers[topic] = handler
+	c.subscriptions = append(c.subscriptions, topic)
+	return subscriptionToken{}
+}
+
+type subscriptionToken struct{}
+
+func (subscriptionToken) Wait() bool                     { return true }
+func (subscriptionToken) WaitTimeout(time.Duration) bool { return true }
+func (subscriptionToken) Error() error                   { return nil }
+func (subscriptionToken) Done() <-chan struct{} {
+	done := make(chan struct{})
+	close(done)
+	return done
+}
+
+type subscribedDevice struct {
+	dimmyDevices.DeviceInterface
+	messages int
+	polls    int
+}
+
+func (d *subscribedDevice) GetMessageHandler(chan core.SwitchRequest, dimmyDevices.DeviceInterface) mqtt.MessageHandler {
+	return func(mqtt.Client, mqtt.Message) { d.messages++ }
+}
+func (d *subscribedDevice) PollValue(mqtt.Client) { d.polls++ }
+
+func TestMqttReconnectRestoresSubscriptions(t *testing.T) {
+	first := &subscribedDevice{DeviceInterface: dimmyDevices.NewLight(core.DeviceConfig{Name: "first", Topic: "cmnd/shared"})}
+	second := &subscribedDevice{DeviceInterface: dimmyDevices.NewLight(core.DeviceConfig{Name: "second", Topic: "cmnd/shared"})}
+	members := []string{"first"}
+	all := map[string]dimmyDevices.DeviceInterface{"first": first, "second": second}
+	all["group"] = dimmyDevices.NewGroup(core.DeviceConfig{Name: "group", Options: &core.ConfigOptions{Devices: &members}}, all)
+	s := &Server{devices: all, config: &core.ServerConfig{}}
+	opts := s.mqttOptions("localhost", "test")
+	require.NotNil(t, opts.OnConnect)
+	require.NotNil(t, opts.OnConnectionLost)
+	require.NotNil(t, opts.OnReconnecting)
+	c := &subscriptionClient{handlers: make(map[string]mqtt.MessageHandler)}
+	opts.OnConnect(c)
+	require.ElementsMatch(t, []string{"#", "tele/shared/STATE"}, c.subscriptions)
+	c.handlers["tele/shared/STATE"](c, nil)
+	require.Equal(t, 1, first.messages)
+	require.Equal(t, 1, second.messages)
+	// Simulate a clean broker session after reconnect, including a saved device.
+	third := &subscribedDevice{DeviceInterface: dimmyDevices.NewLight(core.DeviceConfig{Name: "third", Topic: "cmnd/new"})}
+	s.devices["third"] = third
+	c.handlers = make(map[string]mqtt.MessageHandler)
+	c.subscriptions = nil
+	opts.OnConnect(c)
+	require.ElementsMatch(t, []string{"#", "tele/shared/STATE", "tele/new/STATE"}, c.subscriptions)
+	c.handlers["tele/shared/STATE"](c, nil)
+	c.handlers["tele/new/STATE"](c, nil)
+	require.Equal(t, 2, first.messages)
+	require.Equal(t, 2, second.messages)
+	require.Equal(t, 1, third.messages)
+	require.Equal(t, 2, first.polls)
+	require.Equal(t, 1, third.polls)
 }
