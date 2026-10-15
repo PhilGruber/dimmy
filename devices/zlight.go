@@ -24,7 +24,7 @@ func makeZLight(config core.DeviceConfig) ZLight {
 	d := ZLight{}
 	d.Icon = "💡"
 	d.setBaseConfig(config)
-	d.MqttState = config.Topic
+	d.MqttState = d.protocol.StateTopic(config.Topic)
 
 	d.Target = 0
 
@@ -95,24 +95,6 @@ func (l *ZLight) PublishValue(mqtt mqtt.Client) {
 
 	mqtt.Publish(topic, 0, false, s)
 
-}
-
-func (l *ZLight) PollValue(mqtt mqtt.Client) {
-	pollFields := make(map[string]any)
-	pollFields["brightness"] = 0
-	topic, s, err := l.protocol.PollMessage(l.MqttState, pollFields)
-	if err != nil {
-		log.Printf("[%32s] Error: %s", l.Name, err)
-		return
-	}
-	if topic == "" {
-		return
-	}
-	log.Printf("[%32s] Polling %s\n", l.GetName(), l.MqttState)
-	t := mqtt.Publish(topic, 0, false, s)
-	if t.Wait() && t.Error() != nil {
-		log.Println(t.Error())
-	}
 }
 
 func (l *ZLight) GetMessageHandler(channel chan core.SwitchRequest, sw DeviceInterface) mqtt.MessageHandler {

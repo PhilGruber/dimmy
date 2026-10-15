@@ -21,3 +21,5 @@ func (t ZigbeeProtocol) PollMessage(topic string, data map[string]any) (string, 
 	msg, err := json.Marshal(data)
 	return topic + "/get", msg, err
 }
+
+func (t ZigbeeProtocol) StateTopic(topic string) string { return topic }

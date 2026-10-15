@@ -123,3 +123,5 @@ func (t CbusProtocol) Decode(data []byte) (map[string]any, error) {
 func (t CbusProtocol) PollMessage(string, map[string]any) (string, []byte, error) {
 	return "", nil, nil
 }
+
+func (t CbusProtocol) StateTopic(topic string) string { return topic }

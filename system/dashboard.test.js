@@ -28,8 +28,8 @@ test('dashboard updates devices with punctuation in their names', () => {
     }
     const name = 'cbus/lighting:living.room [lamp]';
     const readings = {
-        [name]: { Type: 'light', value: 50.5 },
-        'CBUS Light': { Type: 'light', value: 40 },
+        [name]: { Type: 'light', brightness: 50.5 },
+        'CBUS Light': { Type: 'light', brightness: 40 },
         'sensor/room:1': {
             Type: 'sensor',
             Values: { temperature: { value: 21.4, LastChanged: new Date().toISOString(), History: [] } },

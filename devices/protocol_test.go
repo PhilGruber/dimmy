@@ -202,3 +202,29 @@ func TestCbusLightStateUpdates(t *testing.T) {
 		})
 	}
 }
+
+func TestLightPollingUsesProtocol(t *testing.T) {
+	for _, zlight := range []bool{false, true} {
+		config := core.DeviceConfig{Topic: "zigbee/lamp", Protocol: "zigbee"}
+		var light DeviceInterface = NewLight(config)
+		if zlight {
+			light = NewZLight(config)
+		}
+		client := &recordingClient{}
+		light.PollValue(client)
+		require.Equal(t, []string{"zigbee/lamp/get"}, client.topics)
+		require.Equal(t, []map[string]any{{"brightness": float64(0)}}, client.messages)
+	}
+}
+
+func TestLightStatusUsesBrightness(t *testing.T) {
+	for _, light := range []DeviceInterface{NewLight(core.DeviceConfig{}), NewZLight(core.DeviceConfig{Type: "zlight"})} {
+		light.SetCurrent(50)
+		data, err := json.Marshal(light)
+		require.NoError(t, err)
+		var fields map[string]any
+		require.NoError(t, json.Unmarshal(data, &fields))
+		require.Equal(t, float64(50), fields["brightness"])
+		require.NotContains(t, fields, "value")
+	}
+}

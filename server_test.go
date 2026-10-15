@@ -181,10 +181,10 @@ func TestDashboardCbusLightValue(t *testing.T) {
 	status := httptest.NewRecorder()
 	server.ShowStatus(&server.devices)(status, httptest.NewRequest(http.MethodGet, "/api/status", nil))
 	var state map[string]struct {
-		Value float64 `json:"value"`
+		Brightness float64 `json:"brightness"`
 	}
 	require.NoError(t, json.Unmarshal(status.Body.Bytes(), &state))
-	require.Equal(t, float64(50), state[name].Value)
+	require.Equal(t, float64(50), state[name].Brightness)
 }
 
 func TestUnknownDevicesRoomOptions(t *testing.T) {

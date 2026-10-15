@@ -36,7 +36,7 @@ func TestTasmotaDecode(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if data["value"] != tc.value || data["state"] != tc.state {
+		if data["brightness"] != tc.value || data["state"] != tc.state {
 			t.Errorf("Decode(%s) = %v", tc.payload, data)
 		}
 	}
@@ -44,9 +44,32 @@ func TestTasmotaDecode(t *testing.T) {
 
 func TestTasmotaInvalidEncodeDoesNotPanic(t *testing.T) {
 	for _, value := range []any{nil, "invalid", true, 1.5} {
-		_, _, err := (TasmotaProtocol{}).Encode("cmnd/light", map[string]any{"value": value})
+		_, _, err := (TasmotaProtocol{}).Encode("cmnd/light", map[string]any{"brightness": value})
 		if err == nil {
 			t.Fatalf("expected error for value %v", value)
 		}
+	}
+}
+
+func TestProtocolStateTopics(t *testing.T) {
+	for _, tc := range []struct {
+		protocol    Protocol
+		topic, want string
+	}{
+		{TasmotaProtocol{}, "cmnd/kitchen", "tele/kitchen/STATE"},
+		{TasmotaProtocol{}, "tele/kitchen/STATE", "tele/kitchen/STATE"},
+		{ZigbeeProtocol{}, "cmnd/kitchen", "cmnd/kitchen"},
+		{CbusProtocol{}, "cbus/lighting/1", "cbus/lighting/1"},
+	} {
+		if got := tc.protocol.StateTopic(tc.topic); got != tc.want {
+			t.Fatalf("StateTopic(%q) = %q; want %q", tc.topic, got, tc.want)
+		}
+	}
+}
+
+func TestTasmotaBrightnessWireFormat(t *testing.T) {
+	topic, payload, err := (TasmotaProtocol{}).Encode("cmnd/kitchen", map[string]any{"brightness": 50})
+	if err != nil || topic != "cmnd/kitchen/dimmer" || string(payload) != "50" {
+		t.Fatalf("unexpected command: %s %s %v", topic, payload, err)
 	}
 }

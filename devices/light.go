@@ -1,9 +1,9 @@
 package devices
 
 import (
+	"encoding/json"
 	"log"
 	"math"
-	"regexp"
 	"time"
 
 	"github.com/PhilGruber/dimmy/core"
@@ -29,10 +29,9 @@ func NewLight(config core.DeviceConfig) *Light {
 	d.Icon = "💡"
 	d.setBaseConfig(config)
 
-	d.persistentFields = []string{"brightness", "value"}
+	d.persistentFields = []string{"brightness"}
 
-	var re = regexp.MustCompile("^cmnd/(.+)$")
-	d.MqttState = re.ReplaceAllString(d.MqttTopic, "tele/$1/STATE")
+	d.MqttState = d.protocol.StateTopic(config.Topic)
 
 	d.Target = 0
 
@@ -54,7 +53,6 @@ func NewLight(config core.DeviceConfig) *Light {
 		d.Min = 0
 		d.Max = 255
 		d.transition = true
-		d.MqttState = config.Topic
 	}
 
 	tt := time.Now()
@@ -89,12 +87,12 @@ func (l *Light) SetReceiverValue(key string, value interface{}) {
 
 func (l *Light) PublishValue(mqtt mqtt.Client) {
 	tt := time.Now()
-	newVal := l.PercentageToValue(l.Current)
+	newVal := l.PercentageToValue(l.GetCurrent())
 	if newVal != l.LastSent {
 		l.LastChanged = &tt
 		l.LastSent = newVal
 		data := make(map[string]any)
-		data["value"] = newVal
+		data["brightness"] = newVal
 		if l.transition {
 			data["transition"] = l.TransitionTime
 		}
@@ -118,14 +116,14 @@ func (l *Light) GetMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt
 
 		state := data["state"] == "ON"
 		if !state {
-			data["value"] = 0
+			data["brightness"] = 0
 		}
 		if !l.transition && l.GetTarget() != math.Round(l.GetCurrent()) {
 			return
 		}
-		value, ok := transform.IntValue(data["value"])
+		value, ok := transform.IntValue(data["brightness"])
 		if !ok {
-			log.Printf("[%32s] Invalid light value: %v", l.Name, data["value"])
+			log.Printf("[%32s] Invalid light value: %v", l.Name, data["brightness"])
 			return
 		}
 		percentage := l.ValueToPercentage(value)
@@ -172,4 +170,26 @@ func (d *Light) GetConfig(name string) core.DeviceConfig {
 
 func (d *Light) GetMqttTopic() string {
 	return d.MqttTopic
+}
+
+func (l *Light) PollValue(client mqtt.Client) {
+	if err := transform.Poll(client, l.protocol, l.MqttState, map[string]any{"brightness": 0}); err != nil {
+		log.Printf("[%32s] Poll failed: %v", l.Name, err)
+	}
+}
+
+// Lights expose brightness while other device types retain their value field.
+func (l *Light) MarshalJSON() ([]byte, error) {
+	type lightData Light
+	data, err := json.Marshal((*lightData)(l))
+	if err != nil {
+		return nil, err
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(data, &fields); err != nil {
+		return nil, err
+	}
+	fields["brightness"] = fields["value"]
+	delete(fields, "value")
+	return json.Marshal(fields)
 }

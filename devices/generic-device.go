@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/PhilGruber/dimmy/core"
+	"github.com/PhilGruber/dimmy/transform"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
@@ -395,18 +396,8 @@ func (d *GenericDevice) PollValue(client mqtt.Client) {
 		return
 	}
 
-	topic, s, err := d.protocol.PollMessage(d.MqttState, values)
-	if err != nil {
-		log.Printf("[%32s] Error: %s\n", d.Name, err.Error())
-		return
-	}
-	if topic == "" {
-		return
-	}
-	log.Printf("[%32s] Polling value for %s\n", d.GetName(), d.MqttState)
-	t := client.Publish(topic, 0, false, s)
-	if t.Wait() && t.Error() != nil {
-		log.Println(t.Error())
+	if err := transform.Poll(client, d.protocol, d.MqttState, values); err != nil {
+		log.Printf("[%32s] Poll failed: %v", d.Name, err)
 	}
 }
 

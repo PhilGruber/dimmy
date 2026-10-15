@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 type TasmotaProtocol struct {
@@ -11,9 +12,13 @@ type TasmotaProtocol struct {
 }
 
 func (t TasmotaProtocol) Encode(topic string, data map[string]any) (string, []byte, error) {
-	value, ok := IntValue(data["value"])
+	raw, present := data["brightness"]
+	if !present {
+		raw = data["value"]
+	} // Generic controls can still be named value.
+	value, ok := IntValue(raw)
 	if !ok {
-		return "", nil, fmt.Errorf("invalid Tasmota value: %v", data["value"])
+		return "", nil, fmt.Errorf("invalid Tasmota value: %v", raw)
 	}
 	result := strconv.Itoa(value)
 	return topic + "/dimmer", []byte(result), nil
@@ -22,7 +27,7 @@ func (t TasmotaProtocol) Encode(topic string, data map[string]any) (string, []by
 func (t TasmotaProtocol) Decode(data []byte) (map[string]any, error) {
 	value, err := strconv.Atoi(string(data))
 	result := make(map[string]any)
-	result["value"] = value
+	result["brightness"] = value
 	result["state"] = "OFF"
 	if value > 0 {
 		result["state"] = "ON"
@@ -36,12 +41,20 @@ func (t TasmotaProtocol) Decode(data []byte) (map[string]any, error) {
 		if err != nil {
 			return nil, err
 		}
-		result["value"] = msg.Value
+		result["brightness"] = msg.Value
 		result["state"] = msg.State
 	}
+	result["value"] = result["brightness"] // Preserve generic-device value controls.
 	return result, err
 }
 
 func (t TasmotaProtocol) PollMessage(topic string, data map[string]any) (string, []byte, error) {
 	return "", []byte(""), nil
+}
+
+func (t TasmotaProtocol) StateTopic(topic string) string {
+	if strings.HasPrefix(topic, "cmnd/") && len(topic) > len("cmnd/") {
+		return "tele/" + strings.TrimPrefix(topic, "cmnd/") + "/STATE"
+	}
+	return topic
 }

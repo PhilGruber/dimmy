@@ -82,7 +82,7 @@ $(document).ready(function() {
 
                     }
                 } else {
-                    dashboardElement("value_" + name).text(Math.round(data[name].value) + '%');
+                    dashboardElement("value_" + name).text(Math.round(data[name].brightness) + '%');
                 }
             }
         }, "json");

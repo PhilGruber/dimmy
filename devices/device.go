@@ -149,7 +149,11 @@ func (d *Device) SetCurrent(current float64) {
 	d.LastChanged = &now
 	d.Current = current
 	d.mutex.Unlock()
-	d.UpdateRules("value", current)
+	if d.Type == "light" {
+		d.UpdateRules("brightness", current)
+	} else {
+		d.UpdateRules("value", current)
+	}
 }
 
 func (d *Device) GetType() string {
