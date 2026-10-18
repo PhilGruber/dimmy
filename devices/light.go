@@ -117,8 +117,7 @@ func (l *Light) GetMessageHandler(chan core.SwitchRequest, DeviceInterface) mqtt
 			return
 		}
 
-		state := data["state"] == "ON"
-		if !state {
+		if data["state"] == "OFF" {
 			data["brightness"] = 0
 		}
 		if !l.transition && l.GetTarget() != math.Round(l.GetCurrent()) {
