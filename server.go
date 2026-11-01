@@ -154,13 +154,19 @@ func (s *Server) initialize(config *core.ServerConfig) {
 		if room == "" || room == "default" || room == "all" || device.IsPseudoDevice() {
 			continue
 		}
+		log.Printf("Creating panel '%s' for device '%s'\n", room, device.GetName())
 		panel := roomPanels[room]
 		panel.Label = room
 		panel.Devices = append(panel.Devices, device)
 		roomPanels[room] = panel
 	}
+	s.dashboards["rooms"] = make([]dimmyDevices.Panel, 0)
 	for room, panel := range roomPanels {
-		s.dashboards[room] = []dimmyDevices.Panel{panel}
+		log.Printf("Panel %s has %d devices\n", room, len(panel.Devices))
+		if len(panel.Devices) > 0 {
+			s.dashboards[room] = []dimmyDevices.Panel{panel}
+			s.dashboards["rooms"] = append(s.dashboards["rooms"], panel)
+		}
 	}
 
 	s.channel = make(chan core.SwitchRequest, len(s.devices))
