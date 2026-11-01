@@ -35,13 +35,12 @@ func NewLight(config core.DeviceConfig) *Light {
 
 	d.Target = 0
 
-	d.transition = true
+	d.transition = false
 
 	d.Min = 0
 	d.Max = 255
 	if config.Protocol == "tasmota" {
 		d.Max = 100
-		d.transition = false
 	}
 
 	d.Receivers = []string{"brightness", "duration"}

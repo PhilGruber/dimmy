@@ -453,6 +453,16 @@ func getIcon(deviceType string) string {
 		return "🌊"
 	case "tamper":
 		return "🛡️"
+	case "voc":
+		return "💨"
+	case "air_quality":
+		return "💨"
+	case "pm25":
+		return "💨"
+	case "formaldehyd":
+		return "💨"
+	case "co2":
+		return "💨"
 	}
 	return " "
 }
