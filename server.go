@@ -36,6 +36,7 @@ type Server struct {
 
 func main() {
 	version := flag.Bool("version", false, "Print version")
+	checkConfig := flag.Bool("check-config", false, "Initialize configuration and exit")
 	flag.Parse()
 
 	if *version {
@@ -61,6 +62,9 @@ func main() {
 
 	server := &Server{historyDB: historyDB}
 	server.initialize(config)
+	if *checkConfig {
+		return
+	}
 	server.Start(config)
 }
 
