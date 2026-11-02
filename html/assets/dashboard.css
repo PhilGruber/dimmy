@@ -70,11 +70,6 @@ body {
   background-color: #4c6793;
 }
 
-.buttons a:focus {
-  outline: none;
-  background-color: #bf616a;
-}
-
 /* Value display (temperature, humidity, etc.) */
 .buttons .value {
   text-wrap: nowrap;

@@ -5,7 +5,15 @@ const vm = require('node:vm');
 
 test('dashboard updates devices with punctuation in their names', () => {
     const elements = new Map();
+    const irButtons = ['power', 'mute'].map(command => ({
+        dataset: { device: 'remote/room:1', command },
+        style: {},
+    }));
     const document = {
+        querySelectorAll(selector) {
+            assert.equal(selector, '.ir-command');
+            return irButtons;
+        },
         getElementById(id) {
             if (!elements.has(id)) elements.set(id, { id, text: '' });
             return elements.get(id);
@@ -28,6 +36,7 @@ test('dashboard updates devices with punctuation in their names', () => {
     }
     const name = 'cbus/lighting:living.room [lamp]';
     const readings = {
+        'remote/room:1': { Type: 'IRControl', last_command: 'power' },
         [name]: { Type: 'light', brightness: 50.5 },
         'CBUS Light': { Type: 'light', brightness: 40 },
         'sensor/room:1': {
@@ -42,6 +51,15 @@ test('dashboard updates devices with punctuation in their names', () => {
     vm.createContext(context);
     vm.runInContext(fs.readFileSync(__dirname + '/../html/assets/dashboard.js', 'utf8'), context);
     refresh();
+    assert.equal(irButtons[0].style.backgroundColor, '#bf616a');
+    assert.equal(irButtons[1].style.backgroundColor, '');
+    readings['remote/room:1'].last_command = 'mute';
+    refresh();
+    assert.equal(irButtons[0].style.backgroundColor, '');
+    assert.equal(irButtons[1].style.backgroundColor, '#bf616a');
+    readings['remote/room:1'].last_command = '';
+    refresh();
+    assert.equal(irButtons[1].style.backgroundColor, '');
     assert.equal(elements.get('value_' + name).text, '51%');
     assert.equal(elements.get('value_CBUS Light').text, '40%');
     assert.equal(elements.get('sensor/room:1_temperature').text, 21.4);

@@ -15,6 +15,7 @@ type IRControl struct {
 	nextRequest      *IrControlMessage
 	preventResending bool
 	lastCommand      string
+	LastIcon         string `json:"last_command"`
 }
 
 type IrControlMessage struct {
@@ -53,6 +54,7 @@ func (i *IRControl) ProcessRequest(request core.SwitchRequest) {
 	log.Printf("Processing request for Device %s: %v\n", i.Name, request.Value)
 	req := IrControlMessage{IrCode: command}
 	i.nextRequest = &req
+	i.LastIcon = request.Value
 }
 
 func (i *IRControl) PublishValue(mqtt mqtt.Client) {
@@ -84,6 +86,10 @@ func (i *IRControl) GetCommands() []string {
 	return commands
 }
 
+func (i *IRControl) GetCommandCode(command string) string {
+	return i.commands[command]
+}
+
 func (i *IRControl) SetReceiverValue(key string, value interface{}) {
 	switch key {
 	case "command":
@@ -95,6 +101,7 @@ func (i *IRControl) SetReceiverValue(key string, value interface{}) {
 		command := i.commands[commandName]
 		req := IrControlMessage{IrCode: command}
 		i.nextRequest = &req
+		i.LastIcon = commandName
 	}
 }
 

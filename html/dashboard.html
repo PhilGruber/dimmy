@@ -113,8 +113,9 @@
                 {{ if eq .GetType "IRControl" }}
                     <span class="left emoji">{{ .GetIconHtml }}</span>
                     {{ $name := .GetName }}
+                    {{ $device := . }}
                     {{ range $cmd := .GetCommands }}
-                        <a class='textbutton button' tabindex="-1" onClick="switchDevice('{{ $name }}', '', '{{ $cmd }}');">{{ $cmd }}</a>
+                        <a class='textbutton button ir-command' data-device="{{ $name }}" data-command="{{ $cmd }}" {{ if eq $cmd $device.LastIcon }}style="background-color: #bf616a;"{{ end }} tabindex="-1" onClick="switchDevice('{{ $name }}', '', '{{ $cmd }}');">{{ $cmd }}</a>
                     {{ end }}
                     <br/>
                 {{ end }}

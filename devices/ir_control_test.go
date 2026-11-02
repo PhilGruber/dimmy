@@ -88,6 +88,9 @@ func TestIRControl_UpdateValue_PendingRequest(t *testing.T) {
 func TestIRControl_SetReceiverValue_Command(t *testing.T) {
 	ir := NewIrControl(irControlConfig(t, false))
 	ir.SetReceiverValue("command", "mute")
+	if ir.LastIcon != "mute" {
+		t.Errorf("expected last command name=mute, got %s", ir.LastIcon)
+	}
 	if ir.nextRequest == nil {
 		t.Fatal("expected nextRequest to be set after SetReceiverValue")
 	}

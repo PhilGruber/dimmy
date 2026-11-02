@@ -30,6 +30,12 @@ $(document).ready(function() {
 
                 if (data[name].Type === 'plug') {
                     dashboardElement("value_" + name).text(data[name].value ? "on" : "off");
+                } else if (data[name].Type === 'IRControl') {
+                    document.querySelectorAll('.ir-command').forEach(function(button) {
+                        if (button.dataset.device === name) {
+                            button.style.backgroundColor = button.dataset.command === data[name].last_command ? '#bf616a' : '';
+                        }
+                    });
                 } else if (data[name].Type === 'sensor') {
                     for (let key in data[name].Values) {
                         const prec = (key === "temperature" ? 10 : 1);
