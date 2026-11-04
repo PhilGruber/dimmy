@@ -35,7 +35,7 @@ func NewLight(config core.DeviceConfig) *Light {
 
 	d.Target = 0
 
-	d.transition = false
+	d.transition = config.Protocol == "cbus"
 
 	d.Min = 0
 	d.Max = 255

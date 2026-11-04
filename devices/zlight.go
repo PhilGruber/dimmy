@@ -31,13 +31,7 @@ func makeZLight(config core.DeviceConfig) ZLight {
 	d.Min = 0
 	d.Max = 255
 
-	if config.Protocol == "cbus" {
-		d.Min = 0
-		d.Max = 255
-		d.transition = true
-	}
-
-	d.transition = false
+	d.transition = config.Protocol == "cbus"
 	d.Type = "light"
 	d.Receivers = []string{"brightness", "duration"}
 
