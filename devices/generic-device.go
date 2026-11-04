@@ -164,6 +164,9 @@ func (d *GenericDevice) UpdateFromMessage(data map[string]any) {
 				Value:        nil,
 			}
 			d.Controls = append(d.Controls, control)
+			if !d.hasSensor(key) {
+				d.Triggers = append(d.Triggers, key)
+			}
 			d.Receivers = append(d.Receivers, key)
 		}
 	}
@@ -343,6 +346,10 @@ func (d *GenericDevice) ProcessRequest(request core.SwitchRequest) {
 		d.commandDuration = request.Duration
 	}
 	d.setControlValue(request.Key, request.Value, true)
+}
+
+func (d *GenericDevice) SetReceiverValue(key string, value any) {
+	d.ProcessRequest(core.SwitchRequest{Key: key, Value: fmt.Sprint(value)})
 }
 
 func (d *GenericDevice) PublishValue(client mqtt.Client) {

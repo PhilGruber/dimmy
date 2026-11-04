@@ -35,7 +35,7 @@
     function addTrigger(trigger = {}) {
         const row = document.createElement("div");
         row.className = "rule-row trigger-row";
-        row.innerHTML = `<select class="device" aria-label="Sensor device">${optionsFor("triggers", trigger.device)}</select><select class="field" aria-label="Sensor field"></select><select class="operator" aria-label="Condition"><option value="==">is</option><option value="!=">is not</option><option value=">">is greater than</option><option value=">=">is at least</option><option value="<">is less than</option><option value="<=">is at most</option></select><input class="condition-value" aria-label="Condition value" placeholder="Value"><button type="button" class="remove-row" aria-label="Remove sensor">&times;</button>`;
+        row.innerHTML = `<select class="device" aria-label="Trigger device">${optionsFor("triggers", trigger.device)}</select><select class="field" aria-label="Trigger field"></select><select class="operator" aria-label="Condition"><option value="==">is</option><option value="!=">is not</option><option value=">">is greater than</option><option value=">=">is at least</option><option value="<">is less than</option><option value="<=">is at most</option></select><input class="condition-value" aria-label="Condition value" placeholder="Value"><button type="button" class="remove-row" aria-label="Remove trigger">&times;</button>`;
         triggerRows.append(row);
         setFields(row, "triggers", trigger.key);
         row.querySelector(".operator").value = trigger.condition?.operator || "==";
@@ -119,7 +119,7 @@
         const invalid = triggers.some(item => !fieldsFor(deviceFor(item.device), "triggers").includes(item.key))
             || receivers.some(item => !fieldsFor(deviceFor(item.device), "receivers").includes(item.key));
         if (invalid) {
-            showError("Replace or remove unavailable sensors and controls before saving this rule.");
+            showError("Replace or remove unavailable triggers and controls before saving this rule.");
             return;
         }
         const updatedRules = [...rules];

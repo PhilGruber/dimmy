@@ -36,6 +36,7 @@ func NewIrControl(config core.DeviceConfig) *IRControl {
 	}
 
 	i.Receivers = []string{"command"}
+	i.Triggers = []string{"command"}
 
 	log.Printf("IRControl Device %s created with commands: %s\n", i.Name, i.GetCommands())
 	return &i
@@ -55,6 +56,7 @@ func (i *IRControl) ProcessRequest(request core.SwitchRequest) {
 	req := IrControlMessage{IrCode: command}
 	i.nextRequest = &req
 	i.LastIcon = request.Value
+	i.UpdateRules("command", request.Value)
 }
 
 func (i *IRControl) PublishValue(mqtt mqtt.Client) {
@@ -102,6 +104,7 @@ func (i *IRControl) SetReceiverValue(key string, value interface{}) {
 		req := IrControlMessage{IrCode: command}
 		i.nextRequest = &req
 		i.LastIcon = commandName
+		i.UpdateRules("command", commandName)
 	}
 }
 
