@@ -1,0 +1,38 @@
+{{ define "device-form" }}
+<link rel="stylesheet" href="/assets/device-form.css">
+        <dialog id="save-device-modal" class="save-modal">
+            <form id="save-device-form" method="dialog" class="save-modal-form">
+                <h2>Save device</h2>
+                <p id="save-device-topic" class="save-modal-topic"></p>
+
+                <label for="device-name-input">Device name</label>
+                <input id="device-name-input" name="name" type="text" required>
+
+                <label for="device-type-input">Device type</label>
+                <select id="device-type-input" name="type" required>
+                    <option value="generic-device">Standard Device</option>
+                    <option value="ir-control">IR Sender</option>
+                    <option value="light">Light</option>
+                    <option value="zlight">Zigbee Light</option>
+                </select>
+
+                <label for="device-room-input">Room</label>
+                <input id="device-room-input" name="room" type="text" list="device-rooms">
+                <datalist id="device-rooms">
+                    {{ range .Rooms }}<option value="{{ . }}"></option>{{ end }}
+                </datalist>
+
+                <label for="device-protocol-input">Protocol</label>
+                <select id="device-protocol-input" name="protocol" required>
+                    <option value="zigbee">Zigbee</option>
+                    <option value="cbus">C-Bus</option>
+                    <option value="tasmota">Tasmota</option>
+                </select>
+
+                <div class="save-modal-actions">
+                    <button type="button" id="cancel-save-btn" class="secondary-btn">Cancel</button>
+                    <button type="submit" id="confirm-save-btn" class="primary-btn">Save</button>
+                </div>
+            </form>
+        </dialog>
+{{ end }}

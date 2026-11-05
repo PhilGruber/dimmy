@@ -107,6 +107,14 @@ tbody tr:hover {
   background: #f8fcfd;
 }
 
+.room-header th {
+  color: #24313d;
+  background: #dff0f5;
+  font-size: 1rem;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
 .topic {
   min-width: 240px;
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;

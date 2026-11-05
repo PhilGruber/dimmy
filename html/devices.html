@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devices - Dimmy</title>
+    <link rel="stylesheet" href="/assets/devices.css">
+    <link rel="icon" href="/assets/favicon.ico">
+</head>
+<body>
+    <main class="page">
+        <header>
+            <div>
+                <p class="eyebrow">Dimmy</p>
+                <h1>Devices</h1>
+                <p class="intro">Edit configured devices. Restart dimmyd after saving to apply changes.</p>
+            </div>
+            <a class="back-link" href="/">Dashboard</a>
+        </header>
+        {{ if .Saved }}<div class="message success" role="status">Saved. Restart dimmyd to apply the changes.</div>{{ end }}
+        <section class="table-card">
+            <table>
+                <thead><tr><th>Name</th><th>Label</th><th>MQTT topic</th><th>Type</th><th>Room</th><th>Protocol</th><th>Icon</th><th>Actions</th></tr></thead>
+                <tbody>
+                {{ range .DeviceGroups }}
+                    <tr class="room-header"><th colspan="8" scope="rowgroup">{{ if .Room }}{{ .Room }}{{ else }}not assigned to room{{ end }}</th></tr>
+                {{ range .Devices }}
+                    <tr>
+                        <td>{{ .Name }}</td><td>{{ if .Label }}{{ .Label }}{{ else }}{{ .Name }}{{ end }}</td><td class="topic">{{ .Topic }}</td><td>{{ .Type }}</td>
+                        <td>{{ .Room }}</td><td>{{ if .Protocol }}{{ .Protocol }}{{ else }}Default{{ end }}</td>
+                        <td>{{ if $iconURL := iconURL .Icon }}<img src="{{ $iconURL }}" alt="" width="24" height="24" style="object-fit: contain;">{{ else }}{{ .Icon }}{{ end }}</td>
+                        <td class="actions"><a class="save-link" href="/devices/edit?name={{ .Name }}">Edit</a></td>
+                    </tr>
+                {{ end }}
+                {{ else }}
+                    <tr><td colspan="8" class="empty">No devices configured.</td></tr>
+                {{ end }}
+                </tbody>
+            </table>
+        </section>
+    </main>
+</body>
+</html>

@@ -84,6 +84,145 @@ type unknownDeviceView struct {
 	Controls []string
 }
 
+func (s *Server) EditDevices(webroot string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		s.mutex.RLock()
+		filename := s.config.Filename
+		s.mutex.RUnlock()
+		devices, err := core.LoadConfiguredDevices(filename)
+		if err != nil {
+			http.Error(w, "could not load device configuration", http.StatusInternalServerError)
+			return
+		}
+		rooms := make([]string, 0)
+		seen := make(map[string]bool)
+		for _, device := range devices {
+			if device.Room != "" && !seen[device.Room] {
+				rooms = append(rooms, device.Room)
+				seen[device.Room] = true
+			}
+		}
+		sort.Strings(rooms)
+		sort.SliceStable(devices, func(i, j int) bool { return devices[i].Name < devices[j].Name })
+		type roomGroup struct {
+			Room    string
+			Devices []core.DeviceConfig
+		}
+		byRoom := make(map[string][]core.DeviceConfig)
+		for _, device := range devices {
+			room := strings.TrimSpace(device.Room)
+			byRoom[room] = append(byRoom[room], device)
+		}
+		groupRooms := make([]string, 0, len(byRoom))
+		for room := range byRoom {
+			if room != "" {
+				groupRooms = append(groupRooms, room)
+			}
+		}
+		sort.Strings(groupRooms)
+		if len(byRoom[""]) > 0 {
+			groupRooms = append(groupRooms, "")
+		}
+		groups := make([]roomGroup, 0, len(groupRooms))
+		for _, room := range groupRooms {
+			groups = append(groups, roomGroup{Room: room, Devices: byRoom[room]})
+		}
+		data, err := json.Marshal(devices)
+		if err != nil {
+			http.Error(w, "could not encode devices", http.StatusInternalServerError)
+			return
+		}
+		page := "device-editor.html"
+		if r.URL.Path == "/devices" {
+			page = "devices.html"
+		}
+		tmpl, err := template.New(page).Funcs(template.FuncMap{
+			"iconURL": func(icon string) string {
+				if icon != "" && filepath.Base(icon) == icon {
+					if info, err := os.Stat(filepath.Join(webroot, "assets", "icons", icon)); err == nil && info.Mode().IsRegular() {
+						return "/assets/icons/" + url.PathEscape(icon)
+					}
+				}
+				return ""
+			},
+		}).ParseFiles(filepath.Join(webroot, page), webroot+"/device-form.html")
+		if err != nil {
+			http.Error(w, "could not load device editor", http.StatusInternalServerError)
+			return
+		}
+		if err := tmpl.Execute(w, struct {
+			Devices      []core.DeviceConfig
+			DeviceGroups []roomGroup
+			Rooms        []string
+			DevicesJSON  template.JS
+			Saved        bool
+		}{devices, groups, rooms, template.JS(data), r.URL.Query().Get("saved") == "1"}); err != nil {
+			log.Println(err)
+		}
+	}
+}
+
+func (s *Server) SaveDeviceEdits() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		r.Body = http.MaxBytesReader(w, r.Body, maxRequestBodyBytes)
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "invalid form data", http.StatusBadRequest)
+			return
+		}
+		name := r.FormValue("name")
+		deviceType := r.FormValue("type")
+		protocol := r.FormValue("protocol")
+		s.mutex.Lock()
+		defer s.mutex.Unlock()
+		devices, err := core.LoadConfiguredDevices(s.config.Filename)
+		if err != nil {
+			http.Error(w, "could not load device configuration", http.StatusInternalServerError)
+			return
+		}
+		var original *core.DeviceConfig
+		for i := range devices {
+			if devices[i].Name == name {
+				original = &devices[i]
+				break
+			}
+		}
+		if original == nil {
+			http.Error(w, "configured device not found", http.StatusNotFound)
+			return
+		}
+		if deviceType != original.Type {
+			switch deviceType {
+			case "device", "ircontrol", "light", "zlight":
+			default:
+				http.Error(w, "unsupported device type", http.StatusBadRequest)
+				return
+			}
+		}
+		if protocol != original.Protocol {
+			switch protocol {
+			case "", "zigbee", "cbus", "tasmota":
+			default:
+				http.Error(w, "unsupported device protocol", http.StatusBadRequest)
+				return
+			}
+		}
+		if err := core.UpdateDeviceFields(s.config.Filename, name, deviceType, strings.TrimSpace(r.FormValue("room")), protocol); err != nil {
+			http.Error(w, "could not save device configuration", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"message": "Saved. Restart dimmyd to apply the changes."})
+	}
+}
+
 func (s *Server) ShowUnknownDevices(webroot string) http.HandlerFunc {
 	return func(output http.ResponseWriter, request *http.Request) {
 		s.mutex.RLock()
@@ -127,7 +266,7 @@ func (s *Server) ShowUnknownDevices(webroot string) http.HandlerFunc {
 			return devices[i].Topic < devices[j].Topic
 		})
 
-		templ, err := template.ParseFiles(webroot + "/unknown-devices.html")
+		templ, err := template.ParseFiles(webroot+"/unknown-devices.html", webroot+"/device-form.html")
 		if err != nil {
 			http.Error(output, err.Error(), http.StatusInternalServerError)
 			return

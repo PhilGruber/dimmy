@@ -1,0 +1,23 @@
+.save-modal {
+    width: min(440px, calc(100% - 32px));
+    border: 1px solid #b9d1d9;
+    border-radius: 14px;
+    padding: 24px;
+    color: #24313d;
+}
+.save-modal::backdrop { background: #162b3480; }
+.save-modal-form { display: grid; gap: 10px; }
+.save-modal-form h2, .save-modal-topic { margin: 0 0 8px; }
+.save-modal-topic { overflow-wrap: anywhere; color: #60717e; }
+.save-modal-form input, .save-modal-form select {
+    padding: 9px;
+    font: inherit;
+    border: 1px solid #b9d1d9;
+    border-radius: 7px;
+    min-width: 0;
+}
+.save-modal-form input[readonly] { background: #f0f6f8; }
+.save-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 12px; }
+.save-modal-actions button { padding: 9px 14px; border: 0; border-radius: 7px; cursor: pointer; font: inherit; }
+.primary-btn { color: white; background: #277a93; }
+.secondary-btn { color: #176b84; background: #e5f4f8; }
