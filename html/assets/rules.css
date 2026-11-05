@@ -22,6 +22,62 @@ button, input, select {
 .icon {
     width: 1.25rem;
     height: 1.25rem;
+    object-fit: contain;
+    vertical-align: middle;
+}
+
+.device-picker {
+    position: relative;
+    min-width: 0;
+}
+
+.device-picker summary {
+    cursor: pointer;
+    padding: .65rem;
+    border: 1px solid #cbd5df;
+    border-radius: 8px;
+    background: white;
+}
+
+.device-options {
+    position: absolute;
+    z-index: 10;
+    min-width: 100%;
+    width: max-content;
+    max-width: min(32rem, calc(100vw - 64px));
+    max-height: 16rem;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #cbd5df;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px #24313d26;
+}
+
+.device-options button {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    width: 100%;
+    border: 0;
+    padding: .65rem;
+    background: white;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.device-options .icon {
+    flex-shrink: 0;
+}
+
+.device-options button span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.device-options button:hover, .device-options button:focus-visible {
+    background: #eaf4fa;
 }
 
 .page {

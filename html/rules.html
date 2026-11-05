@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Rules - Dimmy</title>
-        <link rel="stylesheet" href="/assets/rules.css">
+        <link rel="stylesheet" href="/assets/rules.css?v={{ .AssetsVersion }}">
         <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
     </head>
     <body>
@@ -40,7 +40,7 @@
                                 <div>
                                     {{ if ne .DeviceName $last }}
                                         {{ $last = .DeviceName }}
-                                        <span class="tag sensor">{{ (deviceView .DeviceName).Icon }} {{ (deviceView .DeviceName).Label }}</span>
+                                        <span class="tag sensor">{{ template "device-label" (deviceView .DeviceName) }}</span>
                                     {{ end }}
                                     <div class="muted">{{ .Key }} {{ .Condition.Operator }} {{ .Condition.Value }}</div>
                                 </div>
@@ -52,7 +52,7 @@
                                 <div>
                                     {{ if ne .DeviceName $last }}
                                         {{ $last = .DeviceName }}
-                                        <span class="tag control">{{ (deviceView .DeviceName).Icon }} {{ (deviceView .DeviceName).Label }}</span>
+                                        <span class="tag control">{{ template "device-label" (deviceView .DeviceName) }}</span>
                                     {{ end }}
                                     <div class="muted">{{ .Key }}: {{ .Value }}</div>
                                 </div>
@@ -98,6 +98,7 @@
             </section>
         </div>
         <script>window.ruleData = {{ .RulesJSON }}; window.ruleDevices = {{ .DevicesJSON }};</script>
-        <script src="/assets/rules.js"></script>
+        <script src="/assets/rules.js?v={{ .AssetsVersion }}"></script>
     </body>
 </html>
+{{ define "device-label" }}{{ if .IconURL }}<img class="icon" src="{{ .IconURL }}" alt="">{{ else }}{{ .Icon }}{{ end }} {{ .Label }}{{ end }}

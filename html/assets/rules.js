@@ -17,12 +17,58 @@
         const unavailable = selected && !items.some(device => device.name === selected)
             ? `<option value="${escapeHtml(selected)}" selected>${escapeHtml(selected)} (unavailable)</option>` : "";
         return `<option value="">Choose a device</option>${unavailable}${items.map(device =>
-            `<option value="${escapeHtml(device.name)}"${device.name === selected ? " selected" : ""}>${escapeHtml(`${device.icon} ${device.label}`.trim())}</option>`
+            `<option value="${escapeHtml(device.name)}"${device.name === selected ? " selected" : ""}>${escapeHtml(`${device.icon_url ? '' : device.icon} ${device.label}`.trim())}</option>`
         ).join("")}`;
     };
 
     const escapeHtml = value => String(value).replace(/[&<>'"]/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]));
     const deviceFor = name => devices.find(device => device.name === name);
+
+    function deviceLabel(device, fallback) {
+        if (!device) return escapeHtml(fallback);
+        const icon = device.icon_url
+            ? `<img class="icon" src="${escapeHtml(device.icon_url)}" alt="">`
+            : escapeHtml(device.icon);
+        return `${icon} <span>${escapeHtml(device.label)}</span>`;
+    }
+
+    function addDevicePicker(row) {
+        const select = row.querySelector(".device");
+        select.hidden = true;
+        const picker = document.createElement("details");
+        picker.className = "device-picker";
+        const summary = document.createElement("summary");
+        summary.setAttribute("aria-label", select.getAttribute("aria-label"));
+        picker.append(summary);
+        const menu = document.createElement("div");
+        menu.className = "device-options";
+        for (const option of select.options) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.innerHTML = deviceLabel(deviceFor(option.value), option.textContent);
+            button.addEventListener("click", () => {
+                select.value = option.value;
+                select.dispatchEvent(new Event("change"));
+                picker.open = false;
+                summary.focus();
+            });
+            menu.append(button);
+        }
+        picker.append(menu);
+        select.after(picker);
+        const update = () => {
+            summary.innerHTML = deviceLabel(deviceFor(select.value), select.selectedOptions[0]?.textContent || "Choose a device");
+        };
+        select.addEventListener("change", update);
+        picker.addEventListener("keydown", event => {
+            if (event.key === "Escape") {
+                event.stopPropagation();
+                picker.open = false;
+                summary.focus();
+            }
+        });
+        update();
+    }
 
     function setFields(row, kind, selected = "") {
         const device = deviceFor(row.querySelector(".device").value);
@@ -37,6 +83,7 @@
         row.className = "rule-row trigger-row";
         row.innerHTML = `<select class="device" aria-label="Trigger device">${optionsFor("triggers", trigger.device)}</select><select class="field" aria-label="Trigger field"></select><select class="operator" aria-label="Condition"><option value="==">is</option><option value="!=">is not</option><option value=">">is greater than</option><option value=">=">is at least</option><option value="<">is less than</option><option value="<=">is at most</option></select><input class="condition-value" aria-label="Condition value" placeholder="Value"><button type="button" class="remove-row" aria-label="Remove trigger">&times;</button>`;
         triggerRows.append(row);
+        addDevicePicker(row);
         setFields(row, "triggers", trigger.key);
         row.querySelector(".operator").value = trigger.condition?.operator || "==";
         row.querySelector(".condition-value").value = trigger.condition?.value ?? "";
@@ -49,6 +96,7 @@
         row.className = "rule-row receiver-row";
         row.innerHTML = `<select class="device" aria-label="Control device">${optionsFor("receivers", receiver.device)}</select><select class="field" aria-label="Control field"></select><input class="receiver-value" aria-label="Control value" placeholder="Value"><button type="button" class="remove-row" aria-label="Remove control">&times;</button>`;
         receiverRows.append(row);
+        addDevicePicker(row);
         setFields(row, "receivers", receiver.key);
         row.querySelector(".receiver-value").value = receiver.value ?? "";
         row.querySelector(".device").addEventListener("change", () => setFields(row, "receivers"));
@@ -63,7 +111,7 @@
         (rule.triggers || []).forEach(addTrigger); (rule.receivers || []).forEach(addReceiver);
         formError.hidden = true;
         modal.hidden = false; modal.setAttribute("aria-hidden", "false");
-        triggerRows.querySelector("select")?.focus();
+        triggerRows.querySelector("summary")?.focus();
     }
 
     function closeModal() { modal.hidden = true; modal.setAttribute("aria-hidden", "true"); }

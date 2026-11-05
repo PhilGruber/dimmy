@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +10,9 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
+	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -389,10 +393,20 @@ func (s *Server) ShowSensorHistory(webroot string) http.HandlerFunc {
 
 func (s *Server) EditRules(webroot string) http.HandlerFunc {
 	return func(output http.ResponseWriter, httpRequest *http.Request) {
+		deviceView := func(device dimmyDevices.DeviceInterface) ruleDeviceView {
+			view := ruleDeviceView{Name: device.GetName(), Label: device.GetLabel(), Icon: device.GetEmoji(),
+				Triggers: nonNilStrings(device.GetTriggers()), Receivers: nonNilStrings(device.GetReceivers())}
+			if view.Icon != "" && filepath.Base(view.Icon) == view.Icon {
+				if info, err := os.Stat(filepath.Join(webroot, "assets", "icons", view.Icon)); err == nil && info.Mode().IsRegular() {
+					view.IconURL = "/assets/icons/" + url.PathEscape(view.Icon)
+				}
+			}
+			return view
+		}
 		templ, err := template.New("rules.html").Funcs(template.FuncMap{
 			"deviceView": func(name string) ruleDeviceView {
 				if device, ok := s.getDevice(name); ok {
-					return ruleDeviceView{Name: name, Label: device.GetLabel(), Icon: device.GetEmoji()}
+					return deviceView(device)
 				}
 				return ruleDeviceView{Name: name, Label: name + " (unavailable)"}
 			},
@@ -403,10 +417,7 @@ func (s *Server) EditRules(webroot string) http.HandlerFunc {
 		}
 		devices := make([]ruleDeviceView, 0)
 		for _, device := range s.deviceSnapshot() {
-			devices = append(devices, ruleDeviceView{
-				Name: device.GetName(), Label: device.GetLabel(), Icon: device.GetEmoji(),
-				Triggers: nonNilStrings(device.GetTriggers()), Receivers: nonNilStrings(device.GetReceivers()),
-			})
+			devices = append(devices, deviceView(device))
 		}
 		sort.Slice(devices, func(i, j int) bool { return devices[i].Label < devices[j].Label })
 		s.mutex.RLock()
@@ -422,11 +433,18 @@ func (s *Server) EditRules(webroot string) http.HandlerFunc {
 			http.Error(output, "could not encode devices", http.StatusInternalServerError)
 			return
 		}
+		assetsHash := sha256.New()
+		for _, asset := range []string{"rules.js", "rules.css"} {
+			if data, err := os.ReadFile(filepath.Join(webroot, "assets", asset)); err == nil {
+				assetsHash.Write(data)
+			}
+		}
 		err = templ.Execute(output, struct {
-			Rules       []core.RuleConfig
-			RulesJSON   template.JS
-			DevicesJSON template.JS
-		}{Rules: configuredRules, RulesJSON: template.JS(rulesJSON), DevicesJSON: template.JS(devicesJSON)})
+			Rules         []core.RuleConfig
+			RulesJSON     template.JS
+			DevicesJSON   template.JS
+			AssetsVersion string
+		}{Rules: configuredRules, RulesJSON: template.JS(rulesJSON), DevicesJSON: template.JS(devicesJSON), AssetsVersion: fmt.Sprintf("%x", assetsHash.Sum(nil))})
 		if err != nil {
 			log.Println(err)
 			return
@@ -445,6 +463,7 @@ type ruleDeviceView struct {
 	Name      string   `json:"name"`
 	Label     string   `json:"label"`
 	Icon      string   `json:"icon"`
+	IconURL   string   `json:"icon_url,omitempty"`
 	Triggers  []string `json:"triggers"`
 	Receivers []string `json:"receivers"`
 }

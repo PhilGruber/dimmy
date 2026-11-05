@@ -275,6 +275,54 @@ func TestEditRulesShowsConfiguredMissingDevices(t *testing.T) {
 	require.Contains(t, res.Body.String(), `data-delete-rule="1"`)
 }
 
+func TestEditRulesRendersIconFiles(t *testing.T) {
+	webroot := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(webroot, "assets", "icons"), 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(webroot, "assets", "icons", "ac.png"), []byte("image"), 0644))
+	tmpl, err := os.ReadFile("html/rules.html")
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(filepath.Join(webroot, "rules.html"), tmpl, 0644))
+	for _, icon := range []string{"ac.png", "missing.png", "💡"} {
+		t.Run(icon, func(t *testing.T) {
+			device := dimmyDevices.NewDevice(core.DeviceConfig{Name: "remote", Icon: icon})
+			s := &Server{devices: map[string]dimmyDevices.DeviceInterface{"remote": device}, config: &core.ServerConfig{Rules: []core.RuleConfig{{
+				Triggers:  []core.TriggerConfig{{DeviceName: "remote", Key: "command"}},
+				Receivers: []core.ReceiverConfig{{DeviceName: "remote", Key: "command"}},
+			}}}}
+			res := httptest.NewRecorder()
+			s.EditRules(webroot).ServeHTTP(res, httptest.NewRequest(http.MethodGet, "/rules/edit", nil))
+			require.Equal(t, http.StatusOK, res.Code)
+			if icon == "ac.png" {
+				require.Equal(t, 2, strings.Count(res.Body.String(), `<img class="icon" src="/assets/icons/ac.png" alt="">`))
+				require.Contains(t, res.Body.String(), `"icon_url":"/assets/icons/ac.png"`)
+			} else {
+				require.Contains(t, res.Body.String(), icon+" remote</span>")
+				require.NotContains(t, res.Body.String(), `"icon_url"`)
+			}
+		})
+	}
+}
+
+func TestEditRulesRefreshesChangedAssets(t *testing.T) {
+	webroot := t.TempDir()
+	require.NoError(t, os.MkdirAll(filepath.Join(webroot, "assets"), 0755))
+	tmpl, err := os.ReadFile("html/rules.html")
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(filepath.Join(webroot, "rules.html"), tmpl, 0644))
+	s := &Server{config: &core.ServerConfig{}}
+	previous := ""
+	for _, asset := range []string{"rules.js", "rules.css"} {
+		require.NoError(t, os.WriteFile(filepath.Join(webroot, "assets", asset), []byte("updated"), 0644))
+		res := httptest.NewRecorder()
+		s.EditRules(webroot).ServeHTTP(res, httptest.NewRequest(http.MethodGet, "/rules/edit", nil))
+		require.Equal(t, http.StatusOK, res.Code)
+		require.Contains(t, res.Body.String(), "/assets/rules.js?v=")
+		require.Contains(t, res.Body.String(), "/assets/rules.css?v=")
+		require.NotEqual(t, previous, res.Body.String())
+		previous = res.Body.String()
+	}
+}
+
 // Embedded interfaces make unexpected MQTT operations fail the test.
 type subscriptionClient struct {
 	mqtt.Client
