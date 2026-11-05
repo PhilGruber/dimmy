@@ -1,6 +1,7 @@
 package devices
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"math"
@@ -13,6 +14,14 @@ import (
 type Group struct {
 	Dimmable
 	devices []DeviceInterface
+}
+
+func (g *Group) MarshalJSON() ([]byte, error) {
+	type groupData Group
+	if g.Type == "light" {
+		return marshalBrightness((*groupData)(g))
+	}
+	return json.Marshal((*groupData)(g))
 }
 
 func NewGroup(config core.DeviceConfig, allDevices map[string]DeviceInterface) *Group {

@@ -39,6 +39,11 @@ test('dashboard updates devices with punctuation in their names', () => {
         'remote/room:1': { Type: 'IRControl', last_command: 'power' },
         [name]: { Type: 'light', brightness: 50.5 },
         'CBUS Light': { Type: 'light', brightness: 40 },
+        'Wohnzimmer-Licht': { Type: 'light', value: 0 },
+        'Legacy group': { Type: 'light', value: 42.6 },
+        'Unknown light': { Type: 'light' },
+        'Invalid light': { Type: 'light', brightness: 'invalid' },
+        'Zero light': { Type: 'light', brightness: 0, value: 70 },
         'sensor/room:1': {
             Type: 'sensor',
             Values: { temperature: { value: 21.4, LastChanged: new Date().toISOString(), History: [] } },
@@ -62,6 +67,11 @@ test('dashboard updates devices with punctuation in their names', () => {
     assert.equal(irButtons[1].style.backgroundColor, '');
     assert.equal(elements.get('value_' + name).text, '51%');
     assert.equal(elements.get('value_CBUS Light').text, '40%');
+    assert.equal(elements.get('value_Wohnzimmer-Licht').text, '0%');
+    assert.equal(elements.get('value_Legacy group').text, '43%');
+    assert.equal(elements.get('value_Unknown light').text, '--');
+    assert.equal(elements.get('value_Invalid light').text, '--');
+    assert.equal(elements.get('value_Zero light').text, '0%');
     assert.equal(elements.get('sensor/room:1_temperature').text, 21.4);
     assert.equal(elements.get('value_plug/room:1').text, 'on');
     context.switchDevice(name, '', '+10');

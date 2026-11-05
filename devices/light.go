@@ -182,7 +182,11 @@ func (l *Light) PollValue(client mqtt.Client) {
 // Lights expose brightness while other device types retain their value field.
 func (l *Light) MarshalJSON() ([]byte, error) {
 	type lightData Light
-	data, err := json.Marshal((*lightData)(l))
+	return marshalBrightness((*lightData)(l))
+}
+
+func marshalBrightness(device any) ([]byte, error) {
+	data, err := json.Marshal(device)
 	if err != nil {
 		return nil, err
 	}

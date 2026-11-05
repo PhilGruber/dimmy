@@ -88,7 +88,8 @@ $(document).ready(function() {
 
                     }
                 } else {
-                    dashboardElement("value_" + name).text(Math.round(data[name].brightness) + '%');
+                    const brightness = data[name].brightness ?? data[name].value;
+                    dashboardElement("value_" + name).text(Number.isFinite(brightness) ? Math.round(brightness) + '%' : '--');
                 }
             }
         }, "json");

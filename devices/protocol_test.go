@@ -218,7 +218,11 @@ func TestLightPollingUsesProtocol(t *testing.T) {
 }
 
 func TestLightStatusUsesBrightness(t *testing.T) {
-	for _, light := range []DeviceInterface{NewLight(core.DeviceConfig{}), NewZLight(core.DeviceConfig{Type: "zlight"})} {
+	members := []string{"member"}
+	member := NewLight(core.DeviceConfig{Name: "member"})
+	group := NewGroup(core.DeviceConfig{Name: "group", Options: &core.ConfigOptions{Devices: &members}}, map[string]DeviceInterface{"member": member})
+	require.NotNil(t, group)
+	for _, light := range []DeviceInterface{member, NewZLight(core.DeviceConfig{Type: "zlight"}), group} {
 		light.SetCurrent(50)
 		data, err := json.Marshal(light)
 		require.NoError(t, err)
@@ -227,4 +231,14 @@ func TestLightStatusUsesBrightness(t *testing.T) {
 		require.Equal(t, float64(50), fields["brightness"])
 		require.NotContains(t, fields, "value")
 	}
+}
+
+func TestNonLightGroupStatusRetainsValue(t *testing.T) {
+	group := &Group{Dimmable: Dimmable{Device: Device{Type: "plug", Current: 1}}}
+	data, err := json.Marshal(group)
+	require.NoError(t, err)
+	var fields map[string]any
+	require.NoError(t, json.Unmarshal(data, &fields))
+	require.Equal(t, float64(1), fields["value"])
+	require.NotContains(t, fields, "brightness")
 }
