@@ -440,16 +440,61 @@ func (s *Server) EditRules(webroot string) http.HandlerFunc {
 			}
 		}
 		err = templ.Execute(output, struct {
-			Rules         []core.RuleConfig
+			RuleGroups    []ruleRoomGroup
 			RulesJSON     template.JS
 			DevicesJSON   template.JS
 			AssetsVersion string
-		}{Rules: configuredRules, RulesJSON: template.JS(rulesJSON), DevicesJSON: template.JS(devicesJSON), AssetsVersion: fmt.Sprintf("%x", assetsHash.Sum(nil))})
+		}{RuleGroups: groupRulesByRoom(configuredRules, s.deviceSnapshot()), RulesJSON: template.JS(rulesJSON), DevicesJSON: template.JS(devicesJSON), AssetsVersion: fmt.Sprintf("%x", assetsHash.Sum(nil))})
 		if err != nil {
 			log.Println(err)
 			return
 		}
 	}
+}
+
+type indexedRule struct {
+	core.RuleConfig
+	Index int
+}
+
+type ruleRoomGroup struct {
+	Room  string
+	Rules []indexedRule
+}
+
+func groupRulesByRoom(rules []core.RuleConfig, devices map[string]dimmyDevices.DeviceInterface) []ruleRoomGroup {
+	byRoom := make(map[string][]indexedRule)
+	for index, rule := range rules {
+		rooms := make(map[string]bool)
+		addRoom := func(name string) {
+			if device, ok := devices[name]; ok {
+				if room := strings.TrimSpace(device.GetRoom()); room != "" {
+					rooms[room] = true
+				}
+			}
+		}
+		for _, trigger := range rule.Triggers {
+			addRoom(trigger.DeviceName)
+		}
+		for _, receiver := range rule.Receivers {
+			addRoom(receiver.DeviceName)
+		}
+		room := "General"
+		if len(rooms) > 1 {
+			room = "Multiple Rooms"
+		} else {
+			for name := range rooms {
+				room = name
+			}
+		}
+		byRoom[room] = append(byRoom[room], indexedRule{RuleConfig: rule, Index: index})
+	}
+	groups := make([]ruleRoomGroup, 0, len(byRoom))
+	for room, rules := range byRoom {
+		groups = append(groups, ruleRoomGroup{Room: room, Rules: rules})
+	}
+	sort.Slice(groups, func(i, j int) bool { return groups[i].Room < groups[j].Room })
+	return groups
 }
 
 func nonNilStrings(values []string) []string {

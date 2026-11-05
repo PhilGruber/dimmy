@@ -32,7 +32,10 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {{ range $index, $rule := .Rules }}
+                        {{ range .RuleGroups }}
+                        <tr class="room-header"><th colspan="3" scope="rowgroup">{{ .Room }}</th></tr>
+                        {{ range .Rules }}
+                        {{ $index := .Index }}
                         <tr>
                             <td>
                                 {{ $last := "" }}
@@ -64,6 +67,7 @@
                                 <button class="delete-button" type="button" data-delete-rule="{{ $index }}">Delete</button>
                             </td>
                         </tr>
+                        {{ end }}
                         {{ else }}
                         <tr id="empty-rules"><td colspan="3" class="empty">No rules configured. Add one to get started.</td></tr>
                         {{ end }}

@@ -323,6 +323,39 @@ func TestEditRulesRefreshesChangedAssets(t *testing.T) {
 	}
 }
 
+func TestRulesGroupedByRoom(t *testing.T) {
+	devices := map[string]dimmyDevices.DeviceInterface{
+		"kitchen": dimmyDevices.NewDevice(core.DeviceConfig{Name: "kitchen", Room: "Kitchen"}),
+		"bedroom": dimmyDevices.NewDevice(core.DeviceConfig{Name: "bedroom", Room: "Bedroom"}),
+		"general": dimmyDevices.NewDevice(core.DeviceConfig{Name: "general"}),
+	}
+	rules := []core.RuleConfig{
+		{Triggers: []core.TriggerConfig{{DeviceName: "general"}}, Receivers: []core.ReceiverConfig{{DeviceName: "kitchen"}}},
+		{Triggers: []core.TriggerConfig{{DeviceName: "kitchen"}}, Receivers: []core.ReceiverConfig{{DeviceName: "bedroom"}}},
+		{Triggers: []core.TriggerConfig{{DeviceName: "missing"}}, Receivers: []core.ReceiverConfig{{DeviceName: "general"}}},
+		{Triggers: []core.TriggerConfig{{DeviceName: "bedroom"}}, Receivers: []core.ReceiverConfig{{DeviceName: "bedroom"}}},
+	}
+	groups := groupRulesByRoom(rules, devices)
+	require.Len(t, groups, 4)
+	for i, expected := range []struct {
+		room  string
+		index int
+	}{{"Bedroom", 3}, {"General", 2}, {"Kitchen", 0}, {"Multiple Rooms", 1}} {
+		require.Equal(t, expected.room, groups[i].Room)
+		require.Len(t, groups[i].Rules, 1)
+		require.Equal(t, expected.index, groups[i].Rules[0].Index)
+	}
+	s := &Server{devices: devices, config: &core.ServerConfig{Rules: rules}}
+	res := httptest.NewRecorder()
+	s.EditRules("html").ServeHTTP(res, httptest.NewRequest(http.MethodGet, "/rules/edit", nil))
+	require.Equal(t, http.StatusOK, res.Code)
+	body := res.Body.String()
+	for _, room := range []string{"Bedroom", "General", "Kitchen", "Multiple Rooms"} {
+		require.Contains(t, body, `scope="rowgroup">`+room+`</th>`)
+	}
+	require.Less(t, strings.Index(body, `data-edit-rule="3"`), strings.Index(body, `data-edit-rule="0"`))
+}
+
 // Embedded interfaces make unexpected MQTT operations fail the test.
 type subscriptionClient struct {
 	mqtt.Client
