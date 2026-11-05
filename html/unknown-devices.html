@@ -83,6 +83,7 @@
                 typeInput.value = type || "generic-device";
                 roomInput.value = "";
                 protocolInput.value = link.dataset.protocol;
+                saveForm.dispatchEvent(new Event('device-loaded'));
                 saveModal.showModal();
                 nameInput.focus();
                 nameInput.select();
@@ -108,6 +109,9 @@
                 const deviceType = typeInput.value;
                 const room = roomInput.value.trim();
                 const protocol = protocolInput.value;
+                const extraFields = {};
+                for (const key of ['label', 'icon', 'min', 'max']) extraFields[key] = saveForm.elements[key].value;
+                extraFields.hidden = String(saveForm.elements.hidden.checked);
                 if (name === "" || deviceType === "") {
                     return;
                 }
@@ -121,7 +125,7 @@
                     const response = await fetch("/devices/new-devices/save", {
                         method: "POST",
                         headers: {"Content-Type": "application/x-www-form-urlencoded"},
-                        body: new URLSearchParams({topic: topic, name: name, type: deviceType, room: room, protocol: protocol})
+                        body: new URLSearchParams({topic: topic, name: name, type: deviceType, room: room, protocol: protocol, ...extraFields})
                     });
                     if (!response.ok) {
                         throw new Error((await response.text()).trim() || "Could not save device");

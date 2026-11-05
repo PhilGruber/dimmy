@@ -56,4 +56,23 @@ devices:
 	after, err := os.ReadFile(filename)
 	require.NoError(t, err)
 	require.Equal(t, data, after)
+	fields := DeviceEditorFields{Label: "Cooling", Icon: "❄️", Min: ToPtr(0), Max: ToPtr(200), Hidden: ToPtr(true)}
+	require.NoError(t, UpdateDeviceFields(filename, "remote", "ircontrol", "Kitchen", "zigbee", fields))
+	configured, err := LoadConfiguredDevices(filename)
+	require.NoError(t, err)
+	require.Equal(t, "Cooling", configured[0].Label)
+	require.Equal(t, "❄️", configured[0].Icon)
+	require.Equal(t, 0, *configured[0].Options.Min)
+	require.Equal(t, 200, *configured[0].Options.Max)
+	require.True(t, *configured[0].Options.Hidden)
+	require.Equal(t, "IR_CODE", (*configured[0].Options.Commands)["cold"])
+	fields.Min, fields.Max = nil, nil
+	fields.Hidden = ToPtr(false)
+	require.NoError(t, UpdateDeviceFields(filename, "remote", "ircontrol", "Kitchen", "zigbee", fields))
+	configured, err = LoadConfiguredDevices(filename)
+	require.NoError(t, err)
+	require.Nil(t, configured[0].Options.Min)
+	require.Nil(t, configured[0].Options.Max)
+	require.False(t, *configured[0].Options.Hidden)
+	require.True(t, configured[0].Options.PreventResending)
 }

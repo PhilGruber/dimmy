@@ -26,10 +26,12 @@ func TestDeviceEditor(t *testing.T) {
 	list := httptest.NewRecorder()
 	s.EditDevices("html").ServeHTTP(list, httptest.NewRequest(http.MethodGet, "/devices", nil))
 	require.Equal(t, http.StatusOK, list.Code)
-	for _, property := range []string{"Name", "Label", "MQTT topic", "Type", "Room", "Protocol", "Icon"} {
+	for _, property := range []string{"Label", "MQTT topic", "Type", "Protocol", "Icon"} {
 		require.Contains(t, list.Body.String(), "<th>"+property+"</th>")
 	}
 	require.NotContains(t, list.Body.String(), "<th>Hidden</th>")
+	require.NotContains(t, list.Body.String(), "<th>Name</th>")
+	require.NotContains(t, list.Body.String(), "<th>Room</th>")
 	require.Contains(t, list.Body.String(), `href="/devices/edit?name=lamp"`)
 	require.NotContains(t, list.Body.String(), `id="save-device-form"`)
 	for _, tc := range []struct {
@@ -56,4 +58,49 @@ func TestDeviceEditor(t *testing.T) {
 	page = httptest.NewRecorder()
 	s.EditDevices("html").ServeHTTP(page, httptest.NewRequest(http.MethodGet, "/devices/edit", nil))
 	require.Contains(t, page.Body.String(), `"Room":"Kitchen"`)
+	for _, bounds := range []url.Values{
+		{"min": {"bad"}, "max": {"200"}},
+		{"min": {"200"}, "max": {"10"}},
+		{"min": {"1.5"}, "max": {"100"}},
+		{"min": {"0"}, "max": {"0"}},
+		{"min": {""}, "max": {""}},
+	} {
+		bounds.Set("name", "lamp")
+		bounds.Set("type", "light")
+		bounds.Set("protocol", "cbus")
+		bounds.Set("room", "Kitchen")
+		bounds.Set("label", "Desk light")
+		bounds.Set("icon", "💡")
+		bounds.Set("hidden", "true")
+		req := httptest.NewRequest(http.MethodPost, "/devices/edit/save", strings.NewReader(bounds.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		res := httptest.NewRecorder()
+		s.SaveDeviceEdits().ServeHTTP(res, req)
+		if bounds.Get("min") != "0" && bounds.Get("min") != "" {
+			require.Equal(t, http.StatusBadRequest, res.Code)
+		} else {
+			require.Equal(t, http.StatusOK, res.Code, res.Body.String())
+		}
+	}
+	devices, err = core.LoadConfiguredDevices(filename)
+	require.NoError(t, err)
+	require.Equal(t, "Desk light", devices[0].Label)
+	require.Equal(t, "💡", devices[0].Icon)
+	require.True(t, *devices[0].Options.Hidden)
+	require.Nil(t, devices[0].Options.Min)
+	require.Nil(t, devices[0].Options.Max)
+}
+
+func TestDeviceIconChoices(t *testing.T) {
+	webroot := t.TempDir()
+	dir := filepath.Join(webroot, "assets", "icons")
+	require.NoError(t, os.MkdirAll(dir, 0755))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "air conditioner.png"), []byte("image"), 0644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "notes.txt"), []byte("text"), 0644))
+	choices := deviceIconChoices(webroot)
+	require.Contains(t, choices, deviceIconChoice{Value: "💡"})
+	require.Contains(t, choices, deviceIconChoice{Value: "air conditioner.png", URL: "/assets/icons/air%20conditioner.png"})
+	for _, choice := range choices {
+		require.NotEqual(t, "notes.txt", choice.Value)
+	}
 }

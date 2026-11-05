@@ -33,8 +33,14 @@
             protocol.innerHTML = originalProtocols;
             name.value = device.Name;
             room.value = device.Room;
+            form.elements.label.value = device.Label || '';
+            form.elements.hidden.checked = device.Options?.Hidden ?? false;
+            form.elements.icon.value = device.Icon || '';
+            form.elements.min.value = device.Options?.Min ?? '';
+            form.elements.max.value = device.Options?.Max ?? '';
             selectValue(type, device.Type);
             selectValue(protocol, device.Protocol, 'Default');
+            form.dispatchEvent(new Event('device-loaded'));
             document.getElementById('save-device-topic').textContent = device.Topic;
             modal.showModal();
             room.focus();
@@ -59,6 +65,8 @@
         if (!active || submit.disabled) return;
         const edit = active;
         const values = { name: edit.device.Name, type: type.value, room: room.value.trim(), protocol: protocol.value };
+        for (const key of ['label', 'icon', 'min', 'max']) values[key] = form.elements[key].value;
+        values.hidden = String(form.elements.hidden.checked);
         submit.disabled = true;
         try {
             const response = await fetch('/devices/edit/save', {

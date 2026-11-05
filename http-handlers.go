@@ -84,6 +84,72 @@ type unknownDeviceView struct {
 	Controls []string
 }
 
+type deviceIconChoice struct {
+	Value string
+	URL   string
+}
+
+func deviceIconChoices(webroot string) []deviceIconChoice {
+	choices := make([]deviceIconChoice, 0)
+	for _, emoji := range []string{"💡", "🔌", "📡", "❄️", "🔥", "🌀", "🌡️", "💧", "☀️", "🌙", "🚪", "🪟", "🏠", "🛏️", "🚶", "🧍", "🔘", "⚙️", "🔋", "⚡", "🌱", "🪴", "🚗", "🔒", "🔔", "🎵", "📺", "⏰", "✨"} {
+		choices = append(choices, deviceIconChoice{Value: emoji})
+	}
+	files, _ := os.ReadDir(filepath.Join(webroot, "assets", "icons"))
+	for _, file := range files {
+		info, err := file.Info()
+		if err != nil || !info.Mode().IsRegular() {
+			continue
+		}
+		switch strings.ToLower(filepath.Ext(file.Name())) {
+		case ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".avif", ".ico":
+			choices = append(choices, deviceIconChoice{Value: file.Name(), URL: "/assets/icons/" + url.PathEscape(file.Name())})
+		}
+	}
+	return choices
+}
+
+func deviceEditorFields(r *http.Request, original core.DeviceConfig) (core.DeviceEditorFields, error) {
+	fields := core.DeviceEditorFields{Label: original.Label, Icon: original.Icon}
+	if original.Options != nil {
+		fields.Min, fields.Max = original.Options.Min, original.Options.Max
+		fields.Hidden = original.Options.Hidden
+	}
+	if r.Form.Has("hidden") {
+		hidden, err := strconv.ParseBool(r.FormValue("hidden"))
+		if err != nil {
+			return fields, errors.New("hidden must be true or false")
+		}
+		fields.Hidden = &hidden
+	}
+	if r.Form.Has("label") {
+		fields.Label = strings.TrimSpace(r.FormValue("label"))
+	}
+	if r.Form.Has("icon") {
+		fields.Icon = strings.TrimSpace(r.FormValue("icon"))
+	}
+	for _, field := range []struct {
+		key   string
+		value **int
+	}{{"min", &fields.Min}, {"max", &fields.Max}} {
+		if !r.Form.Has(field.key) {
+			continue
+		}
+		text := strings.TrimSpace(r.FormValue(field.key))
+		*field.value = nil
+		if text != "" {
+			value, err := strconv.Atoi(text)
+			if err != nil {
+				return fields, fmt.Errorf("%s must be a whole number", field.key)
+			}
+			*field.value = &value
+		}
+	}
+	if fields.Min != nil && fields.Max != nil && *fields.Min > *fields.Max {
+		return fields, errors.New("maximum must be greater than or equal to minimum")
+	}
+	return fields, nil
+}
+
 func (s *Server) EditDevices(webroot string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -160,7 +226,8 @@ func (s *Server) EditDevices(webroot string) http.HandlerFunc {
 			Rooms        []string
 			DevicesJSON  template.JS
 			Saved        bool
-		}{devices, groups, rooms, template.JS(data), r.URL.Query().Get("saved") == "1"}); err != nil {
+			Icons        []deviceIconChoice
+		}{devices, groups, rooms, template.JS(data), r.URL.Query().Get("saved") == "1", deviceIconChoices(webroot)}); err != nil {
 			log.Println(err)
 		}
 	}
@@ -214,7 +281,12 @@ func (s *Server) SaveDeviceEdits() http.HandlerFunc {
 				return
 			}
 		}
-		if err := core.UpdateDeviceFields(s.config.Filename, name, deviceType, strings.TrimSpace(r.FormValue("room")), protocol); err != nil {
+		fields, err := deviceEditorFields(r, *original)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if err := core.UpdateDeviceFields(s.config.Filename, name, deviceType, strings.TrimSpace(r.FormValue("room")), protocol, fields); err != nil {
 			http.Error(w, "could not save device configuration", http.StatusInternalServerError)
 			return
 		}
@@ -274,7 +346,8 @@ func (s *Server) ShowUnknownDevices(webroot string) http.HandlerFunc {
 		if err := templ.Execute(output, struct {
 			Devices []unknownDeviceView
 			Rooms   []string
-		}{Devices: devices, Rooms: rooms}); err != nil {
+			Icons   []deviceIconChoice
+		}{Devices: devices, Rooms: rooms, Icons: deviceIconChoices(webroot)}); err != nil {
 			log.Println(err)
 		}
 	}
@@ -326,6 +399,17 @@ func (s *Server) SaveUnknownDevice() http.HandlerFunc {
 				return false
 			}
 			deviceConfig := bareDevice.GetConfig(name)
+			fields, err := deviceEditorFields(request, deviceConfig)
+			if err != nil {
+				http.Error(output, err.Error(), http.StatusBadRequest)
+				return false
+			}
+			deviceConfig.Label, deviceConfig.Icon = fields.Label, fields.Icon
+			if deviceConfig.Options == nil {
+				deviceConfig.Options = &core.ConfigOptions{}
+			}
+			deviceConfig.Options.Min, deviceConfig.Options.Max = fields.Min, fields.Max
+			deviceConfig.Options.Hidden = fields.Hidden
 			deviceConfig.Room = room
 			if protocol != "" {
 				deviceConfig.Protocol = protocol
@@ -344,6 +428,12 @@ func (s *Server) SaveUnknownDevice() http.HandlerFunc {
 				return false
 			}
 			deviceConfig = device.GetConfig(name)
+			deviceConfig.Label, deviceConfig.Icon = fields.Label, fields.Icon
+			if deviceConfig.Options == nil {
+				deviceConfig.Options = &core.ConfigOptions{}
+			}
+			deviceConfig.Options.Min, deviceConfig.Options.Max = fields.Min, fields.Max
+			deviceConfig.Options.Hidden = fields.Hidden
 
 			if err := core.AddDeviceToConfig(s.config.Filename, deviceConfig); err != nil {
 				log.Printf("Could not save device %s: %s", topic, err)
@@ -352,7 +442,11 @@ func (s *Server) SaveUnknownDevice() http.HandlerFunc {
 			}
 
 			device.SetName(name)
-			device.SetLabel(name)
+			if fields.Label != "" {
+				device.SetLabel(fields.Label)
+			} else {
+				device.SetLabel(name)
+			}
 			s.devices[name] = device
 			delete(s.unknownDevices, topic)
 			s.config.Devices = append(s.config.Devices, deviceConfig)

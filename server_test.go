@@ -76,6 +76,10 @@ func TestSaveUnknownDevice(t *testing.T) {
 	}
 
 	form := url.Values{"topic": {topic}, "name": {"Kitchen Sensor"}, "type": {"generic-device"}, "room": {" Kitchen "}, "protocol": {"cbus"}}
+	form.Set("label", "Kitchen climate")
+	form.Set("icon", "🌡️")
+	form.Set("min", "0")
+	form.Set("max", "200")
 	request := httptest.NewRequest(http.MethodPost, "/devices/save", strings.NewReader(form.Encode()))
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	response := httptest.NewRecorder()
@@ -86,12 +90,17 @@ func TestSaveUnknownDevice(t *testing.T) {
 	require.NotContains(t, server.unknownDevices, topic)
 	require.NotNil(t, server.devices["Kitchen Sensor"])
 	require.Equal(t, "Kitchen Sensor", server.devices["Kitchen Sensor"].GetName())
+	require.Equal(t, "Kitchen climate", server.devices["Kitchen Sensor"].GetLabel())
 
 	data, err := os.ReadFile(filename)
 	require.NoError(t, err)
 	var config core.ServerConfig
 	require.NoError(t, yaml.Unmarshal(data, &config))
 	require.Len(t, config.Devices, 1)
+	require.Equal(t, "Kitchen climate", config.Devices[0].Label)
+	require.Equal(t, "🌡️", config.Devices[0].Icon)
+	require.Equal(t, 0, *config.Devices[0].Options.Min)
+	require.Equal(t, 200, *config.Devices[0].Options.Max)
 	require.Equal(t, "Kitchen Sensor", config.Devices[0].Name)
 	require.Equal(t, "device", config.Devices[0].Type)
 	require.Equal(t, topic, config.Devices[0].Topic)

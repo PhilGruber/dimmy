@@ -11,6 +11,14 @@ import (
 
 var ErrDeviceNotFound = errors.New("configured device not found")
 
+type DeviceEditorFields struct {
+	Hidden *bool
+	Label  string
+	Icon   string
+	Min    *int
+	Max    *int
+}
+
 func LoadConfiguredDevices(filename string) ([]DeviceConfig, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
@@ -26,7 +34,7 @@ func LoadConfiguredDevices(filename string) ([]DeviceConfig, error) {
 }
 
 // UpdateDeviceFields changes only the fields exposed by the shared device form.
-func UpdateDeviceFields(filename, name, deviceType, room, protocol string) error {
+func UpdateDeviceFields(filename, name, deviceType, room, protocol string, fields ...DeviceEditorFields) error {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return err
@@ -77,6 +85,70 @@ func UpdateDeviceFields(filename, name, deviceType, room, protocol string) error
 			target.Content = append(target.Content, &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: field.key}, valueNode)
 		}
 		valueNode.Kind, valueNode.Tag, valueNode.Value = yaml.ScalarNode, "!!str", field.value
+	}
+	if len(fields) > 0 {
+		setField := func(mapping *yaml.Node, key string, value any) error {
+			for i := 0; i+1 < len(mapping.Content); i += 2 {
+				if mapping.Content[i].Value == key {
+					if value == nil {
+						mapping.Content = append(mapping.Content[:i], mapping.Content[i+2:]...)
+						return nil
+					}
+					return mapping.Content[i+1].Encode(value)
+				}
+			}
+			if value == nil {
+				return nil
+			}
+			var node yaml.Node
+			if err := node.Encode(value); err != nil {
+				return err
+			}
+			mapping.Content = append(mapping.Content, &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: key}, &node)
+			return nil
+		}
+		if err := setField(target, "label", fields[0].Label); err != nil {
+			return err
+		}
+		if err := setField(target, "icon", fields[0].Icon); err != nil {
+			return err
+		}
+		var options *yaml.Node
+		for i := 0; i+1 < len(target.Content); i += 2 {
+			if target.Content[i].Value == "options" {
+				options = target.Content[i+1]
+				break
+			}
+		}
+		if options == nil && (fields[0].Min != nil || fields[0].Max != nil || fields[0].Hidden != nil) {
+			options = &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
+			target.Content = append(target.Content, &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "options"}, options)
+		}
+		if options != nil {
+			if options.Tag == "!!null" {
+				*options = yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
+			}
+			if options.Kind != yaml.MappingNode {
+				return errors.New("device options must be a YAML mapping")
+			}
+			if fields[0].Hidden != nil {
+				if err := setField(options, "hidden", *fields[0].Hidden); err != nil {
+					return err
+				}
+			}
+			for _, bound := range []struct {
+				key   string
+				value *int
+			}{{"min", fields[0].Min}, {"max", fields[0].Max}} {
+				var value any
+				if bound.value != nil {
+					value = *bound.value
+				}
+				if err := setField(options, bound.key, value); err != nil {
+					return err
+				}
+			}
+		}
 	}
 	info, err := os.Stat(filename)
 	if err != nil {

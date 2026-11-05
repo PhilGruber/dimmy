@@ -1,5 +1,5 @@
 {{ define "device-form" }}
-<link rel="stylesheet" href="/assets/device-form.css">
+<link rel="stylesheet" href="/assets/device-form.css?v=2">
         <dialog id="save-device-modal" class="save-modal">
             <form id="save-device-form" method="dialog" class="save-modal-form">
                 <h2>Save device</h2>
@@ -8,6 +8,23 @@
                 <label for="device-name-input">Device name</label>
                 <input id="device-name-input" name="name" type="text" required>
 
+                <label for="device-label-input">Label</label>
+                <input id="device-label-input" name="label" type="text" placeholder="Use device name">
+
+                <label class="device-checkbox"><input id="device-hidden-input" name="hidden" type="checkbox"> Hidden</label>
+
+                <label for="device-icon-input">Icon</label>
+                <div class="icon-input"><span id="device-icon-preview" aria-hidden="true"></span><input id="device-icon-input" name="icon" type="text" placeholder="Emoji or image filename"></div>
+                <details class="icon-picker">
+                    <summary>Choose an emoji or image</summary>
+                    <div class="icon-choices" aria-label="Device icons">
+                        <button type="button" data-icon="" title="Default icon">Default</button>
+                        {{ range .Icons }}
+                        <button type="button" data-icon="{{ .Value }}" data-icon-url="{{ .URL }}" title="{{ .Value }}" aria-label="{{ .Value }}">{{ if .URL }}<img src="{{ .URL }}" alt="{{ .Value }}" loading="lazy">{{ else }}{{ .Value }}{{ end }}</button>
+                        {{ end }}
+                    </div>
+                </details>
+
                 <label for="device-type-input">Device type</label>
                 <select id="device-type-input" name="type" required>
                     <option value="generic-device">Standard Device</option>
@@ -15,6 +32,12 @@
                     <option value="light">Light</option>
                     <option value="zlight">Zigbee Light</option>
                 </select>
+
+                <div class="device-bounds" hidden>
+                    <label>Minimum<input id="device-min-input" name="min" type="number" step="1" placeholder="Default"></label>
+                    <label>Maximum<input id="device-max-input" name="max" type="number" step="1" placeholder="Default"></label>
+                </div>
+                <small id="device-bounds-help" hidden>Minimum and maximum are raw device levels for dimmable devices. Leave blank to use defaults.</small>
 
                 <label for="device-room-input">Room</label>
                 <input id="device-room-input" name="room" type="text" list="device-rooms">
@@ -35,4 +58,5 @@
                 </div>
             </form>
         </dialog>
+<script src="/assets/device-form.js?v=2"></script>
 {{ end }}

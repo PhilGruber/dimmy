@@ -20,20 +20,20 @@
         {{ if .Saved }}<div class="message success" role="status">Saved. Restart dimmyd to apply the changes.</div>{{ end }}
         <section class="table-card">
             <table>
-                <thead><tr><th>Name</th><th>Label</th><th>MQTT topic</th><th>Type</th><th>Room</th><th>Protocol</th><th>Icon</th><th>Actions</th></tr></thead>
+                <thead><tr><th>Icon</th><th>Label</th><th>MQTT topic</th><th>Type</th><th>Protocol</th><th>Actions</th></tr></thead>
                 <tbody>
                 {{ range .DeviceGroups }}
-                    <tr class="room-header"><th colspan="8" scope="rowgroup">{{ if .Room }}{{ .Room }}{{ else }}not assigned to room{{ end }}</th></tr>
+                    <tr class="room-header"><th colspan="6" scope="rowgroup">{{ if .Room }}{{ .Room }}{{ else }}not assigned to room{{ end }}</th></tr>
                 {{ range .Devices }}
                     <tr>
-                        <td>{{ .Name }}</td><td>{{ if .Label }}{{ .Label }}{{ else }}{{ .Name }}{{ end }}</td><td class="topic">{{ .Topic }}</td><td>{{ .Type }}</td>
-                        <td>{{ .Room }}</td><td>{{ if .Protocol }}{{ .Protocol }}{{ else }}Default{{ end }}</td>
                         <td>{{ if $iconURL := iconURL .Icon }}<img src="{{ $iconURL }}" alt="" width="24" height="24" style="object-fit: contain;">{{ else }}{{ .Icon }}{{ end }}</td>
+                        <td>{{ if .Label }}{{ .Label }}{{ else }}{{ .Name }}{{ end }}</td><td class="topic">{{ .Topic }}</td><td>{{ .Type }}</td>
+                        <td>{{ if .Protocol }}{{ .Protocol }}{{ else }}Default{{ end }}</td>
                         <td class="actions"><a class="save-link" href="/devices/edit?name={{ .Name }}">Edit</a></td>
                     </tr>
                 {{ end }}
                 {{ else }}
-                    <tr><td colspan="8" class="empty">No devices configured.</td></tr>
+                    <tr><td colspan="6" class="empty">No devices configured.</td></tr>
                 {{ end }}
                 </tbody>
             </table>
