@@ -35,3 +35,7 @@
 .icon-choices button:first-child { font-size: .75rem; }
 .icon-picker summary { cursor: pointer; color: #176b84; }
 .save-modal { max-height: calc(100vh - 32px); overflow-y: auto; }
+#group-members ul { list-style: none; padding: 0; }
+#group-members li { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 8px 0; }
+#group-members select { width: 100%; margin: 8px 0; }
+#group-members button { cursor: pointer; padding: 6px 10px; border: 1px solid #b9d1d9; border-radius: 7px; }

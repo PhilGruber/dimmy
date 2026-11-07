@@ -1,5 +1,5 @@
 {{ define "device-form" }}
-<link rel="stylesheet" href="/assets/device-form.css?v=2">
+<link rel="stylesheet" href="/assets/device-form.css?v=3">
         <dialog id="save-device-modal" class="save-modal">
             <form id="save-device-form" method="dialog" class="save-modal-form">
                 <h2>Save device</h2>
@@ -18,9 +18,9 @@
                 <details class="icon-picker">
                     <summary>Choose an emoji or image</summary>
                     <div class="icon-choices" aria-label="Device icons">
-                        <button type="button" data-icon="" title="Default icon">Default</button>
+                        <button type="button" data-icon-value="" title="Default icon">Default</button>
                         {{ range .Icons }}
-                        <button type="button" data-icon="{{ .Value }}" data-icon-url="{{ .URL }}" title="{{ .Value }}" aria-label="{{ .Value }}">{{ if .URL }}<img src="{{ .URL }}" alt="{{ .Value }}" loading="lazy">{{ else }}{{ .Value }}{{ end }}</button>
+                        <button type="button" data-icon-value="{{ .Value }}" data-icon-url="{{ .URL }}" title="{{ .Value }}" aria-label="{{ .Value }}">{{ if .URL }}<img src="{{ .URL }}" alt="{{ .Value }}" loading="lazy">{{ else }}{{ .Value }}{{ end }}</button>
                         {{ end }}
                     </div>
                 </details>
@@ -38,6 +38,15 @@
                     <label>Maximum<input id="device-max-input" name="max" type="number" step="1" placeholder="Default"></label>
                 </div>
                 <small id="device-bounds-help" hidden>Minimum and maximum are raw device levels for dimmable devices. Leave blank to use defaults.</small>
+
+                <section id="group-members" hidden>
+                    <h3>Group devices</h3>
+                    <p>After adding the first device, only devices of the same type can be added.</p>
+                    <ul id="group-member-list"></ul>
+                    <label for="group-member-select">Add device</label>
+                    <select id="group-member-select"></select>
+                    <button id="add-group-member" type="button" class="secondary-btn">Add device</button>
+                </section>
 
                 <label for="device-room-input">Room</label>
                 <input id="device-room-input" name="room" type="text" list="device-rooms">
@@ -58,5 +67,5 @@
                 </div>
             </form>
         </dialog>
-<script src="/assets/device-form.js?v=2"></script>
+<script src="/assets/device-form.js?v=3"></script>
 {{ end }}

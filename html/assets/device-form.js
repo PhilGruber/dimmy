@@ -2,9 +2,9 @@
     const form = document.getElementById('save-device-form');
     const icon = form.elements.icon;
     const preview = document.getElementById('device-icon-preview');
-    const choices = [...form.querySelectorAll('[data-icon]')];
+    const choices = [...form.querySelectorAll('[data-icon-value]')];
     function updatePreview() {
-        const choice = choices.find(button => button.dataset.icon === icon.value);
+        const choice = choices.find(button => button.dataset.iconValue === icon.value);
         preview.replaceChildren();
         if (choice?.dataset.iconUrl) {
             const image = document.createElement('img');
@@ -14,10 +14,10 @@
         } else {
             preview.textContent = icon.value;
         }
-        choices.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.icon === icon.value)));
+        choices.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.iconValue === icon.value)));
     }
     choices.forEach(button => button.addEventListener('click', () => {
-        icon.value = button.dataset.icon;
+        icon.value = button.dataset.iconValue;
         updatePreview();
         form.querySelector('.icon-picker').open = false;
     }));

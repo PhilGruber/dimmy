@@ -12,11 +12,12 @@ import (
 var ErrDeviceNotFound = errors.New("configured device not found")
 
 type DeviceEditorFields struct {
-	Hidden *bool
-	Label  string
-	Icon   string
-	Min    *int
-	Max    *int
+	Hidden  *bool
+	Label   string
+	Icon    string
+	Min     *int
+	Max     *int
+	Devices *[]string
 }
 
 func LoadConfiguredDevices(filename string) ([]DeviceConfig, error) {
@@ -120,7 +121,7 @@ func UpdateDeviceFields(filename, name, deviceType, room, protocol string, field
 				break
 			}
 		}
-		if options == nil && (fields[0].Min != nil || fields[0].Max != nil || fields[0].Hidden != nil) {
+		if options == nil && (fields[0].Min != nil || fields[0].Max != nil || fields[0].Hidden != nil || fields[0].Devices != nil) {
 			options = &yaml.Node{Kind: yaml.MappingNode, Tag: "!!map"}
 			target.Content = append(target.Content, &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: "options"}, options)
 		}
@@ -133,6 +134,11 @@ func UpdateDeviceFields(filename, name, deviceType, room, protocol string, field
 			}
 			if fields[0].Hidden != nil {
 				if err := setField(options, "hidden", *fields[0].Hidden); err != nil {
+					return err
+				}
+			}
+			if fields[0].Devices != nil {
+				if err := setField(options, "devices", *fields[0].Devices); err != nil {
 					return err
 				}
 			}

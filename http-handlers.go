@@ -267,7 +267,7 @@ func (s *Server) SaveDeviceEdits() http.HandlerFunc {
 		}
 		if deviceType != original.Type {
 			switch deviceType {
-			case "device", "ircontrol", "light", "zlight":
+			case "device", "ircontrol", "light", "zlight", "group":
 			default:
 				http.Error(w, "unsupported device type", http.StatusBadRequest)
 				return
@@ -285,6 +285,26 @@ func (s *Server) SaveDeviceEdits() http.HandlerFunc {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
+		}
+		if deviceType == "group" {
+			members := make([]string, 0)
+			if original.Options != nil && original.Options.Devices != nil {
+				members = append(members, (*original.Options.Devices)...)
+			}
+			if r.Form.Has("members") {
+				if err := json.Unmarshal([]byte(r.FormValue("members")), &members); err != nil {
+					http.Error(w, "invalid group members", http.StatusBadRequest)
+					return
+				}
+			}
+			if err := core.ValidateGroupMembers(name, members, devices); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			if members == nil {
+				members = []string{}
+			}
+			fields.Devices = &members
 		}
 		if err := core.UpdateDeviceFields(s.config.Filename, name, deviceType, strings.TrimSpace(r.FormValue("room")), protocol, fields); err != nil {
 			http.Error(w, "could not save device configuration", http.StatusInternalServerError)

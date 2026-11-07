@@ -17,8 +17,48 @@
     form.querySelector('h2').textContent = 'Edit device';
     type.querySelector('[value="generic-device"]').value = 'device';
     type.querySelector('[value="ir-control"]').value = 'ircontrol';
+    type.add(new Option('Group', 'group'));
     const originalTypes = type.innerHTML;
     const originalProtocols = protocol.innerHTML;
+
+    const memberSection = document.getElementById('group-members');
+    const memberList = document.getElementById('group-member-list');
+    const memberSelect = document.getElementById('group-member-select');
+    const addMember = document.getElementById('add-group-member');
+    let members = [];
+    const memberType = device => ({ zlight: 'light', device: 'sensor', ircontrol: 'IRControl' }[device.Type] || device.Type);
+    function renderMembers() {
+        memberSection.hidden = type.value !== 'group';
+        memberList.replaceChildren();
+        for (const name of members) {
+            const device = devices.find(device => device.Name === name);
+            const item = document.createElement('li');
+            const label = document.createElement('span');
+            label.textContent = device ? `${device.Label || name} (${name})` : `${name} (unavailable)`;
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.textContent = 'Remove';
+            remove.setAttribute('aria-label', `Remove ${name}`);
+            remove.addEventListener('click', () => {
+                members = members.filter(member => member !== name);
+                renderMembers();
+            });
+            item.append(label, remove);
+            memberList.append(item);
+        }
+        const first = members.map(name => devices.find(device => device.Name === name)).find(Boolean);
+        const candidates = devices.filter(device => device.Name !== active?.device.Name && device.Type !== 'group'
+            && !members.includes(device.Name) && (!first || memberType(device) === memberType(first)));
+        memberSelect.replaceChildren(new Option(candidates.length ? 'Choose a device' : 'No compatible devices available', ''));
+        for (const device of candidates) memberSelect.add(new Option(`${device.Label || device.Name} (${device.Name})`, device.Name));
+        memberSelect.disabled = candidates.length === 0;
+        addMember.disabled = true;
+    }
+    memberSelect.addEventListener('change', () => { addMember.disabled = !memberSelect.value; });
+    addMember.addEventListener('click', () => {
+        if (memberSelect.value) { members.push(memberSelect.value); renderMembers(); }
+    });
+    type.addEventListener('change', renderMembers);
 
     function selectValue(select, value, label) {
         if (![...select.options].some(option => option.value === value)) {
@@ -29,6 +69,7 @@
 
     function openDevice(device) {
             active = { device };
+            members = [...(device.Options?.Devices || [])];
             type.innerHTML = originalTypes;
             protocol.innerHTML = originalProtocols;
             name.value = device.Name;
@@ -40,6 +81,7 @@
             form.elements.max.value = device.Options?.Max ?? '';
             selectValue(type, device.Type);
             selectValue(protocol, device.Protocol, 'Default');
+            renderMembers();
             form.dispatchEvent(new Event('device-loaded'));
             document.getElementById('save-device-topic').textContent = device.Topic;
             modal.showModal();
@@ -67,6 +109,7 @@
         const values = { name: edit.device.Name, type: type.value, room: room.value.trim(), protocol: protocol.value };
         for (const key of ['label', 'icon', 'min', 'max']) values[key] = form.elements[key].value;
         values.hidden = String(form.elements.hidden.checked);
+        if (type.value === 'group') values.members = JSON.stringify(members);
         submit.disabled = true;
         try {
             const response = await fetch('/devices/edit/save', {

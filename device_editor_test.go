@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -21,6 +22,8 @@ func TestDeviceEditor(t *testing.T) {
 	s.EditDevices("html").ServeHTTP(page, httptest.NewRequest(http.MethodGet, "/devices/edit", nil))
 	require.Equal(t, http.StatusOK, page.Code)
 	require.Contains(t, page.Body.String(), `id="save-device-form"`)
+	require.Contains(t, page.Body.String(), `data-icon-value="💡"`)
+	require.NotContains(t, page.Body.String(), `data-icon-value="%f0%9f%92%a1"`)
 	require.Contains(t, page.Body.String(), `"Name":"lamp"`)
 	require.Contains(t, page.Body.String(), `<option value="Bedroom">`)
 	list := httptest.NewRecorder()
@@ -102,5 +105,57 @@ func TestDeviceIconChoices(t *testing.T) {
 	require.Contains(t, choices, deviceIconChoice{Value: "air conditioner.png", URL: "/assets/icons/air%20conditioner.png"})
 	for _, choice := range choices {
 		require.NotEqual(t, "notes.txt", choice.Value)
+	}
+}
+
+func TestEditGroupMembers(t *testing.T) {
+	filename := filepath.Join(t.TempDir(), "config.yaml")
+	require.NoError(t, os.WriteFile(filename, []byte(`devices:
+  - name: group
+    type: group
+    options:
+      hidden: true
+      devices: [lamp]
+  - name: lamp
+    type: light
+  - name: zigbee-lamp
+    type: zlight
+  - name: sensor
+    type: device
+`), 0600))
+	s := &Server{config: &core.ServerConfig{Filename: filename}}
+	for _, tc := range []struct {
+		members string
+		status  int
+	}{
+		{`["lamp","sensor"]`, http.StatusBadRequest},
+		{`["missing"]`, http.StatusBadRequest},
+		{`["group"]`, http.StatusBadRequest},
+		{`["lamp","lamp"]`, http.StatusBadRequest},
+		{`invalid`, http.StatusBadRequest},
+		{`["lamp","zigbee-lamp"]`, http.StatusOK},
+		{`[]`, http.StatusOK},
+		{`["sensor"]`, http.StatusOK},
+	} {
+		before, err := os.ReadFile(filename)
+		require.NoError(t, err)
+		form := url.Values{"name": {"group"}, "type": {"group"}, "members": {tc.members}}
+		req := httptest.NewRequest(http.MethodPost, "/devices/edit/save", strings.NewReader(form.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		res := httptest.NewRecorder()
+		s.SaveDeviceEdits().ServeHTTP(res, req)
+		require.Equal(t, tc.status, res.Code, res.Body.String())
+		if tc.status != http.StatusOK {
+			after, err := os.ReadFile(filename)
+			require.NoError(t, err)
+			require.Equal(t, before, after)
+		} else {
+			configured, err := core.LoadConfiguredDevices(filename)
+			require.NoError(t, err)
+			var expected []string
+			require.NoError(t, json.Unmarshal([]byte(tc.members), &expected))
+			require.Equal(t, expected, *configured[0].Options.Devices)
+			require.True(t, *configured[0].Options.Hidden)
+		}
 	}
 }
