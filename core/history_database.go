@@ -27,6 +27,43 @@ type TimeValue struct {
 	Value string
 }
 
+type SensorReading struct {
+	Time  time.Time
+	Value any
+}
+
+// RecentSensorHistory returns the most recent readings in chronological order,
+// retaining SQLite's numeric values for use as current sensor readings.
+func (d *HistoryDatabase) RecentSensorHistory(device, sensor string, limit int) ([]SensorReading, error) {
+	rows, err := d.DB.Query(`SELECT timestamp, value FROM sensor_history WHERE device=? AND sensor=? ORDER BY timestamp DESC, id DESC LIMIT ?`, device, sensor, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	readings := make([]SensorReading, 0)
+	for rows.Next() {
+		var reading SensorReading
+		if err := rows.Scan(&reading.Time, &reading.Value); err != nil {
+			return nil, err
+		}
+		if data, ok := reading.Value.([]byte); ok {
+			var value any
+			if err := json.Unmarshal(data, &value); err != nil {
+				return nil, err
+			}
+			reading.Value = value
+		}
+		readings = append(readings, reading)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	for i, j := 0, len(readings)-1; i < j; i, j = i+1, j-1 {
+		readings[i], readings[j] = readings[j], readings[i]
+	}
+	return readings, nil
+}
+
 // OpenHistoryDatabase opens (and creates, when necessary) the SQLite database
 // and ensures its sensor history table exists.
 func OpenHistoryDatabase(path string) (*HistoryDatabase, error) {

@@ -104,8 +104,34 @@ func NewDevice(config core.DeviceConfig, historyDB ...core.SensorHistoryStore) *
 	for _, sensor := range s.Sensors {
 		s.Values[sensor.Name] = &SensorValue{Value: nil, LastChanged: time.Unix(0, 0), History: make([]SensorHistory, 0)}
 	}
+	s.restoreHistory()
 
 	return &s
+}
+
+func (d *GenericDevice) restoreHistory() {
+	reader, ok := d.historyDB.(interface {
+		RecentSensorHistory(string, string, int) ([]core.SensorReading, error)
+	})
+	if !ok || !d.hasHistory {
+		return
+	}
+	for _, sensor := range d.Sensors {
+		readings, err := reader.RecentSensorHistory(d.Name, sensor.Name, 10)
+		if err != nil {
+			log.Printf("[%32s] Could not restore %s history: %v", d.Name, sensor.Name, err)
+			continue
+		}
+		if len(readings) == 0 {
+			continue
+		}
+		value := d.Values[sensor.Name]
+		for _, reading := range readings {
+			value.History = append(value.History, SensorHistory{Time: reading.Time, Value: reading.Value})
+		}
+		latest := readings[len(readings)-1]
+		value.Value, value.LastChanged = latest.Value, latest.Time
+	}
 }
 
 func NewDeviceFromMessage(topic string, data map[string]any) *GenericDevice {
