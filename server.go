@@ -155,10 +155,9 @@ func (s *Server) initialize(config *core.ServerConfig) {
 	roomPanels := make(map[string]dimmyDevices.Panel)
 	for _, device := range s.devices {
 		room := device.GetRoom()
-		if room == "" || room == "default" || room == "all" || device.IsPseudoDevice() {
+		if room == "" || room == "default" || room == "all" || device.IsPseudoDevice() || device.GetHidden() {
 			continue
 		}
-		log.Printf("Creating panel '%s' for device '%s'\n", room, device.GetName())
 		panel := roomPanels[room]
 		panel.Label = room
 		panel.Devices = append(panel.Devices, device)
@@ -229,12 +228,6 @@ func (s *Server) eventLoop(mqttServer string) {
 
 	for {
 
-		for _, device := range s.deviceSnapshot() {
-			if _, ok := device.UpdateValue(); ok {
-				go device.PublishValue(client)
-			}
-		}
-
 		var firedRules []int
 		for idx, rule := range s.rules {
 			if rule.CheckTriggers() {
@@ -242,8 +235,13 @@ func (s *Server) eventLoop(mqttServer string) {
 				firedRules = append(firedRules, idx)
 			}
 		}
-
 		s.clearFiredRules(firedRules)
+
+		for _, device := range s.deviceSnapshot() {
+			if _, ok := device.UpdateValue(); ok {
+				go device.PublishValue(client)
+			}
+		}
 
 		time.Sleep(core.CycleLength * time.Millisecond)
 	}
