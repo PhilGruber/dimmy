@@ -70,12 +70,27 @@
         update();
     }
 
-    function setFields(row, kind, selected = "") {
+    function setFields(row, kind, selected = "", value = "") {
         const device = deviceFor(row.querySelector(".device").value);
         const fields = fieldsFor(device, kind);
         const unavailable = selected && !fields.includes(selected)
             ? `<option value="${escapeHtml(selected)}" selected>${escapeHtml(selected)} (unavailable)</option>` : "";
         row.querySelector(".field").innerHTML = `<option value="">Choose a field</option>${unavailable}${fields.map(field => `<option value="${escapeHtml(field)}"${field === selected ? " selected" : ""}>${escapeHtml(field)}</option>`).join("")}`;
+        const previous = row.querySelector(kind === "triggers" ? ".condition-value" : ".receiver-value");
+        const isIR = device?.type === "IRControl" || device?.type === "ircontrol";
+        const input = document.createElement(isIR ? "select" : "input");
+        input.className = previous.className;
+        input.setAttribute("aria-label", previous.getAttribute("aria-label"));
+        if (isIR) {
+            input.add(new Option("Choose a command", ""));
+            const commands = Array.isArray(device.commands) ? device.commands : [];
+            if (value !== "" && !commands.includes(value)) input.add(new Option(`${value} (unavailable)`, value));
+            for (const command of commands) input.add(new Option(command, command));
+        } else {
+            input.placeholder = "Value";
+        }
+        input.value = value;
+        previous.replaceWith(input);
     }
 
     function addTrigger(trigger = {}) {
@@ -84,7 +99,7 @@
         row.innerHTML = `<select class="device" aria-label="Trigger device">${optionsFor("triggers", trigger.device)}</select><select class="field" aria-label="Trigger field"></select><select class="operator" aria-label="Condition"><option value="==">is</option><option value="!=">is not</option><option value=">">is greater than</option><option value=">=">is at least</option><option value="<">is less than</option><option value="<=">is at most</option></select><input class="condition-value" aria-label="Condition value" placeholder="Value"><button type="button" class="remove-row" aria-label="Remove trigger">&times;</button>`;
         triggerRows.append(row);
         addDevicePicker(row);
-        setFields(row, "triggers", trigger.key);
+        setFields(row, "triggers", trigger.key, trigger.condition?.value ?? "");
         row.querySelector(".operator").value = trigger.condition?.operator || "==";
         row.querySelector(".condition-value").value = trigger.condition?.value ?? "";
         row.querySelector(".device").addEventListener("change", () => setFields(row, "triggers"));
@@ -97,7 +112,7 @@
         row.innerHTML = `<select class="device" aria-label="Control device">${optionsFor("receivers", receiver.device)}</select><select class="field" aria-label="Control field"></select><input class="receiver-value" aria-label="Control value" placeholder="Value"><button type="button" class="remove-row" aria-label="Remove control">&times;</button>`;
         receiverRows.append(row);
         addDevicePicker(row);
-        setFields(row, "receivers", receiver.key);
+        setFields(row, "receivers", receiver.key, receiver.value ?? "");
         row.querySelector(".receiver-value").value = receiver.value ?? "";
         row.querySelector(".device").addEventListener("change", () => setFields(row, "receivers"));
         row.querySelector(".remove-row").addEventListener("click", () => row.remove());

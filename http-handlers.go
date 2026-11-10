@@ -649,6 +649,11 @@ func (s *Server) EditRules(webroot string) http.HandlerFunc {
 		deviceView := func(device dimmyDevices.DeviceInterface) ruleDeviceView {
 			view := ruleDeviceView{Name: device.GetName(), Label: device.GetLabel(), Icon: device.GetEmoji(),
 				Triggers: nonNilStrings(device.GetTriggers()), Receivers: nonNilStrings(device.GetReceivers())}
+			view.Type = device.GetType()
+			if ir, ok := device.(*dimmyDevices.IRControl); ok {
+				view.Commands = nonNilStrings(ir.GetCommands())
+				sort.Strings(view.Commands)
+			}
 			if view.Icon != "" && filepath.Base(view.Icon) == view.Icon {
 				if info, err := os.Stat(filepath.Join(webroot, "assets", "icons", view.Icon)); err == nil && info.Mode().IsRegular() {
 					view.IconURL = "/assets/icons/" + url.PathEscape(view.Icon)
@@ -758,6 +763,8 @@ func nonNilStrings(values []string) []string {
 }
 
 type ruleDeviceView struct {
+	Type      string   `json:"type"`
+	Commands  []string `json:"commands,omitempty"`
 	Name      string   `json:"name"`
 	Label     string   `json:"label"`
 	Icon      string   `json:"icon"`

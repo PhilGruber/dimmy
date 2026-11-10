@@ -307,6 +307,18 @@ func TestEditRulesShowsConfiguredMissingDevices(t *testing.T) {
 	require.Contains(t, res.Body.String(), `data-delete-rule="1"`)
 }
 
+func TestEditRulesIncludesIRCommands(t *testing.T) {
+	commands := map[string]string{"power": "IR_POWER", "cool": "IR_COOL"}
+	ir := dimmyDevices.NewIrControl(core.DeviceConfig{Name: "AC", Options: &core.ConfigOptions{Commands: &commands}})
+	s := &Server{devices: map[string]dimmyDevices.DeviceInterface{"AC": ir}, config: &core.ServerConfig{}}
+	res := httptest.NewRecorder()
+	s.EditRules("html").ServeHTTP(res, httptest.NewRequest(http.MethodGet, "/rules/edit", nil))
+	require.Equal(t, http.StatusOK, res.Code)
+	require.Contains(t, res.Body.String(), `"type":"IRControl"`)
+	require.Contains(t, res.Body.String(), `"commands":["cool","power"]`)
+	require.NotContains(t, res.Body.String(), "IR_POWER")
+}
+
 func TestEditRulesRendersIconFiles(t *testing.T) {
 	webroot := t.TempDir()
 	require.NoError(t, os.MkdirAll(filepath.Join(webroot, "assets", "icons"), 0755))
