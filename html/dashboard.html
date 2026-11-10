@@ -28,6 +28,7 @@
                         {{ if .HasSensors }}
                     <span class="left value">
                                 {{ range .GetSensors }}
+                                    {{ if .Hidden }}{{ continue }}{{ end }}
                                     <a
                                             id="history_link_{{ $deviceName }}_{{ .Name }}"
                                             class="sensor-history-link"

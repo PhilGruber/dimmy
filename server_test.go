@@ -196,6 +196,29 @@ func TestDashboardCbusLightValue(t *testing.T) {
 	require.Equal(t, float64(50), state[name].Brightness)
 }
 
+func TestDashboardOmitsHiddenSensors(t *testing.T) {
+	var config core.DeviceConfig
+	require.NoError(t, yaml.Unmarshal([]byte(`name: climate
+options:
+  sensors:
+    - name: temperature
+    - name: humidity
+      hidden: false
+    - name: illuminance
+      hidden: true
+`), &config))
+	device := dimmyDevices.NewDevice(config)
+	s := &Server{dashboards: map[string][]dimmyDevices.Panel{"default": {dimmyDevices.NewPanelFromDevice(device)}}}
+	res := httptest.NewRecorder()
+	s.ShowDashboard("html")(res, httptest.NewRequest(http.MethodGet, "/", nil))
+	require.Equal(t, http.StatusOK, res.Code)
+	body := res.Body.String()
+	require.Contains(t, body, "history_link_climate_temperature")
+	require.Contains(t, body, "history_link_climate_humidity")
+	require.NotContains(t, body, "climate_illuminance")
+	require.Contains(t, device.GetTriggers(), "illuminance")
+}
+
 func TestUnknownDevicesRoomOptions(t *testing.T) {
 	s := &Server{
 		devices: map[string]dimmyDevices.DeviceInterface{
