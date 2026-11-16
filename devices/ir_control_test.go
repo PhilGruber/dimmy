@@ -2,11 +2,37 @@ package devices
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"testing"
 
 	"github.com/PhilGruber/dimmy/core"
 	"gopkg.in/yaml.v3"
 )
+
+func TestIRCommandsKeepConfigurationOrder(t *testing.T) {
+	var config core.DeviceConfig
+	require.NoError(t, yaml.Unmarshal([]byte(`name: remote
+type: ircontrol
+options:
+  commands:
+    power: IR_POWER
+    cool: IR_COOL
+    off: IR_OFF
+`), &config))
+	expected := []string{"power", "cool", "off"}
+	ir := NewIrControl(config)
+	for i := 0; i < 10; i++ {
+		require.Equal(t, expected, ir.GetCommands())
+	}
+	commands := ir.GetCommands()
+	commands[0] = "changed"
+	require.Equal(t, expected, ir.GetCommands())
+	data, err := yaml.Marshal(ir.GetConfig("remote"))
+	require.NoError(t, err)
+	var reloaded core.DeviceConfig
+	require.NoError(t, yaml.Unmarshal(data, &reloaded))
+	require.Equal(t, expected, NewIrControl(reloaded).GetCommands())
+}
 
 func irControlConfig(t *testing.T, preventResending bool) core.DeviceConfig {
 	t.Helper()

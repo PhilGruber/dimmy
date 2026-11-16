@@ -219,6 +219,28 @@ options:
 	require.Contains(t, device.GetTriggers(), "illuminance")
 }
 
+func TestDashboardIRCommandsFollowConfigOrder(t *testing.T) {
+	var config core.DeviceConfig
+	require.NoError(t, yaml.Unmarshal([]byte(`name: remote
+type: ircontrol
+options:
+  commands:
+    power: IR_POWER
+    cool: IR_COOL
+    off: IR_OFF
+`), &config))
+	device := dimmyDevices.NewIrControl(config)
+	s := &Server{dashboards: map[string][]dimmyDevices.Panel{"default": {dimmyDevices.NewPanelFromDevice(device)}}}
+	res := httptest.NewRecorder()
+	s.ShowDashboard("html")(res, httptest.NewRequest(http.MethodGet, "/", nil))
+	require.Equal(t, http.StatusOK, res.Code)
+	body := res.Body.String()
+	power, cool, off := strings.Index(body, `data-command="power"`), strings.Index(body, `data-command="cool"`), strings.Index(body, `data-command="off"`)
+	require.NotEqual(t, -1, power)
+	require.Greater(t, cool, power)
+	require.Greater(t, off, cool)
+}
+
 func TestUnknownDevicesRoomOptions(t *testing.T) {
 	s := &Server{
 		devices: map[string]dimmyDevices.DeviceInterface{
@@ -308,7 +330,7 @@ func TestEditRulesShowsConfiguredMissingDevices(t *testing.T) {
 }
 
 func TestEditRulesIncludesIRCommands(t *testing.T) {
-	commands := map[string]string{"power": "IR_POWER", "cool": "IR_COOL"}
+	commands := core.Commands{{Name: "power", Value: "IR_POWER"}, {Name: "cool", Value: "IR_COOL"}}
 	ir := dimmyDevices.NewIrControl(core.DeviceConfig{Name: "AC", Options: &core.ConfigOptions{Commands: &commands}})
 	s := &Server{devices: map[string]dimmyDevices.DeviceInterface{"AC": ir}, config: &core.ServerConfig{}}
 	res := httptest.NewRecorder()

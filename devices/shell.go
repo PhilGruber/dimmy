@@ -11,7 +11,7 @@ import (
 type Shell struct {
 	Device
 
-	commands map[string]string
+	commands core.Commands
 }
 
 func NewShell(config core.DeviceConfig) *Shell {
@@ -37,7 +37,7 @@ func (s *Shell) ProcessRequest(request core.SwitchRequest) {
 		return
 	}
 
-	command, ok := s.commands[request.Value]
+	command, ok := s.commands.Get(request.Value)
 	if !ok {
 		log.Printf("Device %s does not support command %s. Please define this in config file.\n", s.Name, request.Value)
 		return
@@ -57,11 +57,7 @@ func (s *Shell) execCommand(command string) {
 }
 
 func (s *Shell) GetCommands() []string {
-	var commands []string
-	for k := range s.commands {
-		commands = append(commands, k)
-	}
-	return commands
+	return s.commands.Names()
 }
 
 func (s *Shell) UpdateValue() (float64, bool) {

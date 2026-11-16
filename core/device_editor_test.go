@@ -65,7 +65,9 @@ devices:
 	require.Equal(t, 0, *configured[0].Options.Min)
 	require.Equal(t, 200, *configured[0].Options.Max)
 	require.True(t, *configured[0].Options.Hidden)
-	require.Equal(t, "IR_CODE", (*configured[0].Options.Commands)["cold"])
+	code, found := configured[0].Options.Commands.Get("cold")
+	require.True(t, found)
+	require.Equal(t, "IR_CODE", code)
 	fields.Min, fields.Max = nil, nil
 	fields.Hidden = ToPtr(false)
 	require.NoError(t, UpdateDeviceFields(filename, "remote", "ircontrol", "Kitchen", "zigbee", fields))

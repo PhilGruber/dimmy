@@ -11,7 +11,7 @@ import (
 type IRControl struct {
 	Device
 
-	commands         map[string]string
+	commands         core.Commands
 	nextRequest      *IrControlMessage
 	preventResending bool
 	lastCommand      string
@@ -43,7 +43,7 @@ func NewIrControl(config core.DeviceConfig) *IRControl {
 }
 
 func (i *IRControl) ProcessRequest(request core.SwitchRequest) {
-	command, ok := i.commands[request.Value]
+	command, ok := i.commands.Get(request.Value)
 	if !ok {
 		log.Printf("Device %s does not support command %s. Please define this in config file.\n", i.Name, request.Value)
 		return
@@ -81,15 +81,12 @@ func (i *IRControl) UpdateValue() (float64, bool) {
 }
 
 func (i *IRControl) GetCommands() []string {
-	var commands []string
-	for k := range i.commands {
-		commands = append(commands, k)
-	}
-	return commands
+	return i.commands.Names()
 }
 
 func (i *IRControl) GetCommandCode(command string) string {
-	return i.commands[command]
+	value, _ := i.commands.Get(command)
+	return value
 }
 
 func (i *IRControl) SetReceiverValue(key string, value interface{}) {
@@ -100,7 +97,7 @@ func (i *IRControl) SetReceiverValue(key string, value interface{}) {
 			log.Printf("[%32s] Invalid IR command: %v", i.Name, value)
 			return
 		}
-		command := i.commands[commandName]
+		command, _ := i.commands.Get(commandName)
 		req := IrControlMessage{IrCode: command}
 		i.nextRequest = &req
 		i.LastIcon = commandName

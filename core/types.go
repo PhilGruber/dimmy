@@ -66,14 +66,14 @@ type PanelConfig struct {
 }
 
 type ConfigOptions struct {
-	Hidden           *bool              `yaml:"hidden,omitempty"`
-	Transition       *bool              `yaml:"transition,omitempty"`
-	Commands         *map[string]string `yaml:"commands,omitempty"`
-	Sensors          *[]Sensor          `yaml:"sensors,omitempty"`
-	Controls         *[]Control         `yaml:"controls,omitempty"`
-	Devices          *[]string          `yaml:"devices,omitempty"`
-	PreventResending bool               `yaml:"prevent_resending,omitempty"`
-	StupidHack       bool               `yaml:"stupid_hack,omitempty"`
+	Hidden           *bool      `yaml:"hidden,omitempty"`
+	Transition       *bool      `yaml:"transition,omitempty"`
+	Commands         *Commands  `yaml:"commands,omitempty"`
+	Sensors          *[]Sensor  `yaml:"sensors,omitempty"`
+	Controls         *[]Control `yaml:"controls,omitempty"`
+	Devices          *[]string  `yaml:"devices,omitempty"`
+	PreventResending bool       `yaml:"prevent_resending,omitempty"`
+	StupidHack       bool       `yaml:"stupid_hack,omitempty"`
 
 	History *bool `yaml:"history,omitempty"`
 
