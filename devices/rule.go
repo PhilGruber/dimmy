@@ -13,9 +13,10 @@ import (
 )
 
 type Rule struct {
-	Triggers  []Trigger
-	Receivers []Receiver
-	SingleUse bool
+	Triggers         []Trigger
+	Receivers        []Receiver
+	SingleUse        bool
+	lastFiredUpdates []*time.Time
 }
 
 type Trigger struct {
@@ -190,6 +191,10 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 }
 
 func (r *Rule) Fire(channel chan core.SwitchRequest) []Receiver {
+	r.lastFiredUpdates = make([]*time.Time, len(r.Triggers))
+	for i, trigger := range r.Triggers {
+		r.lastFiredUpdates[i] = trigger.Condition.LastChanged
+	}
 	log.Printf("[%32s] Firing %v\n", "Rules", r)
 	requests := make(map[string]core.SwitchRequest)
 	var firedReceivers []Receiver
@@ -313,16 +318,22 @@ func makeComparable(value any, target any, numeric bool) (any, any, error) {
 
 func (r *Rule) CheckTriggers() bool {
 	matches := 0
-	for _, trigger := range r.Triggers {
+	// Retained state may still match after firing; require a new reading before
+	// sending the same rule's commands again.
+	updated := len(r.lastFiredUpdates) != len(r.Triggers)
+	for i, trigger := range r.Triggers {
 		if !trigger.Condition.check() {
 			core.D(fmt.Sprintf("\t --> Trigger %s does not match\n", trigger.String()))
 			return false
 		}
 		core.D(fmt.Sprintf("\t --> Trigger %s matched\n", trigger.String()))
 		matches++
+		if !updated && r.lastFiredUpdates[i] != trigger.Condition.LastChanged {
+			updated = true
+		}
 	}
 
-	return matches > 0 && matches == len(r.Triggers)
+	return updated && matches > 0 && matches == len(r.Triggers)
 }
 
 func (t *Trigger) IsPersistent() bool {

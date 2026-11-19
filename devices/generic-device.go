@@ -63,6 +63,9 @@ func NewDevice(config core.DeviceConfig, historyDB ...core.SensorHistoryStore) *
 			for i, sensorConfig := range *config.Options.Sensors {
 				s.Sensors[i] = sensorConfig
 				s.Triggers = append(s.Triggers, sensorConfig.Name)
+				if sensorConfig.Name == "temperature" {
+					s.persistentFields = append(s.persistentFields, sensorConfig.Name)
+				}
 				if sensorConfig.Name == "temperature" || sensorConfig.Name == "humidity" || sensorConfig.Name == "illuminance" {
 					s.hasHistory = true
 				}
@@ -131,6 +134,23 @@ func (d *GenericDevice) restoreHistory() {
 		}
 		latest := readings[len(readings)-1]
 		value.Value, value.LastChanged = latest.Value, latest.Time
+	}
+}
+
+func (d *GenericDevice) AddRule(rule *Rule) {
+	d.Device.AddRule(rule)
+	d.valueMutex.RLock()
+	defer d.valueMutex.RUnlock()
+	for i := range rule.Triggers {
+		trigger := &rule.Triggers[i]
+		if trigger.Device.GetName() != d.Name || !d.IsPersistent(trigger.Key) {
+			continue
+		}
+		if reading := d.Values[trigger.Key]; reading != nil && reading.Value != nil {
+			trigger.Condition.LastValue = reading.Value
+			timestamp := reading.LastChanged
+			trigger.Condition.LastChanged = &timestamp
+		}
 	}
 }
 
