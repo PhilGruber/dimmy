@@ -207,6 +207,19 @@ func (s *Server) EditDevices(webroot string) http.HandlerFunc {
 			page = "devices.html"
 		}
 		tmpl, err := template.New(page).Funcs(template.FuncMap{
+			"battery": func(name string) *struct {
+				Percent int
+				Low     bool
+			} { device, ok := s.getDevice(name); if !ok {
+				return nil
+			}; reader, ok := device.(interface{ GetBattery() *int }); if !ok {
+				return nil
+			}; level := reader.GetBattery(); if level == nil {
+				return nil
+			}; return &struct {
+				Percent int
+				Low     bool
+			}{Percent: *level, Low: *level < 20} },
 			"iconURL": func(icon string) string {
 				if icon != "" && filepath.Base(icon) == icon {
 					if info, err := os.Stat(filepath.Join(webroot, "assets", "icons", icon)); err == nil && info.Mode().IsRegular() {

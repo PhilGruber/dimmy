@@ -257,7 +257,20 @@ func (d *Device) setBatteryLevel(battery *int) {
 	if battery == nil {
 		return
 	}
-	d.Battery = battery
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+	level := *battery
+	d.Battery = &level
+}
+
+func (d *Device) GetBattery() *int {
+	d.mutex.RLock()
+	defer d.mutex.RUnlock()
+	if d.Battery == nil {
+		return nil
+	}
+	level := *d.Battery
+	return &level
 }
 
 func (d *Device) setLinkQuality(linkQuality *int) {

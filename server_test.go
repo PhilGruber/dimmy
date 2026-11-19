@@ -341,6 +341,36 @@ func TestEditRulesIncludesIRCommands(t *testing.T) {
 	require.NotContains(t, res.Body.String(), "IR_POWER")
 }
 
+func TestDeviceListBattery(t *testing.T) {
+	filename := filepath.Join(t.TempDir(), "config.yaml")
+	require.NoError(t, os.WriteFile(filename, []byte("devices:\n  - name: sensor\n    type: device\n"), 0600))
+	for _, tc := range []struct {
+		name  string
+		level *int
+		text  string
+		low   bool
+	}{
+		{"zero", core.ToPtr(0), "🪫 0%", true},
+		{"low", core.ToPtr(19), "🪫 19%", true},
+		{"threshold", core.ToPtr(20), "20%", false},
+		{"full", core.ToPtr(100), "100%", false},
+		{"unknown", nil, "—", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			device := dimmyDevices.NewDevice(core.DeviceConfig{Name: "sensor"})
+			device.Battery = tc.level
+			s := &Server{config: &core.ServerConfig{Filename: filename}, devices: map[string]dimmyDevices.DeviceInterface{"sensor": device}}
+			res := httptest.NewRecorder()
+			s.EditDevices("html").ServeHTTP(res, httptest.NewRequest(http.MethodGet, "/devices", nil))
+			require.Equal(t, http.StatusOK, res.Code)
+			require.Contains(t, res.Body.String(), "<td>"+tc.text+"</td>")
+			if !tc.low {
+				require.NotContains(t, res.Body.String(), "🪫")
+			}
+		})
+	}
+}
+
 func TestEditRulesRendersIconFiles(t *testing.T) {
 	webroot := t.TempDir()
 	require.NoError(t, os.MkdirAll(filepath.Join(webroot, "assets", "icons"), 0755))
