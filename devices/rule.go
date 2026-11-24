@@ -20,9 +20,26 @@ type Rule struct {
 }
 
 type Trigger struct {
-	Device    DeviceInterface
-	Key       string
-	Condition *condition
+	OnChange      bool
+	lastObserved  any
+	hasObserved   bool
+	changeVersion uint64
+	firedVersion  uint64
+	Device        DeviceInterface
+	Key           string
+	Condition     *condition
+}
+
+func (t *Trigger) update(value any, timestamp time.Time) {
+	changed := !t.hasObserved || !reflect.DeepEqual(t.lastObserved, value)
+	if changed {
+		t.changeVersion++
+		t.lastObserved, t.hasObserved = value, true
+	}
+	t.Condition.LastValue = value
+	if !t.OnChange || changed || t.Condition.LastChanged == nil {
+		t.Condition.LastChanged = &timestamp
+	}
 }
 
 type condition struct {
@@ -153,6 +170,10 @@ func (r *Rule) String() string {
 }
 
 func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
+	if err := config.ValidateTriggerFlags(); err != nil {
+		log.Printf("Skipping invalid rule: %v", err)
+		return nil
+	}
 	r := Rule{}
 	r.SingleUse = false
 	for _, triggerConfig := range config.Triggers {
@@ -161,8 +182,9 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 			continue
 		}
 		trigger := Trigger{
-			Device: devices[triggerConfig.DeviceName],
-			Key:    triggerConfig.Key,
+			OnChange: triggerConfig.OnChange,
+			Device:   devices[triggerConfig.DeviceName],
+			Key:      triggerConfig.Key,
 			Condition: core.ToPtr(condition{
 				Operator: triggerConfig.Condition.Operator,
 				Value:    triggerConfig.Condition.Value,
@@ -194,6 +216,9 @@ func (r *Rule) Fire(channel chan core.SwitchRequest) []Receiver {
 	r.lastFiredUpdates = make([]*time.Time, len(r.Triggers))
 	for i, trigger := range r.Triggers {
 		r.lastFiredUpdates[i] = trigger.Condition.LastChanged
+		if trigger.OnChange {
+			r.Triggers[i].firedVersion = trigger.changeVersion
+		}
 	}
 	log.Printf("[%32s] Firing %v\n", "Rules", r)
 	requests := make(map[string]core.SwitchRequest)
@@ -322,6 +347,9 @@ func (r *Rule) CheckTriggers() bool {
 	// sending the same rule's commands again.
 	updated := len(r.lastFiredUpdates) != len(r.Triggers)
 	for i, trigger := range r.Triggers {
+		if trigger.OnChange && (trigger.changeVersion == 0 || trigger.changeVersion == trigger.firedVersion) {
+			return false
+		}
 		if !trigger.Condition.check() {
 			core.D(fmt.Sprintf("\t --> Trigger %s does not match\n", trigger.String()))
 			return false

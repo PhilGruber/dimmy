@@ -341,6 +341,20 @@ func TestEditRulesIncludesIRCommands(t *testing.T) {
 	require.NotContains(t, res.Body.String(), "IR_POWER")
 }
 
+func TestSaveRulesRejectsMultipleOnChangeTriggers(t *testing.T) {
+	filename := filepath.Join(t.TempDir(), "rules.yaml")
+	require.NoError(t, os.WriteFile(filename, []byte("[]\n"), 0600))
+	s := &Server{config: &core.ServerConfig{RulesFilename: filename}}
+	body := `[{"triggers":[{"device":"light","key":"brightness","on_change":true},{"device":"temperature","key":"temperature","on_change":true}],"receivers":[]}]`
+	res := httptest.NewRecorder()
+	s.SaveRules().ServeHTTP(res, httptest.NewRequest(http.MethodPut, "/api/rules", strings.NewReader(body)))
+	require.Equal(t, http.StatusBadRequest, res.Code)
+	require.Contains(t, res.Body.String(), "only one trigger")
+	data, err := os.ReadFile(filename)
+	require.NoError(t, err)
+	require.Equal(t, "[]\n", string(data))
+}
+
 func TestDeviceListBattery(t *testing.T) {
 	filename := filepath.Join(t.TempDir(), "config.yaml")
 	require.NoError(t, os.WriteFile(filename, []byte("devices:\n  - name: sensor\n    type: device\n"), 0600))

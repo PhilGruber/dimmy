@@ -147,9 +147,7 @@ func (d *GenericDevice) AddRule(rule *Rule) {
 			continue
 		}
 		if reading := d.Values[trigger.Key]; reading != nil && reading.Value != nil {
-			trigger.Condition.LastValue = reading.Value
-			timestamp := reading.LastChanged
-			trigger.Condition.LastChanged = &timestamp
+			trigger.update(reading.Value, reading.LastChanged)
 		}
 	}
 }

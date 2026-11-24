@@ -45,7 +45,7 @@
                                         {{ $last = .DeviceName }}
                                         <span class="tag sensor">{{ template "device-label" (deviceView .DeviceName) }}</span>
                                     {{ end }}
-                                    <div class="muted">{{ .Key }} {{ .Condition.Operator }} {{ .Condition.Value }}</div>
+                                    <div class="muted">{{ .Key }} {{ .Condition.Operator }} {{ .Condition.Value }}{{ if .OnChange }} · once per value change{{ end }}</div>
                                 </div>
                                 {{ end }}
                             </td>

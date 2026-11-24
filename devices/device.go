@@ -297,8 +297,7 @@ func (d *Device) UpdateRule(rule *Rule, field string, value any) {
 	now := time.Now()
 	for t, trigger := range rule.Triggers {
 		if trigger.Device.GetName() == d.GetName() && trigger.Key == field {
-			rule.Triggers[t].Condition.LastValue = value
-			rule.Triggers[t].Condition.LastChanged = &now
+			rule.Triggers[t].update(value, now)
 		}
 	}
 }

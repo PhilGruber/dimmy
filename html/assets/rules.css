@@ -384,6 +384,16 @@ tbody tr:hover {
     grid-template-columns: 1fr 1fr .7fr 1fr auto;
 }
 
+.trigger-on-change {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .85rem;
+}
+
+.rule-row .trigger-on-change input { width: auto; }
+
 .rule-row select, .rule-row input {
     min-width: 0;
     width: 100%;

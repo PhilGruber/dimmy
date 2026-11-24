@@ -42,6 +42,7 @@ type RuleConfig struct {
 }
 
 type TriggerConfig struct {
+	OnChange   bool                    `yaml:"on_change,omitempty" json:"on_change,omitempty"`
 	DeviceName string                  `yaml:"device" json:"device"`
 	Key        string                  `yaml:"key" json:"key"`
 	Active     bool                    `yaml:"active" json:"active"`

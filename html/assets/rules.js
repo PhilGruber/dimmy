@@ -93,17 +93,32 @@
         previous.replaceWith(input);
     }
 
+    function syncOnChangeFlags() {
+        const flags = [...triggerRows.querySelectorAll('.on-change')];
+        const selected = flags.some(flag => flag.checked);
+        flags.forEach(flag => { flag.disabled = selected && !flag.checked; });
+    }
+
     function addTrigger(trigger = {}) {
         const row = document.createElement("div");
         row.className = "rule-row trigger-row";
         row.innerHTML = `<select class="device" aria-label="Trigger device">${optionsFor("triggers", trigger.device)}</select><select class="field" aria-label="Trigger field"></select><select class="operator" aria-label="Condition"><option value="==">is</option><option value="!=">is not</option><option value=">">is greater than</option><option value=">=">is at least</option><option value="<">is less than</option><option value="<=">is at most</option></select><input class="condition-value" aria-label="Condition value" placeholder="Value"><button type="button" class="remove-row" aria-label="Remove trigger">&times;</button>`;
         triggerRows.append(row);
+        const flagLabel = document.createElement('label');
+        flagLabel.className = 'trigger-on-change';
+        flagLabel.innerHTML = '<input type="checkbox" class="on-change"> Only once per value change';
+        flagLabel.title = 'Only one trigger per rule can use this option.';
+        row.append(flagLabel);
+        const flag = flagLabel.querySelector('input');
+        flag.checked = Boolean(trigger.on_change);
+        flag.addEventListener('change', syncOnChangeFlags);
+        syncOnChangeFlags();
         addDevicePicker(row);
         setFields(row, "triggers", trigger.key, trigger.condition?.value ?? "");
         row.querySelector(".operator").value = trigger.condition?.operator || "==";
         row.querySelector(".condition-value").value = trigger.condition?.value ?? "";
         row.querySelector(".device").addEventListener("change", () => setFields(row, "triggers"));
-        row.querySelector(".remove-row").addEventListener("click", () => row.remove());
+        row.querySelector(".remove-row").addEventListener("click", () => { row.remove(); syncOnChangeFlags(); });
     }
 
     function addReceiver(receiver = {}) {
@@ -168,6 +183,7 @@
             device: row.querySelector(".device").value,
             key: row.querySelector(".field").value,
             active: true,
+            on_change: row.querySelector('.on-change').checked,
             condition: { operator: row.querySelector(".operator").value, value: row.querySelector(".condition-value").value }
         }));
         const receivers = [...receiverRows.children].map(row => ({
@@ -175,6 +191,10 @@
             key: row.querySelector(".field").value,
             value: row.querySelector(".receiver-value").value
         }));
+        if (triggers.filter(trigger => trigger.on_change).length > 1) {
+            showError('Only one trigger per rule may use "Only once per value change".');
+            return;
+        }
         if (!triggers.length || !receivers.length || [...triggers, ...receivers].some(item => !item.device || !item.key) || triggers.some(item => item.condition.value === "") || receivers.some(item => item.value === "")) {
             showError("Choose a device and field, and enter a value for every row.");
             return;

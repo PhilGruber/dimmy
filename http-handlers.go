@@ -210,16 +210,24 @@ func (s *Server) EditDevices(webroot string) http.HandlerFunc {
 			"battery": func(name string) *struct {
 				Percent int
 				Low     bool
-			} { device, ok := s.getDevice(name); if !ok {
-				return nil
-			}; reader, ok := device.(interface{ GetBattery() *int }); if !ok {
-				return nil
-			}; level := reader.GetBattery(); if level == nil {
-				return nil
-			}; return &struct {
-				Percent int
-				Low     bool
-			}{Percent: *level, Low: *level < 20} },
+			} {
+				device, ok := s.getDevice(name)
+				if !ok {
+					return nil
+				}
+				reader, ok := device.(interface{ GetBattery() *int })
+				if !ok {
+					return nil
+				}
+				level := reader.GetBattery()
+				if level == nil {
+					return nil
+				}
+				return &struct {
+					Percent int
+					Low     bool
+				}{Percent: *level, Low: *level < 20}
+			},
 			"iconURL": func(icon string) string {
 				if icon != "" && filepath.Base(icon) == icon {
 					if info, err := os.Stat(filepath.Join(webroot, "assets", "icons", icon)); err == nil && info.Mode().IsRegular() {
@@ -804,6 +812,10 @@ func (s *Server) SaveRules() http.HandlerFunc {
 		// repaired or deleted. New and modified rules still require valid fields.
 		retained := make([]bool, len(s.config.Rules))
 		for _, rule := range rules {
+			if err := rule.ValidateTriggerFlags(); err != nil {
+				http.Error(output, err.Error(), http.StatusBadRequest)
+				return
+			}
 			unchanged := false
 			ruleJSON, _ := json.Marshal(rule)
 			for i, existing := range s.config.Rules {
