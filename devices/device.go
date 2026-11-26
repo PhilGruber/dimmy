@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"html/template"
 	"log"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -339,12 +338,7 @@ func (d *Device) IsPersistent(field string) bool {
 }
 
 func (d *Device) GetIconHtml() template.HTML {
-	// TODO: prevent escaping from path
-	webroot := "/usr/share/dimmy"
-	if _, err := os.Stat(webroot + "/assets/icons/" + d.Icon); err == nil {
-		return template.HTML("<img class='icon' src='/assets/icons/" + d.Icon + "' alt='" + d.GetLabel() + "'>")
-	}
-	return template.HTML(d.Icon)
+	return core.RenderIcon(d.Icon, d.GetLabel(), "/usr/share/dimmy")
 }
 
 func (d *Device) IsPseudoDevice() bool {

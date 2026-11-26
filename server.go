@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -20,18 +21,20 @@ const (
 	maxRequestBodyBytes       = 1 << 20 // 1 MiB
 	sensorHistoryRetention    = 14 * 24 * time.Hour
 	sensorHistoryCleanupEvery = 24 * time.Hour
+	unknownDeviceRetention    = 3 * time.Hour
 )
 
 type Server struct {
-	dashboards     map[string][]dimmyDevices.Panel
-	devices        map[string]dimmyDevices.DeviceInterface
-	unknownDevices map[string]dimmyDevices.DeviceInterface
-	rules          []*dimmyDevices.Rule
-	channel        chan core.SwitchRequest
-	config         *core.ServerConfig
-	historyDB      *core.HistoryDatabase
-	mqttClient     mqtt.Client
-	mutex          sync.RWMutex
+	dashboards      map[string][]dimmyDevices.Panel
+	devices         map[string]dimmyDevices.DeviceInterface
+	unknownDevices  map[string]dimmyDevices.DeviceInterface
+	unknownLastSeen map[string]time.Time
+	rules           []*dimmyDevices.Rule
+	channel         chan core.SwitchRequest
+	config          *core.ServerConfig
+	historyDB       *core.HistoryDatabase
+	mqttClient      mqtt.Client
+	mutex           sync.RWMutex
 }
 
 func main() {
@@ -73,6 +76,7 @@ func (s *Server) initialize(config *core.ServerConfig) {
 
 	s.devices = make(map[string]dimmyDevices.DeviceInterface)
 	s.unknownDevices = make(map[string]dimmyDevices.DeviceInterface)
+	s.unknownLastSeen = make(map[string]time.Time)
 
 	for _, deviceConfig := range config.Devices {
 		switch deviceConfig.Type {
@@ -183,6 +187,13 @@ func (s *Server) newGenericDevice(config core.DeviceConfig) *dimmyDevices.Generi
 }
 
 func (s *Server) Start(config *core.ServerConfig) {
+	go func() {
+		ticker := time.NewTicker(time.Minute)
+		defer ticker.Stop()
+		for now := range ticker.C {
+			s.pruneUnknownDevices(now)
+		}
+	}()
 
 	go s.processRequests()
 	go s.eventLoop(config.MqttServer)
@@ -211,11 +222,46 @@ func (s *Server) Start(config *core.ServerConfig) {
 func newHTTPServer(addr string, handler http.Handler) *http.Server {
 	return &http.Server{
 		Addr:              addr,
-		Handler:           http.MaxBytesHandler(handler, maxRequestBodyBytes),
+		Handler:           protectCrossOrigin(http.MaxBytesHandler(handler, maxRequestBodyBytes)),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      30 * time.Second,
 		IdleTimeout:       60 * time.Second,
+	}
+}
+
+func protectCrossOrigin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodOptions {
+			sameOrigin := func(value string) bool {
+				origin, err := url.Parse(value)
+				return err == nil && origin.User == nil && (origin.Scheme == "http" || origin.Scheme == "https") && strings.EqualFold(origin.Host, r.Host)
+			}
+			site := r.Header.Get("Sec-Fetch-Site")
+			origin := r.Header.Get("Origin")
+			if (site != "" && site != "same-origin" && site != "none") ||
+				(origin != "" && !sameOrigin(origin)) ||
+				(origin == "" && r.Referer() != "" && !sameOrigin(r.Referer())) {
+				http.Error(w, "cross-origin state changes are forbidden", http.StatusForbidden)
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *Server) pruneUnknownDevices(now time.Time) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	s.expireUnknownDevicesLocked(now)
+}
+
+func (s *Server) expireUnknownDevicesLocked(now time.Time) {
+	for name, lastSeen := range s.unknownLastSeen {
+		if lastSeen.Before(now.Add(-unknownDeviceRetention)) {
+			delete(s.unknownDevices, name)
+			delete(s.unknownLastSeen, name)
+		}
 	}
 }
 
@@ -406,6 +452,11 @@ func (s *Server) DetectDevice() mqtt.MessageHandler {
 		topic := dimmyDevices.LikelyDeviceTopic(mqttMessage.Topic())
 		s.mutex.Lock()
 		defer s.mutex.Unlock()
+		now := time.Now()
+		s.expireUnknownDevicesLocked(now)
+		if s.unknownLastSeen == nil {
+			s.unknownLastSeen = make(map[string]time.Time)
+		}
 		for _, d := range s.devices {
 			if d.GetMqttTopic() == topic || d.GetMqttStateTopic() == topic || dimmyDevices.LikelyDeviceTopic(d.GetMqttTopic()) == topic {
 				// We already know this device. Nothing to do.
@@ -414,9 +465,10 @@ func (s *Server) DetectDevice() mqtt.MessageHandler {
 		}
 
 		var newDevice dimmyDevices.DeviceInterface
-		for _, d := range s.unknownDevices {
+		for name, d := range s.unknownDevices {
 			if d.GetMqttTopic() == topic || d.GetMqttStateTopic() == topic {
 				d.UpdateFromMessage(data)
+				s.unknownLastSeen[name] = now
 				return
 			}
 		}
@@ -426,6 +478,7 @@ func (s *Server) DetectDevice() mqtt.MessageHandler {
 		}
 
 		s.unknownDevices[newDevice.GetName()] = newDevice
+		s.unknownLastSeen[newDevice.GetName()] = now
 	}
 }
 

@@ -3,11 +3,34 @@ package core
 import (
 	"os"
 	"path/filepath"
+	"runtime/debug"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
+
+func TestSaveRulesConfigClosesTemporaryFiles(t *testing.T) {
+	if _, err := os.ReadDir("/proc/self/fd"); err != nil {
+		t.Skip("requires procfs")
+	}
+	previous := debug.SetGCPercent(-1)
+	defer debug.SetGCPercent(previous)
+	directory := t.TempDir()
+	filename := filepath.Join(directory, "rules.yaml")
+	for i := 0; i < 20; i++ {
+		require.NoError(t, SaveRulesConfig(filename, []RuleConfig{}))
+	}
+	entries, err := os.ReadDir("/proc/self/fd")
+	require.NoError(t, err)
+	for _, entry := range entries {
+		target, err := os.Readlink(filepath.Join("/proc/self/fd", entry.Name()))
+		if err == nil {
+			require.False(t, strings.HasPrefix(target, directory+"/"), "leaked descriptor for %s", target)
+		}
+	}
+}
 
 func TestAddDeviceToConfig(t *testing.T) {
 	filename := filepath.Join(t.TempDir(), "dimmyd.conf.yaml")

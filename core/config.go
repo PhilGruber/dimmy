@@ -79,6 +79,7 @@ func SaveRulesConfig(filename string, rules []RuleConfig) error {
 	}
 	tempName := temp.Name()
 	defer os.Remove(tempName)
+	defer temp.Close()
 	encoder := yaml.NewEncoder(temp)
 	encoder.SetIndent(2)
 	if err := encoder.Encode(rules); err != nil {
@@ -92,7 +93,13 @@ func SaveRulesConfig(filename string, rules []RuleConfig) error {
 	if statErr == nil {
 		mode = info.Mode().Perm()
 	}
-	if err := os.Chmod(tempName, mode); err != nil {
+	if err := temp.Chmod(mode); err != nil {
+		return err
+	}
+	if err := temp.Sync(); err != nil {
+		return err
+	}
+	if err := temp.Close(); err != nil {
 		return err
 	}
 	return os.Rename(tempName, filename)

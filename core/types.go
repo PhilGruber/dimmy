@@ -1,7 +1,7 @@
 package core
 
 import (
-	"os"
+	"html/template"
 
 	"gopkg.in/yaml.v3"
 )
@@ -129,21 +129,15 @@ type Sensor struct {
 	ValueIcons map[string]string `yaml:"value_icons,omitempty"`
 }
 
-func GetIconHtml(icon string, name string) string {
-	if len(icon) == 0 {
-		return name
-	}
-	if _, err := os.Stat("html/assets/icons/" + icon); err == nil {
-		return "<img class='icon' src='" + icon + "' alt='" + name + "'>"
-	}
-	return icon
+func GetIconHtml(icon string, name string) template.HTML {
+	return RenderIcon(icon, name, "html")
 }
 
-func (c *Control) GetIconHtml() string {
+func (c *Control) GetIconHtml() template.HTML {
 	return GetIconHtml(c.Icon, c.Name)
 }
 
-func (s *Sensor) GetIconHtml() string {
+func (s *Sensor) GetIconHtml() template.HTML {
 	return GetIconHtml(s.Icon, s.Name)
 }
 

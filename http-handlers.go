@@ -25,6 +25,11 @@ import (
 
 func (s *Server) ReceiveRequest() http.HandlerFunc {
 	return func(output http.ResponseWriter, httpRequest *http.Request) {
+		if httpRequest.Method != http.MethodPost {
+			output.Header().Set("Allow", "POST")
+			http.Error(output, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
 
 		jsonResponse := func(result bool, request interface{}, message string) string {
 			data := make(map[string]interface{})
@@ -338,6 +343,7 @@ func (s *Server) SaveDeviceEdits() http.HandlerFunc {
 
 func (s *Server) ShowUnknownDevices(webroot string) http.HandlerFunc {
 	return func(output http.ResponseWriter, request *http.Request) {
+		s.pruneUnknownDevices(time.Now())
 		s.mutex.RLock()
 		devices := make([]unknownDeviceView, 0, len(s.unknownDevices))
 		for _, device := range s.unknownDevices {
@@ -434,6 +440,7 @@ func (s *Server) SaveUnknownDevice() http.HandlerFunc {
 				http.Error(output, "a device with that name already exists", http.StatusConflict)
 				return false
 			}
+			s.expireUnknownDevicesLocked(time.Now())
 			bareDevice, exists := s.unknownDevices[topic]
 			if !exists {
 				http.Error(output, "unknown device was not found", http.StatusNotFound)
@@ -490,6 +497,7 @@ func (s *Server) SaveUnknownDevice() http.HandlerFunc {
 			}
 			s.devices[name] = device
 			delete(s.unknownDevices, topic)
+			delete(s.unknownLastSeen, topic)
 			s.config.Devices = append(s.config.Devices, deviceConfig)
 			mqttClient = s.mqttClient
 
