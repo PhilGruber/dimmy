@@ -812,7 +812,7 @@ func (s *Server) SaveRules() http.HandlerFunc {
 		// repaired or deleted. New and modified rules still require valid fields.
 		retained := make([]bool, len(s.config.Rules))
 		for _, rule := range rules {
-			if err := rule.ValidateTriggerFlags(); err != nil {
+			if err := rule.Validate(); err != nil {
 				http.Error(output, err.Error(), http.StatusBadRequest)
 				return
 			}
@@ -853,12 +853,17 @@ func (s *Server) SaveRules() http.HandlerFunc {
 			http.Error(output, "could not save rules: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
+		var scheduled []*dimmyDevices.Rule
 		for _, rule := range s.rules {
+			if rule.SingleUse {
+				scheduled = append(scheduled, rule)
+				continue
+			}
 			for _, trigger := range rule.Triggers {
 				trigger.Device.RemoveRule(rule)
 			}
 		}
-		s.rules = nil
+		s.rules = scheduled
 		s.config.Rules = rules
 		for _, ruleConfig := range rules {
 			s.rules = append(s.rules, dimmyDevices.NewRule(ruleConfig, s.devices))

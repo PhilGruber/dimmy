@@ -56,6 +56,7 @@ type ReceiverConditionConfig struct {
 }
 
 type ReceiverConfig struct {
+	Delay      int    `yaml:"delay,omitempty" json:"delay,omitempty"`
 	DeviceName string `yaml:"device" json:"device"`
 	Key        string `yaml:"key" json:"key"`
 	Value      string `yaml:"value" json:"value"`

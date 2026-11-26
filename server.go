@@ -228,14 +228,7 @@ func (s *Server) eventLoop(mqttServer string) {
 
 	for {
 
-		var firedRules []int
-		for idx, rule := range s.rules {
-			if rule.CheckTriggers() {
-				rule.Fire(s.channel)
-				firedRules = append(firedRules, idx)
-			}
-		}
-		s.clearFiredRules(firedRules)
+		s.processRules(time.Now())
 
 		for _, device := range s.deviceSnapshot() {
 			if _, ok := device.UpdateValue(); ok {
@@ -245,6 +238,44 @@ func (s *Server) eventLoop(mqttServer string) {
 
 		time.Sleep(core.CycleLength * time.Millisecond)
 	}
+}
+
+func (s *Server) processRules(now time.Time) {
+	var firedRules []int
+	var scheduled []*dimmyDevices.Rule
+	for idx, rule := range s.rules {
+		if !rule.CheckTriggers() {
+			continue
+		}
+		delayed := make(map[int][]core.ReceiverConfig)
+		for _, receiver := range rule.Receivers {
+			if receiver.Delay > 0 {
+				delayed[receiver.Delay] = append(delayed[receiver.Delay], core.ReceiverConfig{
+					DeviceName: receiver.Device.GetName(), Key: receiver.Key, Value: receiver.Value,
+				})
+			}
+		}
+		if len(delayed) > 0 {
+			devices := s.deviceSnapshot()
+			clock, ok := devices["time"].(*dimmyDevices.DimmyTime)
+			if !ok {
+				log.Println("Cannot schedule delayed controls: time device is unavailable")
+				continue
+			}
+			for delay, receivers := range delayed {
+				singleUse := dimmyDevices.NewRule(core.RuleConfig{
+					Triggers:  clock.CreateTriggersFromTime(now.Add(time.Duration(delay) * time.Second)),
+					Receivers: receivers,
+				}, devices)
+				singleUse.SingleUse = true
+				scheduled = append(scheduled, singleUse)
+			}
+		}
+		rule.Fire(s.channel)
+		firedRules = append(firedRules, idx)
+	}
+	s.clearFiredRules(firedRules)
+	s.rules = append(s.rules, scheduled...)
 }
 
 // Remove fired rules from the end so earlier indices remain valid.

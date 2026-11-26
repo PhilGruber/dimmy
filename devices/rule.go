@@ -145,6 +145,7 @@ func (c *condition) check() bool {
 }
 
 type Receiver struct {
+	Delay  int
 	Device DeviceInterface
 	Key    string
 	Value  string
@@ -170,7 +171,7 @@ func (r *Rule) String() string {
 }
 
 func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
-	if err := config.ValidateTriggerFlags(); err != nil {
+	if err := config.Validate(); err != nil {
 		log.Printf("Skipping invalid rule: %v", err)
 		return nil
 	}
@@ -201,6 +202,7 @@ func NewRule(config core.RuleConfig, devices map[string]DeviceInterface) *Rule {
 			continue
 		}
 		receiver := Receiver{
+			Delay:  receiverConfig.Delay,
 			Device: devices[receiverConfig.DeviceName],
 			Key:    receiverConfig.Key,
 			Value:  receiverConfig.Value,
@@ -224,6 +226,9 @@ func (r *Rule) Fire(channel chan core.SwitchRequest) []Receiver {
 	requests := make(map[string]core.SwitchRequest)
 	var firedReceivers []Receiver
 	for _, receiver := range r.Receivers {
+		if receiver.Delay > 0 {
+			continue
+		}
 
 		// TODO: check if device needs aggregating - only for light
 
@@ -249,7 +254,7 @@ func (r *Rule) Fire(channel chan core.SwitchRequest) []Receiver {
 			request.Key = receiver.Key
 			request.Command = receiver.Key
 		}
-		requests[receiver.Device.GetName()] = request
+		requests[key] = request
 		firedReceivers = append(firedReceivers, receiver)
 	}
 

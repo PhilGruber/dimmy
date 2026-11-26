@@ -126,6 +126,11 @@
         row.className = "rule-row receiver-row";
         row.innerHTML = `<select class="device" aria-label="Control device">${optionsFor("receivers", receiver.device)}</select><select class="field" aria-label="Control field"></select><input class="receiver-value" aria-label="Control value" placeholder="Value"><button type="button" class="remove-row" aria-label="Remove control">&times;</button>`;
         receiverRows.append(row);
+        const delayLabel = document.createElement('label');
+        delayLabel.className = 'receiver-delay-label';
+        delayLabel.innerHTML = 'Run after (seconds) <input type="number" class="receiver-delay" min="0" step="1" value="0" aria-label="Control delay in seconds">';
+        row.append(delayLabel);
+        delayLabel.querySelector('input').value = receiver.delay ?? 0;
         addDevicePicker(row);
         setFields(row, "receivers", receiver.key, receiver.value ?? "");
         row.querySelector(".receiver-value").value = receiver.value ?? "";
@@ -189,8 +194,13 @@
         const receivers = [...receiverRows.children].map(row => ({
             device: row.querySelector(".device").value,
             key: row.querySelector(".field").value,
-            value: row.querySelector(".receiver-value").value
+            value: row.querySelector(".receiver-value").value,
+            delay: Number(row.querySelector('.receiver-delay').value)
         }));
+        if (receivers.some(receiver => !Number.isSafeInteger(receiver.delay) || receiver.delay < 0)) {
+            showError('Control delays must be nonnegative whole seconds.');
+            return;
+        }
         if (triggers.filter(trigger => trigger.on_change).length > 1) {
             showError('Only one trigger per rule may use "Only once per value change".');
             return;

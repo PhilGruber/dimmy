@@ -57,7 +57,7 @@
                                         {{ $last = .DeviceName }}
                                         <span class="tag control">{{ template "device-label" (deviceView .DeviceName) }}</span>
                                     {{ end }}
-                                    <div class="muted">{{ .Key }}: {{ .Value }}</div>
+                                    <div class="muted">{{ .Key }}: {{ .Value }}{{ if .Delay }} · after {{ .Delay }} seconds{{ end }}</div>
                                 </div>
                                 {{ end }}
                             </td>
