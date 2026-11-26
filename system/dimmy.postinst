@@ -17,6 +17,14 @@ fi
 
 mkdir -p /etc/dimmy /usr/share/dimmy /var/lib/dimmy
 
+DIMMY_HOME=$(getent passwd dimmy | cut -d: -f6)
+if [[ "$DIMMY_HOME" != /* ]]; then
+    echo "Cannot determine the dimmy account's home directory" >&2
+    exit 1
+fi
+mkdir -p -m 0750 "$DIMMY_HOME/scripts"
+chown dimmy:dimmy "$DIMMY_HOME/scripts"
+
 CFG_DIR="/etc/dimmy"
 DEFAULTS_DIR="/usr/share/dimmy/defaults"
 

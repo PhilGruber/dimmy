@@ -45,22 +45,26 @@ sed -e "s|/etc/dimmy|$ROOT/etc/dimmy|g" \
     -e "s|/usr/share/dimmy|$ROOT/usr/share/dimmy|g" \
     -e "s|/var/lib/dimmy|$ROOT/var/lib/dimmy|g" \
     "$TEST_DIR/control/postinst" > "$TEST_DIR/postinst"
-for name in getent chown; do
+for name in chown; do
     printf '#!/bin/sh\nexit 0\n' > "$TEST_DIR/bin/$name"
     chmod 755 "$TEST_DIR/bin/$name"
 done
+printf '#!/bin/sh\nif [ "$1" = passwd ]; then\n    echo "dimmy:x:999:999::%s:/usr/sbin/nologin"\nfi\n' "$ROOT/var/lib/dimmy" > "$TEST_DIR/bin/getent"
+chmod 755 "$TEST_DIR/bin/getent"
 
 configure() {
     PATH="$TEST_DIR/bin:$PATH" bash "$TEST_DIR/postinst" configure
 }
 
 configure
+[[ -d "$ROOT/var/lib/dimmy/scripts" ]]
 for name in "${CONFIGS[@]}"; do
     cmp "$ROOT/etc/dimmy/$name" "$REPO/$name.example"
 done
 
 CONFIG="$ROOT/etc/dimmy"
 DATABASE="$ROOT/var/lib/dimmy"
+printf '#!/bin/sh\necho custom script\n' > "$DATABASE/scripts/custom.sh"
 printf 'custom configuration\n' > "$CONFIG/dimmyd.conf.yaml"
 : > "$CONFIG/rules.conf.yaml"
 rm "$CONFIG/dimmy.conf"
@@ -82,6 +86,7 @@ for iteration in 1 2; do
     for name in dimmy.db dimmy.db-wal dimmy.db-shm; do
         cmp "$DATABASE/$name" "$TEST_DIR/expected-database/$name"
     done
+    cmp "$DATABASE/scripts/custom.sh" "$TEST_DIR/expected-database/scripts/custom.sh"
     [[ -L "$CONFIG/dimmy.conf" ]]
     [[ $(readlink "$CONFIG/dimmy.conf") == missing-local-config ]]
     [[ ! -e "$CONFIG/missing-local-config" ]]

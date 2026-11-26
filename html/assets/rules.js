@@ -78,19 +78,57 @@
         row.querySelector(".field").innerHTML = `<option value="">Choose a field</option>${unavailable}${fields.map(field => `<option value="${escapeHtml(field)}"${field === selected ? " selected" : ""}>${escapeHtml(field)}</option>`).join("")}`;
         const previous = row.querySelector(kind === "triggers" ? ".condition-value" : ".receiver-value");
         const isIR = device?.type === "IRControl" || device?.type === "ircontrol";
-        const input = document.createElement(isIR ? "select" : "input");
+        const isScript = kind === 'receivers' && device?.type === 'shell';
+        row.querySelector('.script-parameters-label')?.remove();
+        row.querySelector('.script-status')?.remove();
+        let parameters = '';
+        if (isScript && value) {
+            const parts = value.match(/^("(?:\\.|[^"\\])*"|'[^']*'|\S+)(?:\s+([\s\S]*))?$/);
+            if (parts) {
+                try { value = parts[1].startsWith('"') ? JSON.parse(parts[1]) : parts[1].replace(/^'|'$/g, ''); parameters = parts[2] || ''; } catch {}
+            }
+        }
+        const input = document.createElement(isIR || isScript ? "select" : "input");
         input.className = previous.className;
         input.setAttribute("aria-label", previous.getAttribute("aria-label"));
-        if (isIR) {
-            input.add(new Option("Choose a command", ""));
-            const commands = Array.isArray(device.commands) ? device.commands : [];
+        if (isIR || isScript) {
+            input.add(new Option(isScript ? 'Choose a script' : "Choose a command", ""));
+            const commands = (isScript ? device.scripts : device.commands) || [];
             if (value !== "" && !commands.includes(value)) input.add(new Option(`${value} (unavailable)`, value));
             for (const command of commands) input.add(new Option(command, command));
+            if (isScript) {
+                for (const [name, reason] of Object.entries(device.script_rejected || {})) {
+                    const option = new Option(`${name} (unavailable: ${reason})`, name);
+                    option.disabled = true;
+                    input.add(option);
+                }
+            }
         } else {
             input.placeholder = "Value";
         }
         input.value = value;
         previous.replaceWith(input);
+        if (isScript) {
+            const label = document.createElement('label');
+            label.className = 'script-parameters-label';
+            label.innerHTML = 'Parameters <input class="script-parameters" placeholder="Arguments (quote values containing spaces)">';
+            label.querySelector('input').value = parameters;
+            row.append(label);
+            const status = document.createElement('p');
+            status.className = 'script-status';
+            status.textContent = `Scripts directory: ${device.script_directory || 'unknown'}`;
+            if (device.script_error) status.textContent += ` — ${device.script_error}`;
+            else if (!(device.scripts || []).length) status.textContent += ' — No runnable scripts found.';
+            for (const [name, reason] of Object.entries(device.script_rejected || {})) status.textContent += `\n${name}: ${reason}`;
+            row.append(status);
+        }
+    }
+
+    function receiverValue(row) {
+        const value = row.querySelector('.receiver-value').value;
+        const parameters = row.querySelector('.script-parameters');
+        if (!parameters || !value) return value;
+        return JSON.stringify(value) + (parameters.value.trim() ? ' ' + parameters.value.trim() : '');
     }
 
     function syncOnChangeFlags() {
@@ -133,7 +171,6 @@
         delayLabel.querySelector('input').value = receiver.delay ?? 0;
         addDevicePicker(row);
         setFields(row, "receivers", receiver.key, receiver.value ?? "");
-        row.querySelector(".receiver-value").value = receiver.value ?? "";
         row.querySelector(".device").addEventListener("change", () => setFields(row, "receivers"));
         row.querySelector(".remove-row").addEventListener("click", () => row.remove());
     }
@@ -194,7 +231,7 @@
         const receivers = [...receiverRows.children].map(row => ({
             device: row.querySelector(".device").value,
             key: row.querySelector(".field").value,
-            value: row.querySelector(".receiver-value").value,
+            value: receiverValue(row),
             delay: Number(row.querySelector('.receiver-delay').value)
         }));
         if (receivers.some(receiver => !Number.isSafeInteger(receiver.delay) || receiver.delay < 0)) {

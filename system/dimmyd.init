@@ -24,8 +24,14 @@ SCRIPTNAME=/etc/init.d/$NAME
 . /lib/lsb/init-functions
 
 do_start() {
+	DIMMY_HOME=$(getent passwd dimmy | cut -d: -f6)
+	case "$DIMMY_HOME" in
+		/*) ;;
+		*) echo "Cannot determine the dimmy account's home directory" >&2; return 1 ;;
+	esac
 	start-stop-daemon --start --quiet --background --make-pidfile \
-		--pidfile "$PIDFILE" --chuid dimmy:dimmy --exec "$DAEMON" -- \
+		--pidfile "$PIDFILE" --chuid dimmy:dimmy --exec "$DAEMON" \
+		--startas /usr/bin/env -- "HOME=$DIMMY_HOME" "$DAEMON" \
 		>>"$LOGFILE" 2>&1
 }
 

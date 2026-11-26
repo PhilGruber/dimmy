@@ -341,6 +341,19 @@ func TestEditRulesIncludesIRCommands(t *testing.T) {
 	require.NotContains(t, res.Body.String(), "IR_POWER")
 }
 
+func TestRuleEditorShowsScriptDiscoveryDirectory(t *testing.T) {
+	shell := dimmyDevices.NewShell(core.DeviceConfig{Name: "shell"})
+	s := &Server{devices: map[string]dimmyDevices.DeviceInterface{"shell": shell}, config: &core.ServerConfig{}}
+	res := httptest.NewRecorder()
+	s.EditRules("html").ServeHTTP(res, httptest.NewRequest(http.MethodGet, "/rules/edit", nil))
+	require.Equal(t, http.StatusOK, res.Code)
+	home, err := os.UserHomeDir()
+	require.NoError(t, err)
+	directoryJSON, err := json.Marshal(filepath.Join(home, "scripts"))
+	require.NoError(t, err)
+	require.Contains(t, res.Body.String(), `"script_directory":`+string(directoryJSON))
+}
+
 func TestSaveRulesRejectsMultipleOnChangeTriggers(t *testing.T) {
 	filename := filepath.Join(t.TempDir(), "rules.yaml")
 	require.NoError(t, os.WriteFile(filename, []byte("[]\n"), 0600))

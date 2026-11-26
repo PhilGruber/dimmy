@@ -395,6 +395,8 @@ tbody tr:hover {
 .rule-row .trigger-on-change input { width: auto; }
 .receiver-delay-label { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; font-size: .85rem; }
 .rule-row .receiver-delay-label input { width: 7rem; }
+.script-parameters-label { grid-column: 1 / -1; display: grid; gap: 6px; font-size: .85rem; }
+.script-status { grid-column: 1 / -1; margin: 0; font-size: .8rem; overflow-wrap: anywhere; white-space: pre-line; }
 
 .rule-row select, .rule-row input {
     min-width: 0;

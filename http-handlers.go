@@ -675,6 +675,11 @@ func (s *Server) EditRules(webroot string) http.HandlerFunc {
 				view.Commands = nonNilStrings(ir.GetCommands())
 				sort.Strings(view.Commands)
 			}
+			if shell, ok := device.(*dimmyDevices.Shell); ok {
+				inventory := shell.ScriptInventory()
+				view.Scripts = nonNilStrings(inventory.Scripts)
+				view.ScriptDirectory, view.ScriptError, view.ScriptRejected = inventory.Directory, inventory.Error, inventory.Rejected
+			}
 			if view.Icon != "" && filepath.Base(view.Icon) == view.Icon {
 				if info, err := os.Stat(filepath.Join(webroot, "assets", "icons", view.Icon)); err == nil && info.Mode().IsRegular() {
 					view.IconURL = "/assets/icons/" + url.PathEscape(view.Icon)
@@ -784,14 +789,18 @@ func nonNilStrings(values []string) []string {
 }
 
 type ruleDeviceView struct {
-	Type      string   `json:"type"`
-	Commands  []string `json:"commands,omitempty"`
-	Name      string   `json:"name"`
-	Label     string   `json:"label"`
-	Icon      string   `json:"icon"`
-	IconURL   string   `json:"icon_url,omitempty"`
-	Triggers  []string `json:"triggers"`
-	Receivers []string `json:"receivers"`
+	ScriptDirectory string            `json:"script_directory,omitempty"`
+	ScriptError     string            `json:"script_error,omitempty"`
+	ScriptRejected  map[string]string `json:"script_rejected,omitempty"`
+	Scripts         []string          `json:"scripts,omitempty"`
+	Type            string            `json:"type"`
+	Commands        []string          `json:"commands,omitempty"`
+	Name            string            `json:"name"`
+	Label           string            `json:"label"`
+	Icon            string            `json:"icon"`
+	IconURL         string            `json:"icon_url,omitempty"`
+	Triggers        []string          `json:"triggers"`
+	Receivers       []string          `json:"receivers"`
 }
 
 func (s *Server) SaveRules() http.HandlerFunc {
@@ -845,6 +854,12 @@ func (s *Server) SaveRules() http.HandlerFunc {
 				if !ok || !contains(device.GetReceivers(), receiver.Key) {
 					http.Error(output, "invalid control", http.StatusBadRequest)
 					return
+				}
+				if shell, ok := device.(*dimmyDevices.Shell); ok {
+					if err := shell.ValidateCommand(receiver.Value); err != nil {
+						http.Error(output, "invalid script: "+err.Error(), http.StatusBadRequest)
+						return
+					}
 				}
 			}
 		}
